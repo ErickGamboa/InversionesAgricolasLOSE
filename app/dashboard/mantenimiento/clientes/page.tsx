@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface Cliente {
   id: number
@@ -23,14 +22,13 @@ interface Cliente {
 }
 
 const fields = [
-  { name: "codigo", label: "Codigo", type: "text" as const, required: true },
+  { name: "codigo", label: "Código", type: "text" as const, required: true },
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
 export default function ClientesPage() {
   const [data, setData] = useState<Cliente[]>([])
-  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchData = useCallback(async () => {
@@ -39,7 +37,6 @@ export default function ClientesPage() {
       .select("*")
       .order("codigo")
     setData(clientes ?? [])
-    setLoading(false)
   }, [supabase])
 
   useEffect(() => {
@@ -65,22 +62,14 @@ export default function ClientesPage() {
       </header>
 
       <div className="p-6">
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        ) : (
-          <MaintenanceTable
-            tableName="clientes"
-            title="Clientes"
-            description="Administre los clientes del sistema"
-            fields={fields}
-            data={data}
-            onRefresh={fetchData}
-          />
-        )}
+        <MaintenanceTable
+          tableName="clientes"
+          title="Clientes"
+          description="Administre los clientes del sistema"
+          fields={fields}
+          data={data}
+          onRefresh={fetchData}
+        />
       </div>
     </>
   )

@@ -132,7 +132,7 @@ export function DashboardSidebar({ user }: { user: User }) {
             </svg>
           </div>
           <div className="flex flex-col">
-            <span className="font-semibold text-sidebar-foreground">Recepcion Pina</span>
+            <span className="font-semibold text-sidebar-foreground">Recepción Piña</span>
             <span className="text-xs text-sidebar-foreground/70">Costa Rica</span>
           </div>
         </div>
@@ -207,7 +207,7 @@ export function DashboardSidebar({ user }: { user: User }) {
               <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
                 <DropdownMenuItem onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
-                  Cerrar Sesion
+                  Cerrar Sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

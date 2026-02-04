@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface Chofer {
   id: number
@@ -23,14 +22,13 @@ interface Chofer {
 }
 
 const fields = [
-  { name: "codigo", label: "Codigo", type: "text" as const, required: true },
+  { name: "codigo", label: "Código", type: "text" as const, required: true },
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
 export default function ChoferesPage() {
   const [data, setData] = useState<Chofer[]>([])
-  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchData = useCallback(async () => {
@@ -39,7 +37,6 @@ export default function ChoferesPage() {
       .select("*")
       .order("codigo")
     setData(choferes ?? [])
-    setLoading(false)
   }, [supabase])
 
   useEffect(() => {
@@ -65,22 +62,14 @@ export default function ChoferesPage() {
       </header>
 
       <div className="p-6">
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        ) : (
-          <MaintenanceTable
-            tableName="choferes"
-            title="Choferes"
-            description="Administre los choferes del sistema"
-            fields={fields}
-            data={data}
-            onRefresh={fetchData}
-          />
-        )}
+        <MaintenanceTable
+          tableName="choferes"
+          title="Choferes"
+          description="Administre los choferes del sistema"
+          fields={fields}
+          data={data}
+          onRefresh={fetchData}
+        />
       </div>
     </>
   )

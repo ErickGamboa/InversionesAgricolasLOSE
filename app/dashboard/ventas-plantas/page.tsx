@@ -8,6 +8,16 @@ import { TransactionTable } from "@/components/dashboard/transaction-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, TrendingUp } from "lucide-react";
+import { SidebarTrigger } from "@/components/ui/sidebar";
+import { Separator } from "@/components/ui/separator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import {
   Dialog,
   DialogContent,
@@ -94,7 +104,7 @@ export default function VentasPlantasPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Ocurrio un error",
+        description: error instanceof Error ? error.message : "Ocurrió un error",
         variant: "destructive",
       });
     } finally {
@@ -127,7 +137,7 @@ export default function VentasPlantasPage() {
     } catch (error) {
       toast({
         title: "Error",
-        description: error instanceof Error ? error.message : "Ocurrio un error",
+        description: error instanceof Error ? error.message : "Ocurrió un error",
         variant: "destructive",
       });
     }
@@ -142,17 +152,34 @@ export default function VentasPlantasPage() {
   const todayMonto = todayStats.reduce((sum: number, t: Record<string, unknown>) => sum + Number(t.monto || 0), 0);
 
   return (
-    <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold text-foreground">Ventas a Plantas</h1>
-          <p className="text-muted-foreground">Registro de ventas de pina a plantas procesadoras</p>
+    <>
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+        <Separator orientation="vertical" className="mr-2 h-4" />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/dashboard">Dashboard</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Ventas a Plantas</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
+      </header>
+
+      <div className="space-y-6 p-4">
+        <div className="flex items-center justify-between">
+          <div>
+            <h1 className="text-2xl font-bold text-foreground">Ventas a Plantas</h1>
+            <p className="text-muted-foreground">Registro de ventas de piña a plantas procesadoras</p>
+          </div>
+          <Button onClick={() => { setEditingTransaction(null); setIsDialogOpen(true); }}>
+            <Plus className="h-4 w-4 mr-2" />
+            Nueva Venta
+          </Button>
         </div>
-        <Button onClick={() => { setEditingTransaction(null); setIsDialogOpen(true); }}>
-          <Plus className="h-4 w-4 mr-2" />
-          Nueva Venta
-        </Button>
-      </div>
 
       <div className="grid gap-4 md:grid-cols-3">
         <Card>
@@ -225,5 +252,6 @@ export default function VentasPlantasPage() {
         </DialogContent>
       </Dialog>
     </div>
+    </>
   );
 }

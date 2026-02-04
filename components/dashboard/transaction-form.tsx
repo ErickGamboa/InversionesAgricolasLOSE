@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2, Plus, Save } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 interface SelectOption {
   id: number
@@ -147,7 +148,7 @@ export function TransactionForm({
           <CardTitle>{title}</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center justify-center py-8">
-          <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+          <Spinner size="lg" text="Cargando formulario..." />
         </CardContent>
       </Card>
     )
@@ -163,8 +164,8 @@ export function TransactionForm({
       </CardHeader>
       <CardContent>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-            <div className="space-y-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 min-w-0">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="fecha">Fecha</Label>
               <Input
                 id="fecha"
@@ -172,102 +173,104 @@ export function TransactionForm({
                 value={formData.fecha}
                 onChange={(e) => setFormData((prev) => ({ ...prev, fecha: e.target.value }))}
                 required
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="cliente">Cliente</Label>
               <Select
                 value={formData.cliente_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, cliente_id: value }))}
                 required
               >
-                <SelectTrigger id="cliente">
-                  <SelectValue placeholder="Seleccione..." />
+                <SelectTrigger id="cliente" className="w-full">
+                  <SelectValue placeholder="Seleccione..." className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.codigo} - {c.nombre}
+                    <SelectItem key={c.id} value={c.id.toString()} className="truncate max-w-[300px]">
+                      <span className="truncate">{c.codigo} - {c.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="planta">Planta</Label>
               <Select
                 value={formData.planta_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, planta_id: value }))}
                 required
               >
-                <SelectTrigger id="planta">
-                  <SelectValue placeholder="Seleccione..." />
+                <SelectTrigger id="planta" className="w-full">
+                  <SelectValue placeholder="Seleccione..." className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   {plantas.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>
-                      {p.codigo} - {p.nombre}
+                    <SelectItem key={p.id} value={p.id.toString()} className="truncate max-w-[300px]">
+                      <span className="truncate">{p.codigo} - {p.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="chofer">Chofer</Label>
               <Select
                 value={formData.chofer_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, chofer_id: value }))}
                 required
               >
-                <SelectTrigger id="chofer">
-                  <SelectValue placeholder="Seleccione..." />
+                <SelectTrigger id="chofer" className="w-full">
+                  <SelectValue placeholder="Seleccione..." className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   {choferes.map((ch) => (
-                    <SelectItem key={ch.id} value={ch.id.toString()}>
-                      {ch.codigo} - {ch.nombre}
+                    <SelectItem key={ch.id} value={ch.id.toString()} className="truncate max-w-[300px]">
+                      <span className="truncate">{ch.codigo} - {ch.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="placa">Placa</Label>
               <Select
                 value={formData.placa_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, placa_id: value }))}
                 required
               >
-                <SelectTrigger id="placa">
-                  <SelectValue placeholder="Seleccione..." />
+                <SelectTrigger id="placa" className="w-full">
+                  <SelectValue placeholder="Seleccione..." className="truncate" />
                 </SelectTrigger>
                 <SelectContent>
                   {placas.map((pl) => (
-                    <SelectItem key={pl.id} value={pl.id.toString()}>
-                      {pl.codigo} {pl.descripcion ? `- ${pl.descripcion}` : ""}
+                    <SelectItem key={pl.id} value={pl.id.toString()} className="truncate max-w-[300px]">
+                      <span className="truncate">{pl.codigo} {pl.descripcion ? `- ${pl.descripcion}` : ""}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="boleta">Boleta</Label>
               <Input
                 id="boleta"
                 value={formData.boleta}
                 onChange={(e) => setFormData((prev) => ({ ...prev, boleta: e.target.value }))}
                 placeholder="Numero de boleta"
+                className="w-full"
               />
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            <div className="space-y-2">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 min-w-0">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="kilos_bruto">Kilos Bruto</Label>
               <Input
                 id="kilos_bruto"
@@ -277,10 +280,11 @@ export function TransactionForm({
                 value={formData.kilos_bruto}
                 onChange={(e) => setFormData((prev) => ({ ...prev, kilos_bruto: e.target.value }))}
                 required
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="kilos_tara">Kilos Tara</Label>
               <Input
                 id="kilos_tara"
@@ -290,17 +294,18 @@ export function TransactionForm({
                 value={formData.kilos_tara}
                 onChange={(e) => setFormData((prev) => ({ ...prev, kilos_tara: e.target.value }))}
                 required
+                className="w-full"
               />
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label>Kilos Neto</Label>
-              <div className="flex h-9 items-center rounded-md border bg-muted px-3 text-sm font-medium">
+              <div className="flex h-9 w-full items-center overflow-hidden rounded-md border bg-muted px-3 text-sm font-medium">
                 {kilosNeto.toLocaleString("es-CR")} kg
               </div>
             </div>
 
-            <div className="space-y-2">
+            <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="precio">Precio por Kilo</Label>
               <Input
                 id="precio"
@@ -310,25 +315,26 @@ export function TransactionForm({
                 value={formData.precio}
                 onChange={(e) => setFormData((prev) => ({ ...prev, precio: e.target.value }))}
                 required
+                className="w-full"
               />
             </div>
           </div>
 
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-2 min-w-0">
             {showTipoPago && (
-              <div className="space-y-2">
+              <div className="space-y-2 min-w-0 overflow-hidden">
                 <Label htmlFor="tipo_pago">Tipo de Pago</Label>
                 <Select
                   value={formData.tipo_pago_id}
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, tipo_pago_id: value }))}
                 >
-                  <SelectTrigger id="tipo_pago">
-                    <SelectValue placeholder="Seleccione..." />
+                  <SelectTrigger id="tipo_pago" className="w-full">
+                    <SelectValue placeholder="Seleccione..." className="truncate" />
                   </SelectTrigger>
                   <SelectContent>
                     {tiposPago.map((tp) => (
-                      <SelectItem key={tp.id} value={tp.id.toString()}>
-                        {tp.codigo} - {tp.nombre}
+                      <SelectItem key={tp.id} value={tp.id.toString()} className="truncate max-w-[300px]">
+                        <span className="truncate">{tp.codigo} - {tp.nombre}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -338,7 +344,7 @@ export function TransactionForm({
 
             <div className={`space-y-2 ${showTipoPago ? "" : "lg:col-start-4"}`}>
               <Label>Monto Total</Label>
-              <div className="flex h-9 items-center rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary">
+              <div className="flex h-9 w-full items-center overflow-hidden rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary">
                 ₡{formatCurrency(monto)}
               </div>
             </div>
@@ -347,7 +353,7 @@ export function TransactionForm({
           <div className="flex justify-end">
             <Button type="submit" disabled={loading}>
               {loading ? (
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Spinner size="sm" showText={false} />
               ) : (
                 <Save className="mr-2 h-4 w-4" />
               )}

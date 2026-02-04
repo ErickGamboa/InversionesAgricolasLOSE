@@ -22,6 +22,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Pencil, Trash2, Search } from "lucide-react";
+import { Spinner } from "@/components/ui/spinner";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
 
@@ -137,7 +138,7 @@ export function TransactionTable({
               <TableRow>
                 <TableCell colSpan={showTipoPago ? 13 : 12} className="text-center py-8">
                   <div className="flex items-center justify-center gap-2">
-                    <div className="h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
+                    <Spinner size="sm" showText={false} />
                     Cargando...
                   </div>
                 </TableCell>
@@ -250,9 +251,9 @@ export function TransactionTable({
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar eliminacion</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta accion no se puede deshacer. Se eliminara permanentemente este registro.
+              Esta acción no se puede deshacer. Se eliminará permanentemente este registro.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

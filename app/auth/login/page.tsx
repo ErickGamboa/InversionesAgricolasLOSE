@@ -11,6 +11,7 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Loader2 } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 export default function LoginPage() {
   const [email, setEmail] = useState("")
@@ -59,9 +60,9 @@ export default function LoginPage() {
               />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold">Recepcion Pina</CardTitle>
+          <CardTitle className="text-2xl font-bold">Recepción Piña</CardTitle>
           <CardDescription>
-            Sistema de Gestion - Costa Rica
+            Sistema de Gestión - Costa Rica
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -72,7 +73,7 @@ export default function LoginPage() {
               </Alert>
             )}
             <div className="space-y-2">
-              <Label htmlFor="email">Correo Electronico</Label>
+              <Label htmlFor="email">Correo Electrónico</Label>
               <Input
                 id="email"
                 type="email"
@@ -84,7 +85,7 @@ export default function LoginPage() {
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="password">Contrasena</Label>
+              <Label htmlFor="password">Contraseña</Label>
               <Input
                 id="password"
                 type="password"
@@ -98,7 +99,7 @@ export default function LoginPage() {
             <Button type="submit" className="w-full" disabled={loading}>
               {loading ? (
                 <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  <Spinner size="sm" showText={false} />
                   Ingresando...
                 </>
               ) : (

@@ -94,7 +94,7 @@ export default async function DashboardPage() {
 
       <div className="p-6">
         <div className="mb-6">
-          <h1 className="text-2xl font-bold text-foreground">Resumen del Dia</h1>
+          <h1 className="text-2xl font-bold text-foreground">Resumen del Día</h1>
           <p className="text-muted-foreground capitalize">{today}</p>
         </div>
 

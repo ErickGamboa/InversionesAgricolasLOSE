@@ -13,7 +13,6 @@ import {
   BreadcrumbSeparator,
 } from "@/components/ui/breadcrumb"
 import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
-import { Skeleton } from "@/components/ui/skeleton"
 
 interface Placa {
   id: number
@@ -23,14 +22,13 @@ interface Placa {
 }
 
 const fields = [
-  { name: "codigo", label: "Numero de Placa", type: "text" as const, required: true },
-  { name: "descripcion", label: "Descripcion", type: "text" as const },
+  { name: "codigo", label: "Número de Placa", type: "text" as const, required: true },
+  { name: "descripcion", label: "Descripción", type: "text" as const },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
 export default function PlacasPage() {
   const [data, setData] = useState<Placa[]>([])
-  const [loading, setLoading] = useState(true)
   const supabase = createClient()
 
   const fetchData = useCallback(async () => {
@@ -39,7 +37,6 @@ export default function PlacasPage() {
       .select("*")
       .order("codigo")
     setData(placas ?? [])
-    setLoading(false)
   }, [supabase])
 
   useEffect(() => {
@@ -65,22 +62,14 @@ export default function PlacasPage() {
       </header>
 
       <div className="p-6">
-        {loading ? (
-          <div className="space-y-4">
-            <Skeleton className="h-8 w-48" />
-            <Skeleton className="h-10 w-full" />
-            <Skeleton className="h-64 w-full" />
-          </div>
-        ) : (
-          <MaintenanceTable
-            tableName="placas"
-            title="Placas"
-            description="Administre las placas de vehiculos del sistema"
-            fields={fields}
-            data={data}
-            onRefresh={fetchData}
-          />
-        )}
+        <MaintenanceTable
+          tableName="placas"
+          title="Placas"
+          description="Administre las placas de vehículos del sistema"
+          fields={fields}
+          data={data}
+          onRefresh={fetchData}
+        />
       </div>
     </>
   )

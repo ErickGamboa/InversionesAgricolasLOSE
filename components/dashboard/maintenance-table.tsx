@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { toast } from "sonner"
 import { Plus, Pencil, Trash2, Loader2, Search } from "lucide-react"
+import { Spinner } from "@/components/ui/spinner"
 
 interface Field {
   name: string
@@ -67,8 +68,18 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
   const [deletingItem, setDeletingItem] = useState<T | null>(null)
   const [formData, setFormData] = useState<Record<string, string | boolean>>({})
   const [loading, setLoading] = useState(false)
+  const [initialLoading, setInitialLoading] = useState(true)
 
   const supabase = createClient()
+
+  useEffect(() => {
+    if (data.length === 0) {
+      onRefresh()
+      setInitialLoading(false)
+    } else {
+      setInitialLoading(false)
+    }
+  }, [])
 
   const filteredData = data.filter((item) => {
     const searchLower = searchTerm.toLowerCase()
@@ -269,9 +280,9 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
                 : "Complete los campos para crear un nuevo registro"}
             </DialogDescription>
           </DialogHeader>
-          <div className="grid gap-4 py-4">
+          <div className="grid gap-4 py-4 min-w-0">
             {fields.map((field) => (
-              <div key={field.name} className="grid gap-2">
+              <div key={field.name} className="grid gap-2 min-w-0">
                 <Label htmlFor={field.name}>{field.label}</Label>
                 {field.type === "boolean" ? (
                   <Switch
@@ -289,6 +300,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
                       setFormData((prev) => ({ ...prev, [field.name]: e.target.value }))
                     }
                     required={field.required}
+                    className="w-full"
                   />
                 )}
               </div>
@@ -299,7 +311,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
               Cancelar
             </Button>
             <Button onClick={handleSave} disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading && <Spinner size="sm" showText={false} />}
               {editingItem ? "Guardar" : "Crear"}
             </Button>
           </DialogFooter>
@@ -309,15 +321,15 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
       <AlertDialog open={isDeleteDialogOpen} onOpenChange={setIsDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Confirmar eliminacion</AlertDialogTitle>
+            <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
             <AlertDialogDescription>
-              Esta seguro que desea eliminar este registro? Esta accion no se puede deshacer.
+              ¿Está seguro que desea eliminar este registro? Esta acción no se puede deshacer.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
             <AlertDialogAction onClick={handleDelete} disabled={loading}>
-              {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
+              {loading && <Spinner size="sm" showText={false} />}
               Eliminar
             </AlertDialogAction>
           </AlertDialogFooter>

@@ -8,8 +8,8 @@ const _geist = Geist({ subsets: ["latin"] });
 const _geistMono = Geist_Mono({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Recepcion Pina - Sistema de Gestion',
-  description: 'Sistema de gestion de recepcion de pina para plantas procesadoras',
+  title: 'Recepción Piña - Sistema de Gestión',
+  description: 'Sistema de gestión de recepción de piña para plantas procesadoras',
   generator: 'v0.app',
   icons: {
     icon: [
