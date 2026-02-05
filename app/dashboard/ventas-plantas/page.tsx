@@ -33,9 +33,9 @@ const fetcher = async () => {
     .from("ventas_plantas")
     .select(`
       *,
-      cliente:clientes(id, codigo, nombre),
-      planta:plantas(id, codigo, nombre),
-      chofer:choferes(id, codigo, nombre),
+      cliente:clientes(id, nombre, tipo_cliente),
+      planta:plantas(id, nombre),
+      chofer:chofer(id, nombre),
       placa:placas(id, codigo)
     `)
     .order("fecha", { ascending: false })
@@ -46,17 +46,17 @@ const fetcher = async () => {
 };
 
 const fetchLookups = async () => {
-  const [clientes, plantas, choferes, placas] = await Promise.all([
-    supabase.from("clientes").select("id, codigo, nombre").eq("activo", true).order("codigo"),
-    supabase.from("plantas").select("id, codigo, nombre").eq("activo", true).order("codigo"),
-    supabase.from("choferes").select("id, codigo, nombre").eq("activo", true).order("codigo"),
+  const [clientes, plantas, chofer, placas] = await Promise.all([
+    supabase.from("clientes").select("id, nombre, tipo_cliente").eq("activo", true).order("nombre"),
+    supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
+    supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
     supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
   ]);
 
   return {
     clientes: clientes.data || [],
     plantas: plantas.data || [],
-    choferes: choferes.data || [],
+    choferes: chofer.data || [],
     placas: placas.data || [],
   };
 };
@@ -128,7 +128,7 @@ export default function VentasPlantasPage() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDelete = useCallback(async (id: string) => {
     try {
       const { error } = await supabase.from("ventas_plantas").delete().eq("id", id);
       if (error) throw error;
@@ -246,7 +246,7 @@ export default function VentasPlantasPage() {
             isSubmitting={isSubmitting}
             clientes={lookups?.clientes || []}
             plantas={lookups?.plantas || []}
-            choferes={lookups?.choferes || []}
+            chofer={lookups?.choferes || []}
             placas={lookups?.placas || []}
           />
         </DialogContent>

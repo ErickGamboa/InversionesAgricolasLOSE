@@ -1,7 +1,4 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -27,21 +24,12 @@ const fields = [
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
-export default function PlacasPage() {
-  const [data, setData] = useState<Placa[]>([])
-  const supabase = createClient()
-
-  const fetchData = useCallback(async () => {
-    const { data: placas } = await supabase
-      .from("placas")
-      .select("*")
-      .order("codigo")
-    setData(placas ?? [])
-  }, [supabase])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+export default async function PlacasPage() {
+  const supabase = await createClient()
+  const { data: placas } = await supabase
+    .from("placas")
+    .select("*")
+    .order("codigo")
 
   return (
     <>
@@ -67,8 +55,7 @@ export default function PlacasPage() {
           title="Placas"
           description="Administre las placas de vehículos del sistema"
           fields={fields}
-          data={data}
-          onRefresh={fetchData}
+          data={placas ?? []}
         />
       </div>
     </>

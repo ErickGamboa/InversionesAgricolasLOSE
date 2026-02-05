@@ -1,7 +1,4 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -16,32 +13,34 @@ import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
 
 interface Cliente {
   id: number
-  codigo: string
   nombre: string
+  celular: string
+  tipo_cliente: 'especial' | 'regular'
   activo: boolean
 }
 
 const fields = [
-  { name: "codigo", label: "Código", type: "text" as const, required: true },
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
+  { name: "celular", label: "Celular", type: "text" as const },
+  { 
+    name: "tipo_cliente", 
+    label: "Tipo de Cliente", 
+    type: "select" as const,
+    required: true,
+    options: [
+      { value: "especial", label: "Especial" },
+      { value: "regular", label: "Regular" }
+    ]
+  },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
-export default function ClientesPage() {
-  const [data, setData] = useState<Cliente[]>([])
-  const supabase = createClient()
-
-  const fetchData = useCallback(async () => {
-    const { data: clientes } = await supabase
-      .from("clientes")
-      .select("*")
-      .order("codigo")
-    setData(clientes ?? [])
-  }, [supabase])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+export default async function ClientesPage() {
+  const supabase = await createClient()
+  const { data: clientes } = await supabase
+    .from("clientes")
+    .select("*")
+    .order("nombre")
 
   return (
     <>
@@ -67,8 +66,7 @@ export default function ClientesPage() {
           title="Clientes"
           description="Administre los clientes del sistema"
           fields={fields}
-          data={data}
-          onRefresh={fetchData}
+          data={clientes ?? []}
         />
       </div>
     </>

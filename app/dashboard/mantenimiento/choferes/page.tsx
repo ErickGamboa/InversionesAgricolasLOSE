@@ -1,7 +1,4 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -16,32 +13,21 @@ import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
 
 interface Chofer {
   id: number
-  codigo: string
   nombre: string
   activo: boolean
 }
 
 const fields = [
-  { name: "codigo", label: "Código", type: "text" as const, required: true },
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
-export default function ChoferesPage() {
-  const [data, setData] = useState<Chofer[]>([])
-  const supabase = createClient()
-
-  const fetchData = useCallback(async () => {
-    const { data: choferes } = await supabase
-      .from("choferes")
-      .select("*")
-      .order("codigo")
-    setData(choferes ?? [])
-  }, [supabase])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+export default async function ChoferesPage() {
+  const supabase = await createClient()
+  const { data: choferes } = await supabase
+    .from("choferes")
+    .select("*")
+    .order("nombre")
 
   return (
     <>
@@ -67,8 +53,7 @@ export default function ChoferesPage() {
           title="Choferes"
           description="Administre los choferes del sistema"
           fields={fields}
-          data={data}
-          onRefresh={fetchData}
+          data={choferes ?? []}
         />
       </div>
     </>

@@ -1,7 +1,4 @@
-"use client"
-
-import { useEffect, useState, useCallback } from "react"
-import { createClient } from "@/lib/supabase/client"
+import { createClient } from "@/lib/supabase/server"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
 import {
@@ -16,32 +13,21 @@ import { MaintenanceTable } from "@/components/dashboard/maintenance-table"
 
 interface TipoPago {
   id: number
-  codigo: string
   nombre: string
   activo: boolean
 }
 
 const fields = [
-  { name: "codigo", label: "Código", type: "text" as const, required: true },
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 
-export default function TiposPagoPage() {
-  const [data, setData] = useState<TipoPago[]>([])
-  const supabase = createClient()
-
-  const fetchData = useCallback(async () => {
-    const { data: tiposPago } = await supabase
-      .from("tipos_pago")
-      .select("*")
-      .order("codigo")
-    setData(tiposPago ?? [])
-  }, [supabase])
-
-  useEffect(() => {
-    fetchData()
-  }, [fetchData])
+export default async function TiposPagoPage() {
+  const supabase = await createClient()
+  const { data: tiposPago } = await supabase
+    .from("tipos_pago")
+    .select("*")
+    .order("nombre")
 
   return (
     <>
@@ -67,8 +53,7 @@ export default function TiposPagoPage() {
           title="Tipos de Pago"
           description="Administre los tipos de pago del sistema"
           fields={fields}
-          data={data}
-          onRefresh={fetchData}
+          data={tiposPago ?? []}
         />
       </div>
     </>
