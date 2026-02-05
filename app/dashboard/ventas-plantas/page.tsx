@@ -35,7 +35,7 @@ const fetcher = async () => {
       *,
       cliente:clientes(id, nombre, tipo_cliente),
       planta:plantas(id, nombre),
-      chofer:chofer(id, nombre),
+      chofer:choferes(id, nombre),
       placa:placas(id, codigo)
     `)
     .order("fecha", { ascending: false })
@@ -128,7 +128,7 @@ export default function VentasPlantasPage() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: string) => {
+  const handleDelete = useCallback(async (id: string | number) => {
     try {
       const { error } = await supabase.from("ventas_plantas").delete().eq("id", id);
       if (error) throw error;

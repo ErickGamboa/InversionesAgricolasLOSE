@@ -35,7 +35,7 @@ const fetcher = async () => {
       *,
       cliente:clientes(id, nombre, tipo_cliente),
       planta:plantas(id, nombre),
-      chofer:chofer(id, nombre),
+      chofer:choferes(id, nombre),
       placa:placas(id, codigo),
       tipo_pago:tipos_pago(id, nombre)
     `)
@@ -133,7 +133,7 @@ export default function TransporteContratadoPage() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: number) => {
+  const handleDelete = useCallback(async (id: string | number) => {
     try {
       const { error } = await supabase.from("transporte_contratado").delete().eq("id", id);
       if (error) throw error;
