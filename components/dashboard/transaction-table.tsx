@@ -45,7 +45,7 @@ interface Transaction {
 interface TransactionTableProps {
   transactions: Transaction[];
   onEdit: (transaction: Transaction) => void;
-  onDelete: (id: number) => void;
+  onDelete: (id: string | number) => void;
   showTipoPago?: boolean;
   isLoading?: boolean;
 }

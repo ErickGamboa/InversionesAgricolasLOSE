@@ -246,7 +246,7 @@ export default function TransporteInternoPage() {
             isSubmitting={isSubmitting}
             clientes={lookups?.clientes || []}
             plantas={lookups?.plantas || []}
-            chofer={lookups?.choferes || []}
+            choferes={lookups?.choferes || []}
             placas={lookups?.placas || []}
           />
         </DialogContent>

@@ -252,7 +252,7 @@ export default function ComprasRegularesPage() {
             isSubmitting={isSubmitting}
             clientes={lookups?.clientes || []}
             plantas={lookups?.plantas || []}
-            chofer={lookups?.choferes || []}
+            choferes={lookups?.choferes || []}
             placas={lookups?.placas || []}
             tiposPago={lookups?.tiposPago || []}
             showTipoPago

@@ -16,36 +16,55 @@ import {
 } from "@/components/ui/select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
-import { Loader2, Plus, Save } from "lucide-react"
+import { Loader2, Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 
 interface SelectOption {
   id: number
-  codigo: string
+  codigo?: string
   nombre?: string
   descripcion?: string
 }
 
 interface TransactionFormProps {
-  tableName: string
-  title: string
+  tableName?: string
+  title?: string
   showTipoPago?: boolean
-  onSuccess: () => void
+  onSuccess?: () => void
+  initialData?: Record<string, unknown>
+  onSubmit?: (data: Record<string, unknown>) => void
+  onCancel?: () => void
+  isSubmitting?: boolean
+  clientes?: SelectOption[]
+  plantas?: SelectOption[]
+  choferes?: SelectOption[]
+  placas?: SelectOption[]
+  tiposPago?: SelectOption[]
 }
 
 export function TransactionForm({
   tableName,
-  title,
+  title = "Nueva Transacción",
   showTipoPago = false,
   onSuccess,
+  initialData,
+  onSubmit,
+  onCancel,
+  isSubmitting: isSubmittingProp,
+  clientes: clientesProp,
+  plantas: plantasProp,
+  choferes: choferesProp,
+  placas: placasProp,
+  tiposPago: tiposPagoProp,
 }: TransactionFormProps) {
+  const isControlled = !!onSubmit
   const [loading, setLoading] = useState(false)
-  const [loadingOptions, setLoadingOptions] = useState(true)
-  const [clientes, setClientes] = useState<SelectOption[]>([])
-  const [plantas, setPlantas] = useState<SelectOption[]>([])
-  const [choferes, setChoferes] = useState<SelectOption[]>([])
-  const [placas, setPlacas] = useState<SelectOption[]>([])
-  const [tiposPago, setTiposPago] = useState<SelectOption[]>([])
+  const [loadingOptions, setLoadingOptions] = useState(!clientesProp)
+  const [clientes, setClientes] = useState<SelectOption[]>(clientesProp || [])
+  const [plantas, setPlantas] = useState<SelectOption[]>(plantasProp || [])
+  const [choferes, setChoferes] = useState<SelectOption[]>(choferesProp || [])
+  const [placas, setPlacas] = useState<SelectOption[]>(placasProp || [])
+  const [tiposPago, setTiposPago] = useState<SelectOption[]>(tiposPagoProp || [])
 
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().split("T")[0],
@@ -62,7 +81,41 @@ export function TransactionForm({
 
   const supabase = createClient()
 
+  useEffect(() => {
+    if (initialData) {
+      setFormData({
+        fecha: (initialData.fecha as string) || new Date().toISOString().split("T")[0],
+        cliente_id: String(initialData.cliente_id || ""),
+        planta_id: String(initialData.planta_id || ""),
+        chofer_id: String(initialData.chofer_id || ""),
+        placa_id: String(initialData.placa_id || ""),
+        boleta: String(initialData.boleta || ""),
+        kilos_bruto: String(initialData.kilos_bruto || ""),
+        kilos_tara: String(initialData.kilos_tara || ""),
+        precio: String(initialData.precio || ""),
+        tipo_pago_id: String(initialData.tipo_pago_id || ""),
+      })
+    } else {
+      setFormData({
+        fecha: new Date().toISOString().split("T")[0],
+        cliente_id: "",
+        planta_id: "",
+        chofer_id: "",
+        placa_id: "",
+        boleta: "",
+        kilos_bruto: "",
+        kilos_tara: "",
+        precio: "",
+        tipo_pago_id: "",
+      })
+    }
+  }, [initialData])
+
   const fetchOptions = useCallback(async () => {
+    if (clientesProp && plantasProp && choferesProp && placasProp && (!showTipoPago || tiposPagoProp)) {
+      return
+    }
+
     setLoadingOptions(true)
     const [
       { data: clientesData },
@@ -71,20 +124,20 @@ export function TransactionForm({
       { data: placasData },
       { data: tiposPagoData },
     ] = await Promise.all([
-      supabase.from("clientes").select("id, codigo, nombre").eq("activo", true).order("codigo"),
-      supabase.from("plantas").select("id, codigo, nombre").eq("activo", true).order("codigo"),
-      supabase.from("choferes").select("id, codigo, nombre").eq("activo", true).order("codigo"),
-      supabase.from("placas").select("id, codigo, descripcion").eq("activo", true).order("codigo"),
-      supabase.from("tipos_pago").select("id, codigo, nombre").eq("activo", true).order("codigo"),
+      clientesProp ? Promise.resolve({ data: clientesProp }) : supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
+      plantasProp ? Promise.resolve({ data: plantasProp }) : supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
+      choferesProp ? Promise.resolve({ data: choferesProp }) : supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+      placasProp ? Promise.resolve({ data: placasProp }) : supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
+      showTipoPago && !tiposPagoProp ? supabase.from("tipos_pago").select("id, nombre").eq("activo", true).order("nombre") : Promise.resolve({ data: tiposPagoProp || [] }),
     ])
 
-    setClientes(clientesData ?? [])
-    setPlantas(plantasData ?? [])
-    setChoferes(choferesData ?? [])
-    setPlacas(placasData ?? [])
-    setTiposPago(tiposPagoData ?? [])
+    if (!clientesProp) setClientes(clientesData ?? [])
+    if (!plantasProp) setPlantas(plantasData ?? [])
+    if (!choferesProp) setChoferes(choferesData ?? [])
+    if (!placasProp) setPlacas(placasData ?? [])
+    if (!tiposPagoProp) setTiposPago(tiposPagoData ?? [])
     setLoadingOptions(false)
-  }, [supabase])
+  }, [supabase, clientesProp, plantasProp, choferesProp, placasProp, tiposPagoProp, showTipoPago])
 
   useEffect(() => {
     fetchOptions()
@@ -95,6 +148,28 @@ export function TransactionForm({
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
+    
+    if (isControlled && onSubmit) {
+      const dataToSubmit: Record<string, unknown> = {
+        fecha: formData.fecha,
+        cliente_id: Number(formData.cliente_id),
+        planta_id: Number(formData.planta_id),
+        chofer_id: Number(formData.chofer_id),
+        placa_id: Number(formData.placa_id),
+        boleta: formData.boleta || null,
+        kilos_bruto: Number(formData.kilos_bruto) || 0,
+        kilos_tara: Number(formData.kilos_tara) || 0,
+        precio: Number(formData.precio) || 0,
+      }
+
+      if (showTipoPago && formData.tipo_pago_id) {
+        dataToSubmit.tipo_pago_id = Number(formData.tipo_pago_id)
+      }
+
+      onSubmit(dataToSubmit)
+      return
+    }
+
     setLoading(true)
 
     try {
@@ -114,13 +189,12 @@ export function TransactionForm({
         dataToInsert.tipo_pago_id = Number(formData.tipo_pago_id)
       }
 
-      const { error } = await supabase.from(tableName).insert(dataToInsert)
+      const { error } = await supabase.from(tableName || "").insert(dataToInsert)
 
       if (error) throw error
 
       toast.success("Registro guardado exitosamente")
       
-      // Reset form but keep date and potentially reused fields
       setFormData((prev) => ({
         ...prev,
         boleta: "",
@@ -129,7 +203,7 @@ export function TransactionForm({
         precio: "",
       }))
       
-      onSuccess()
+      onSuccess?.()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
       toast.error(`Error: ${message}`)
@@ -140,6 +214,8 @@ export function TransactionForm({
 
   const formatCurrency = (num: number) =>
     num.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+
+  const isSubmittingState = isSubmittingProp || loading
 
   if (loadingOptions) {
     return (
@@ -190,7 +266,7 @@ export function TransactionForm({
                 <SelectContent>
                   {clientes.map((c) => (
                     <SelectItem key={c.id} value={c.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{c.codigo} - {c.nombre}</span>
+                      <span className="truncate">{c.codigo ? `${c.codigo} - ` : ""}{c.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -210,7 +286,7 @@ export function TransactionForm({
                 <SelectContent>
                   {plantas.map((p) => (
                     <SelectItem key={p.id} value={p.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{p.codigo} - {p.nombre}</span>
+                      <span className="truncate">{p.codigo ? `${p.codigo} - ` : ""}{p.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -230,7 +306,7 @@ export function TransactionForm({
                 <SelectContent>
                   {choferes.map((ch) => (
                     <SelectItem key={ch.id} value={ch.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{ch.codigo} - {ch.nombre}</span>
+                      <span className="truncate">{ch.codigo ? `${ch.codigo} - ` : ""}{ch.nombre}</span>
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -331,10 +407,10 @@ export function TransactionForm({
                   <SelectTrigger id="tipo_pago" className="w-full">
                     <SelectValue placeholder="Seleccione..." className="truncate" />
                   </SelectTrigger>
-                  <SelectContent>
+                <SelectContent>
                     {tiposPago.map((tp) => (
                       <SelectItem key={tp.id} value={tp.id.toString()} className="truncate max-w-[300px]">
-                        <span className="truncate">{tp.codigo} - {tp.nombre}</span>
+                        <span className="truncate">{tp.codigo ? `${tp.codigo} - ` : ""}{tp.nombre}</span>
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -350,9 +426,15 @@ export function TransactionForm({
             </div>
           </div>
 
-          <div className="flex justify-end">
-            <Button type="submit" disabled={loading}>
-              {loading ? (
+          <div className="flex justify-end gap-2">
+            {onCancel && (
+              <Button type="button" variant="outline" onClick={onCancel}>
+                <X className="mr-2 h-4 w-4" />
+                Cancelar
+              </Button>
+            )}
+            <Button type="submit" disabled={isSubmittingState}>
+              {isSubmittingState ? (
                 <Spinner size="sm" showText={false} />
               ) : (
                 <Save className="mr-2 h-4 w-4" />
