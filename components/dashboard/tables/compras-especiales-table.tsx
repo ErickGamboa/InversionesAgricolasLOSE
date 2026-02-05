@@ -1,6 +1,7 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useMemo, useEffect } from "react"
+import { useSearchParams, useRouter, usePathname } from "next/navigation"
 import {
   Table,
   TableBody,
@@ -12,8 +13,16 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, Search } from "lucide-react"
+import { Pencil, Trash2, FilterX } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 
 interface CompraEspecial {
   id: string | number
@@ -41,24 +50,84 @@ interface ComprasEspecialesTableProps {
   isLoading?: boolean
 }
 
+const ALL_COLUMNS = [
+  { key: "fecha", label: "Fecha" },
+  { key: "numero_semana", label: "Sem" },
+  { key: "cliente.nombre", label: "Cliente" },
+  { key: "procedencia", label: "Procedencia" },
+  { key: "chofer.nombre", label: "Chofer" },
+  { key: "numero_cajas", label: "Cajas" },
+  { key: "total_pinas", label: "Piñas" },
+  { key: "total_kilos", label: "Kilos" },
+  { key: "total_a_pagar", label: "Total" },
+  { key: "pagado", label: "Pagado" },
+]
+
 export function ComprasEspecialesTable({
   compras,
   onEdit,
   onDelete,
   isLoading = false,
 }: ComprasEspecialesTableProps) {
-  const [searchTerm, setSearchTerm] = useState("")
+  const router = useRouter()
+  const pathname = usePathname()
+  const searchParams = useSearchParams()
 
-  const filteredCompras = compras.filter((compra) => {
-    const searchLower = searchTerm.toLowerCase()
-    return (
-      compra.cliente?.nombre?.toLowerCase().includes(searchLower) ||
-      compra.chofer?.nombre?.toLowerCase().includes(searchLower) ||
-      compra.procedencia?.toLowerCase().includes(searchLower) ||
-      compra.lote?.toLowerCase().includes(searchLower) ||
-      compra.numero_boleta?.toLowerCase().includes(searchLower)
-    )
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("compras_especiales_columns")
+      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
+    }
+    return ALL_COLUMNS.map(c => c.key)
   })
+
+  useEffect(() => {
+    localStorage.setItem("compras_especiales_columns", JSON.stringify(visibleColumns))
+  }, [visibleColumns])
+
+  const filters = useMemo(() => {
+    return Object.fromEntries(searchParams.entries())
+  }, [searchParams])
+
+  const setFilter = (key: string, value: string) => {
+    const params = new URLSearchParams(searchParams.toString())
+    if (value) params.set(key, value)
+    else params.delete(key)
+    router.replace(`${pathname}?${params.toString()}`)
+  }
+
+  const clearFilters = () => router.replace(pathname)
+
+  const toggleColumn = (key: string) => {
+    setVisibleColumns(prev => 
+      prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]
+    )
+  }
+
+  const filteredCompras = useMemo(() => {
+    return compras.filter((c) => {
+      if (filters.fecha_desde && c.fecha < filters.fecha_desde) return false
+      if (filters.fecha_hasta && c.fecha > filters.fecha_hasta) return false
+
+      for (const [key, value] of Object.entries(filters)) {
+        if (key === "fecha_desde" || key === "fecha_hasta") continue
+        const searchLower = value.toLowerCase()
+        
+        if (key === "cliente") {
+          if (!c.cliente?.nombre?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "chofer") {
+          if (!c.chofer?.nombre?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "procedencia") {
+          if (!c.procedencia?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "pagado") {
+          if (c.pagado.toString() !== value) return false
+        } else if (key === "numero_semana") {
+          if (c.numero_semana.toString() !== value) return false
+        }
+      }
+      return true
+    })
+  }, [compras, filters])
 
   const formatCurrency = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
@@ -66,10 +135,6 @@ export function ComprasEspecialesTable({
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"
 
-  const formatNumberDecimal = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
-
-  // Calcular totales
   const totals = filteredCompras.reduce(
     (acc, c) => ({
       cajas: acc.cajas + Number(c.numero_cajas || 0),
@@ -90,105 +155,143 @@ export function ComprasEspecialesTable({
 
   return (
     <div className="space-y-4">
-      <div className="flex items-center gap-2">
-        <Search className="h-4 w-4 text-muted-foreground" />
-        <Input
-          placeholder="Buscar por cliente, chofer, procedencia..."
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="max-w-sm"
-        />
-      </div>
-
-      <div className="rounded-md border overflow-x-auto">
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Fecha</TableHead>
-              <TableHead>Sem</TableHead>
-              <TableHead>Cliente</TableHead>
-              <TableHead>Procedencia</TableHead>
-              <TableHead>Chofer</TableHead>
-              <TableHead className="text-right">Cajas</TableHead>
-              <TableHead className="text-right">Piñas</TableHead>
-              <TableHead className="text-right">Kilos</TableHead>
-              <TableHead className="text-right">Precio/kg</TableHead>
-              <TableHead className="text-right">Total</TableHead>
-              <TableHead className="text-center">Pagado</TableHead>
-              <TableHead className="text-right">Acciones</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {filteredCompras.length === 0 ? (
-              <TableRow>
-                <TableCell colSpan={12} className="text-center py-8 text-muted-foreground">
-                  No se encontraron registros
-                </TableCell>
-              </TableRow>
-            ) : (
-              <>
-                {filteredCompras.map((compra) => (
-                  <TableRow key={compra.id}>
-                    <TableCell>{compra.fecha}</TableCell>
-                    <TableCell>{compra.numero_semana}</TableCell>
-                    <TableCell>{compra.cliente?.nombre || "-"}</TableCell>
-                    <TableCell>{compra.procedencia || "-"}</TableCell>
-                    <TableCell>{compra.chofer?.nombre || "-"}</TableCell>
-                    <TableCell className="text-right">{formatNumber(compra.numero_cajas)}</TableCell>
-                    <TableCell className="text-right">{formatNumber(compra.total_pinas)}</TableCell>
-                    <TableCell className="text-right">{formatNumberDecimal(compra.total_kilos)}</TableCell>
-                    <TableCell className="text-right">₡{formatCurrency(compra.precio_por_kilo)}</TableCell>
-                    <TableCell className="text-right font-medium">
-                      ₡{formatCurrency(compra.total_a_pagar)}
-                    </TableCell>
-                    <TableCell className="text-center">
-                      <Checkbox checked={compra.pagado} disabled />
-                    </TableCell>
-                    <TableCell className="text-right">
-                      <div className="flex justify-end gap-2">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onEdit(compra)}
-                        >
-                          <Pencil className="h-4 w-4" />
-                        </Button>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => onDelete(compra.id)}
-                        >
-                          <Trash2 className="h-4 w-4 text-destructive" />
-                        </Button>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {/* Fila de totales */}
-                <TableRow className="bg-muted/50 font-medium">
-                  <TableCell colSpan={5} className="text-right">
-                    Totales:
-                  </TableCell>
-                  <TableCell className="text-right">{formatNumber(totals.cajas)}</TableCell>
-                  <TableCell className="text-right">{formatNumber(totals.pinas)}</TableCell>
-                  <TableCell className="text-right">{formatNumberDecimal(totals.kilos)}</TableCell>
-                  <TableCell />
-                  <TableCell className="text-right text-primary">
-                    ₡{formatCurrency(totals.total)}
-                  </TableCell>
-                  <TableCell colSpan={2} />
-                </TableRow>
-              </>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-
-      {filteredCompras.length > 0 && (
-        <div className="text-sm text-muted-foreground">
-          Mostrando {filteredCompras.length} de {compras.length} registros
+      <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 p-2 rounded-lg border">
+        <div className="flex items-center gap-2">
+          <ExportActions 
+            data={filteredCompras} 
+            columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
+            title="Compras Especiales" 
+          />
+          {Object.keys(filters).length > 0 && (
+            <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
+              <FilterX className="mr-2 h-4 w-4" />
+              Limpiar Filtros
+            </Button>
+          )}
         </div>
-      )}
+        <ColumnToggle columns={ALL_COLUMNS} visibleColumns={visibleColumns} onToggle={toggleColumn} />
+      </div>
+
+      <div className="rounded-md border overflow-hidden">
+        <div className="overflow-x-auto">
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
+                {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
+                {visibleColumns.includes("procedencia") && <TableHead>Procedencia</TableHead>}
+                {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
+                {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
+                {visibleColumns.includes("total_pinas") && <TableHead className="text-right">Piñas</TableHead>}
+                {visibleColumns.includes("total_kilos") && <TableHead className="text-right">Kilos</TableHead>}
+                {visibleColumns.includes("total_a_pagar") && <TableHead className="text-right">Total</TableHead>}
+                {visibleColumns.includes("pagado") && <TableHead className="text-center">Pagado</TableHead>}
+                <TableHead className="text-right">Acciones</TableHead>
+              </TableRow>
+
+              <TableRow className="bg-muted/20 hover:bg-muted/20 border-b">
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="p-2">
+                    <div className="flex flex-col gap-1">
+                      <Input type="date" className="h-7 text-[10px] px-1" value={filters.fecha_desde || ""} onChange={(e) => setFilter("fecha_desde", e.target.value)} />
+                      <Input type="date" className="h-7 text-[10px] px-1" value={filters.fecha_hasta || ""} onChange={(e) => setFilter("fecha_hasta", e.target.value)} />
+                    </div>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("numero_semana") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput 
+                      placeholder="#" 
+                      className="h-8 text-xs w-12 mx-auto" 
+                      value={filters.numero_semana || ""} 
+                      onChange={(val) => setFilter("numero_semana", val.toString())} 
+                    />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("cliente.nombre") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Cliente..." className="h-8 text-xs" value={filters.cliente || ""} onChange={(val) => setFilter("cliente", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("procedencia") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Procedencia..." className="h-8 text-xs" value={filters.procedencia || ""} onChange={(val) => setFilter("procedencia", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("chofer.nombre") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Chofer..." className="h-8 text-xs" value={filters.chofer || ""} onChange={(val) => setFilter("chofer", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("numero_cajas") && <TableHead className="p-2" />}
+                {visibleColumns.includes("total_pinas") && <TableHead className="p-2" />}
+                {visibleColumns.includes("total_kilos") && <TableHead className="p-2" />}
+                {visibleColumns.includes("total_a_pagar") && <TableHead className="p-2" />}
+                {visibleColumns.includes("pagado") && (
+                  <TableHead className="p-2 text-center">
+                    <Select value={filters.pagado || "ALL"} onValueChange={(val) => setFilter("pagado", val === "ALL" ? "" : val)}>
+                      <SelectTrigger className="h-8 text-xs"><SelectValue placeholder="-" /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="ALL">Todos</SelectItem>
+                        <SelectItem value="true">Sí</SelectItem>
+                        <SelectItem value="false">No</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </TableHead>
+                )}
+                <TableHead className="p-2" />
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {filteredCompras.length === 0 ? (
+                <TableRow>
+                  <TableCell colSpan={visibleColumns.length + 1} className="text-center py-8 text-muted-foreground">
+                    No se encontraron registros
+                  </TableCell>
+                </TableRow>
+              ) : (
+                <>
+                  {filteredCompras.map((compra) => (
+                    <TableRow key={compra.id} className="hover:bg-muted/30 transition-colors">
+                      {visibleColumns.includes("fecha") && <TableCell className="whitespace-nowrap">{compra.fecha}</TableCell>}
+                      {visibleColumns.includes("numero_semana") && <TableCell>{compra.numero_semana}</TableCell>}
+                      {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
+                      {visibleColumns.includes("procedencia") && <TableCell>{compra.procedencia || "-"}</TableCell>}
+                      {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
+                      {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(compra.numero_cajas)}</TableCell>}
+                      {visibleColumns.includes("total_pinas") && <TableCell className="text-right">{formatNumber(compra.total_pinas)}</TableCell>}
+                      {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{compra.total_kilos?.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</TableCell>}
+                      {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right font-medium">₡{formatCurrency(compra.total_a_pagar)}</TableCell>}
+                      {visibleColumns.includes("pagado") && (
+                        <TableCell className="text-center">
+                          <Checkbox checked={compra.pagado} disabled />
+                        </TableCell>
+                      )}
+                      <TableCell className="text-right">
+                        <div className="flex justify-end gap-1">
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(compra)}><Pencil className="h-4 w-4" /></Button>
+                          <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onDelete(compra.id)}><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+                  ))}
+                  <TableRow className="bg-muted/50 font-bold">
+                    <TableCell colSpan={visibleColumns.filter(c => ["fecha", "numero_semana", "cliente.nombre", "procedencia", "chofer.nombre"].includes(c)).length} className="text-right">
+                      Totales:
+                    </TableCell>
+                    {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(totals.cajas)}</TableCell>}
+                    {visibleColumns.includes("total_pinas") && <TableCell className="text-right">{formatNumber(totals.pinas)}</TableCell>}
+                    {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{totals.kilos?.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</TableCell>}
+                    {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right text-primary">₡{formatCurrency(totals.total)}</TableCell>}
+                    <TableCell colSpan={2} />
+                  </TableRow>
+                </>
+              )}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
     </div>
   )
 }
