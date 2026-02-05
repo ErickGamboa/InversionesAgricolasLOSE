@@ -227,6 +227,7 @@ export function TransporteInternoForm({
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
               <Select
+                key={`chofer-${choferes.length}-${formData.chofer_id}`}
                 value={formData.chofer_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
                 required
@@ -247,6 +248,7 @@ export function TransporteInternoForm({
             <div className="space-y-2">
               <Label htmlFor="placa" className="whitespace-nowrap">Placa</Label>
               <Select
+                key={`placa-${placas.length}-${formData.placa_id}`}
                 value={formData.placa_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, placa_id: value }))}
                 required
@@ -267,6 +269,7 @@ export function TransporteInternoForm({
             <div className="space-y-2">
               <Label htmlFor="cliente" className="whitespace-nowrap">Cliente</Label>
               <Select
+                key={`cliente-${clientes.length}-${formData.cliente_id}`}
                 value={formData.cliente_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
                 required

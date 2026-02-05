@@ -256,6 +256,7 @@ export function TransactionForm({
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="cliente">Cliente</Label>
               <Select
+                key={`cliente-${clientes.length}-${formData.cliente_id}`}
                 value={formData.cliente_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, cliente_id: value }))}
                 required
@@ -276,6 +277,7 @@ export function TransactionForm({
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="planta">Planta</Label>
               <Select
+                key={`planta-${plantas.length}-${formData.planta_id}`}
                 value={formData.planta_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, planta_id: value }))}
                 required
@@ -296,6 +298,7 @@ export function TransactionForm({
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="chofer">Chofer</Label>
               <Select
+                key={`chofer-${choferes.length}-${formData.chofer_id}`}
                 value={formData.chofer_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, chofer_id: value }))}
                 required
@@ -316,6 +319,7 @@ export function TransactionForm({
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="placa">Placa</Label>
               <Select
+                key={`placa-${placas.length}-${formData.placa_id}`}
                 value={formData.placa_id}
                 onValueChange={(value) => setFormData((prev) => ({ ...prev, placa_id: value }))}
                 required
@@ -401,6 +405,7 @@ export function TransactionForm({
               <div className="space-y-2 min-w-0 overflow-hidden">
                 <Label htmlFor="tipo_pago">Tipo de Pago</Label>
                 <Select
+                  key={`tipo-pago-${tiposPago.length}-${formData.tipo_pago_id}`}
                   value={formData.tipo_pago_id}
                   onValueChange={(value) => setFormData((prev) => ({ ...prev, tipo_pago_id: value }))}
                 >

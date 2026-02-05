@@ -317,6 +317,7 @@ export function ComprasRegularesForm({
             <div className="space-y-2">
               <Label htmlFor="cliente" className="whitespace-nowrap">Cliente</Label>
               <Select
+                key={`cliente-${clientes.length}-${formData.cliente_id}`}
                 value={formData.cliente_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
                 required
@@ -360,6 +361,7 @@ export function ComprasRegularesForm({
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
               <Select
+                key={`chofer-${choferes.length}-${formData.chofer_id}`}
                 value={formData.chofer_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
                 required
@@ -462,6 +464,7 @@ export function ComprasRegularesForm({
             <div className="space-y-2">
               <Label htmlFor="tipo_pago" className="whitespace-nowrap">Tipo de Pago</Label>
               <Select
+                key={`tipo-pago-${tiposPago.length}-${formData.tipo_pago_id}`}
                 value={formData.tipo_pago_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_pago_id: value }))}
               >

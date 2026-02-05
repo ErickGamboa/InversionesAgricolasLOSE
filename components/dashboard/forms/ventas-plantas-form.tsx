@@ -267,6 +267,7 @@ export function VentasPlantasForm({
             <div className="space-y-2">
               <Label htmlFor="planta" className="whitespace-nowrap">Planta</Label>
               <Select
+                key={`planta-${plantas.length}-${formData.planta_id}`}
                 value={formData.planta_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, planta_id: value }))}
                 required
@@ -290,6 +291,7 @@ export function VentasPlantasForm({
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
               <Select
+                key={`chofer-${choferes.length}-${formData.chofer_id}`}
                 value={formData.chofer_id}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
                 required
