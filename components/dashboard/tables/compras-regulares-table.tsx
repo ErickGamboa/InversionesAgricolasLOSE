@@ -152,6 +152,14 @@ export function ComprasRegularesTable({
     )
   }
 
+  const footerData = useMemo(() => {
+    const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    return {
+      total_a_pagar: `CRC: ${formatCurrency(crc)} / USD: ${formatCurrency(usd, true)}`
+    }
+  }, [filteredCompras])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 p-2 rounded-lg border">
@@ -160,6 +168,7 @@ export function ComprasRegularesTable({
             data={filteredCompras} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Compras Regulares" 
+            footerData={footerData}
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

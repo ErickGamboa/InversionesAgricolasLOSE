@@ -92,27 +92,44 @@ export function ColumnToggle({
 export function ExportActions({ 
   data, 
   columns, 
-  title 
+  title,
+  footerData
 }: { 
   data: any[], 
   columns: { key: string, label: string }[], 
-  title: string 
+  title: string,
+  footerData?: Record<string, any>
 }) {
   const exportToExcel = () => {
-    const ws = XLSX.utils.json_to_sheet(
-      data.map(item => {
-        const row: any = {}
-        columns.forEach(col => {
-          if (col.key.includes('.')) {
-            const [parent, child] = col.key.split('.')
-            row[col.label] = item[parent]?.[child] || ""
-          } else {
-            row[col.label] = item[col.key]
-          }
-        })
-        return row
+    const exportRows = data.map(item => {
+      const row: any = {}
+      columns.forEach(col => {
+        if (col.key.includes('.')) {
+          const [parent, child] = col.key.split('.')
+          row[col.label] = item[parent]?.[child] || ""
+        } else {
+          row[col.label] = item[col.key] || ""
+        }
       })
-    )
+      return row
+    })
+
+    // Añadir fila de totales si existe
+    if (footerData) {
+      const footerRow: any = {}
+      columns.forEach((col, index) => {
+        if (index === 0) {
+          footerRow[col.label] = "TOTALES"
+        } else if (footerData[col.key] !== undefined) {
+          footerRow[col.label] = footerData[col.key]
+        } else {
+          footerRow[col.label] = ""
+        }
+      })
+      exportRows.push(footerRow)
+    }
+
+    const ws = XLSX.utils.json_to_sheet(exportRows)
     const wb = XLSX.utils.book_new()
     XLSX.utils.book_append_sheet(wb, ws, "Datos")
     XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`)
@@ -131,13 +148,25 @@ export function ExportActions({
       })
     )
 
+    let foot: any[][] | undefined = undefined
+    if (footerData) {
+      foot = [
+        columns.map((col, index) => {
+          if (index === 0) return "TOTALES"
+          return footerData[col.key] || ""
+        })
+      ]
+    }
+
     autoTable(doc, {
       head: head,
       body: body,
+      foot: foot,
       startY: 20,
       theme: 'striped',
       styles: { fontSize: 8 },
-      headStyles: { fillColor: [41, 128, 185] } // Corregido: fillStyle -> fillColor
+      headStyles: { fillColor: [41, 128, 185] },
+      footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
     })
     
     doc.text(title, 14, 15)

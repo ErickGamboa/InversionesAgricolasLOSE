@@ -151,6 +151,14 @@ export function TransporteContratadoTable({
     )
   }
 
+  const footerData = useMemo(() => {
+    return {
+      total_kilos: formatNumber(totals.kilos),
+      adelanto: `₡${formatCurrency(totals.adelanto)}`,
+      total_a_pagar: `₡${formatCurrency(totals.total)}`
+    }
+  }, [totals])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 p-2 rounded-lg border">
@@ -159,6 +167,7 @@ export function TransporteContratadoTable({
             data={filteredTransportes} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Transporte Contratado" 
+            footerData={footerData}
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

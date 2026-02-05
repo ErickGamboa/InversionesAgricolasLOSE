@@ -134,6 +134,14 @@ export function TransporteInternoTable({
     balance: t.ingreso - t.diesel
   }))
 
+  const footerData = useMemo(() => {
+    return {
+      diesel: `₡${formatCurrency(totals.diesel)}`,
+      ingreso: `₡${formatCurrency(totals.ingreso)}`,
+      balance: `₡${formatCurrency(totals.balance)}`
+    }
+  }, [totals])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 p-2 rounded-lg border">
@@ -142,6 +150,7 @@ export function TransporteInternoTable({
             data={exportData} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Transporte Interno" 
+            footerData={footerData}
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

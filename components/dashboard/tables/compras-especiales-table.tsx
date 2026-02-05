@@ -153,6 +153,15 @@ export function ComprasEspecialesTable({
     )
   }
 
+  const footerData = useMemo(() => {
+    return {
+      numero_cajas: formatNumber(totals.cajas),
+      total_pinas: formatNumber(totals.pinas),
+      total_kilos: totals.kilos.toLocaleString("es-CR", { minimumFractionDigits: 2 }),
+      total_a_pagar: `₡${formatCurrency(totals.total)}`
+    }
+  }, [totals])
+
   return (
     <div className="space-y-4">
       <div className="flex flex-wrap items-center justify-between gap-2 bg-muted/20 p-2 rounded-lg border">
@@ -161,6 +170,7 @@ export function ComprasEspecialesTable({
             data={filteredCompras} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Compras Especiales" 
+            footerData={footerData}
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
