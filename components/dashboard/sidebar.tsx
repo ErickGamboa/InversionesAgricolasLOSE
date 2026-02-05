@@ -196,12 +196,14 @@ export function DashboardSidebar({ user }: { user: User }) {
           <SidebarMenuItem>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <SidebarMenuButton className="w-full">
-                  <div className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
-                    {user.email?.charAt(0).toUpperCase()}
-                  </div>
-                  <span className="flex-1 text-left truncate">{user.email}</span>
-                  <ChevronUp className="h-4 w-4" />
+                <SidebarMenuButton className="w-full" asChild>
+                  <button type="button">
+                    <span className="flex h-8 w-8 items-center justify-center rounded-full bg-sidebar-accent text-sidebar-accent-foreground">
+                      {user.email?.charAt(0).toUpperCase()}
+                    </span>
+                    <span className="flex-1 text-left truncate">{user.email}</span>
+                    <ChevronUp className="h-4 w-4" />
+                  </button>
                 </SidebarMenuButton>
               </DropdownMenuTrigger>
               <DropdownMenuContent side="top" className="w-(--radix-popper-anchor-width)">
