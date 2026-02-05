@@ -14,6 +14,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Loader2, Plus, Save, X } from "lucide-react"
@@ -255,86 +256,58 @@ export function TransactionForm({
 
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="cliente">Cliente</Label>
-              <Select
-                key={`cliente-${clientes.length}-${formData.cliente_id}`}
+              <SearchableSelect
+                options={clientes.map((c) => ({
+                  value: c.id.toString(),
+                  label: `${c.codigo ? `${c.codigo} - ` : ""}${c.nombre || ""}`
+                }))}
                 value={formData.cliente_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, cliente_id: value }))}
-                required
-              >
-                <SelectTrigger id="cliente" className="w-full">
-                  <SelectValue placeholder="Seleccione..." className="truncate" />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{c.codigo ? `${c.codigo} - ` : ""}{c.nombre}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData((prev) => ({ ...prev, cliente_id: value }))}
+                placeholder="Buscar cliente..."
+                emptyText="No se encontró el cliente"
+              />
             </div>
 
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="planta">Planta</Label>
-              <Select
-                key={`planta-${plantas.length}-${formData.planta_id}`}
+              <SearchableSelect
+                options={plantas.map((p) => ({
+                  value: p.id.toString(),
+                  label: `${p.codigo ? `${p.codigo} - ` : ""}${p.nombre || ""}`
+                }))}
                 value={formData.planta_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, planta_id: value }))}
-                required
-              >
-                <SelectTrigger id="planta" className="w-full">
-                  <SelectValue placeholder="Seleccione..." className="truncate" />
-                </SelectTrigger>
-                <SelectContent>
-                  {plantas.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{p.codigo ? `${p.codigo} - ` : ""}{p.nombre}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData((prev) => ({ ...prev, planta_id: value }))}
+                placeholder="Buscar planta..."
+                emptyText="No se encontró la planta"
+              />
             </div>
 
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="chofer">Chofer</Label>
-              <Select
-                key={`chofer-${choferes.length}-${formData.chofer_id}`}
+              <SearchableSelect
+                options={choferes.map((ch) => ({
+                  value: ch.id.toString(),
+                  label: `${ch.codigo ? `${ch.codigo} - ` : ""}${ch.nombre || ""}`
+                }))}
                 value={formData.chofer_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, chofer_id: value }))}
-                required
-              >
-                <SelectTrigger id="chofer" className="w-full">
-                  <SelectValue placeholder="Seleccione..." className="truncate" />
-                </SelectTrigger>
-                <SelectContent>
-                  {choferes.map((ch) => (
-                    <SelectItem key={ch.id} value={ch.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{ch.codigo ? `${ch.codigo} - ` : ""}{ch.nombre}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData((prev) => ({ ...prev, chofer_id: value }))}
+                placeholder="Buscar chofer..."
+                emptyText="No se encontró el chofer"
+              />
             </div>
 
             <div className="space-y-2 min-w-0 overflow-hidden">
               <Label htmlFor="placa">Placa</Label>
-              <Select
-                key={`placa-${placas.length}-${formData.placa_id}`}
+              <SearchableSelect
+                options={placas.map((pl) => ({
+                  value: pl.id.toString(),
+                  label: `${pl.codigo || ""} ${pl.descripcion ? `- ${pl.descripcion}` : ""}`
+                }))}
                 value={formData.placa_id}
-                onValueChange={(value) => setFormData((prev) => ({ ...prev, placa_id: value }))}
-                required
-              >
-                <SelectTrigger id="placa" className="w-full">
-                  <SelectValue placeholder="Seleccione..." className="truncate" />
-                </SelectTrigger>
-                <SelectContent>
-                  {placas.map((pl) => (
-                    <SelectItem key={pl.id} value={pl.id.toString()} className="truncate max-w-[300px]">
-                      <span className="truncate">{pl.codigo} {pl.descripcion ? `- ${pl.descripcion}` : ""}</span>
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData((prev) => ({ ...prev, placa_id: value }))}
+                placeholder="Buscar placa..."
+                emptyText="No se encontró la placa"
+              />
             </div>
 
             <div className="space-y-2 min-w-0 overflow-hidden">

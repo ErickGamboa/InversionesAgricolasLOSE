@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
@@ -274,23 +275,13 @@ export function ComprasEspecialesForm({
 
             <div className="space-y-2">
               <Label htmlFor="cliente" className="whitespace-nowrap">Cliente</Label>
-              <Select
-                key={`cliente-${clientes.length}-${formData.cliente_id}`}
+              <SearchableSelect
+                options={clientes.map((c) => ({ value: c.id.toString(), label: c.nombre || "" }))}
                 value={formData.cliente_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
-                required
-              >
-                <SelectTrigger id="cliente">
-                  <SelectValue placeholder="Seleccione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
+                placeholder="Seleccione cliente..."
+                emptyText="No se encontró el cliente"
+              />
             </div>
 
             <div className="space-y-2">
@@ -318,44 +309,24 @@ export function ComprasEspecialesForm({
 
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
-              <Select
-                key={`chofer-${choferes.length}-${formData.chofer_id}`}
+              <SearchableSelect
+                options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
                 value={formData.chofer_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
-                required
-              >
-                <SelectTrigger id="chofer">
-                  <SelectValue placeholder="Seleccione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {choferes.map((ch) => (
-                    <SelectItem key={ch.id} value={ch.id.toString()}>
-                      {ch.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
+                placeholder="Seleccione chofer..."
+                emptyText="No se encontró el chofer"
+              />
             </div>
 
             <div className="space-y-2">
               <Label htmlFor="placa" className="whitespace-nowrap">Placa</Label>
-              <Select
-                key={`placa-${placas.length}-${formData.placa_id}`}
+              <SearchableSelect
+                options={placas.map((p) => ({ value: p.id.toString(), label: p.codigo || "" }))}
                 value={formData.placa_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, placa_id: value }))}
-                required
-              >
-                <SelectTrigger id="placa">
-                  <SelectValue placeholder="Seleccione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {placas.map((p) => (
-                    <SelectItem key={p.id} value={p.id.toString()}>
-                      {p.codigo}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData(prev => ({ ...prev, placa_id: value }))}
+                placeholder="Seleccione placa..."
+                emptyText="No se encontró la placa"
+              />
             </div>
           </div>
 

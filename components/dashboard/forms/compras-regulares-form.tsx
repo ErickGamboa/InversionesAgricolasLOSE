@@ -13,6 +13,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
@@ -317,23 +318,13 @@ export function ComprasRegularesForm({
 
             <div className="space-y-2">
               <Label htmlFor="cliente" className="whitespace-nowrap">Cliente</Label>
-              <Select
-                key={`cliente-${clientes.length}-${formData.cliente_id}`}
+              <SearchableSelect
+                options={clientes.map((c) => ({ value: c.id.toString(), label: c.nombre || "" }))}
                 value={formData.cliente_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
-                required
-              >
-                <SelectTrigger id="cliente">
-                  <SelectValue placeholder="Seleccione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {clientes.map((c) => (
-                    <SelectItem key={c.id} value={c.id.toString()}>
-                      {c.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData(prev => ({ ...prev, cliente_id: value }))}
+                placeholder="Seleccione cliente..."
+                emptyText="No se encontró el cliente"
+              />
             </div>
           </div>
 
@@ -361,23 +352,13 @@ export function ComprasRegularesForm({
 
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
-              <Select
-                key={`chofer-${choferes.length}-${formData.chofer_id}`}
+              <SearchableSelect
+                options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
                 value={formData.chofer_id}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
-                required
-              >
-                <SelectTrigger id="chofer">
-                  <SelectValue placeholder="Seleccione..." />
-                </SelectTrigger>
-                <SelectContent>
-                  {choferes.map((ch) => (
-                    <SelectItem key={ch.id} value={ch.id.toString()}>
-                      {ch.nombre}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
+                placeholder="Seleccione chofer..."
+                emptyText="No se encontró el chofer"
+              />
             </div>
           </div>
 
