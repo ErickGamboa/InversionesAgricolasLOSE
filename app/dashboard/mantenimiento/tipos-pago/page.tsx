@@ -51,6 +51,7 @@ export default async function TiposPagoPage() {
         <MaintenanceTable
           tableName="tipos_pago"
           title="Tipos de Pago"
+          singularTitle="Tipo de Pago"
           description="Administre los tipos de pago del sistema"
           fields={fields}
           data={tiposPago ?? []}

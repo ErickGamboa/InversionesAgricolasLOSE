@@ -53,6 +53,7 @@ export default async function PlacasPage() {
         <MaintenanceTable
           tableName="placas"
           title="Placas"
+          singularTitle="Placa"
           description="Administre las placas de vehículos del sistema"
           fields={fields}
           data={placas ?? []}

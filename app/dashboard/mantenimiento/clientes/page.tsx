@@ -64,6 +64,7 @@ export default async function ClientesPage() {
         <MaintenanceTable
           tableName="clientes"
           title="Clientes"
+          singularTitle="Cliente"
           description="Administre los clientes del sistema"
           fields={fields}
           data={clientes ?? []}

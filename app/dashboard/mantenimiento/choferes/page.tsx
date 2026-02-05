@@ -51,6 +51,7 @@ export default async function ChoferesPage() {
         <MaintenanceTable
           tableName="choferes"
           title="Choferes"
+          singularTitle="Chofer"
           description="Administre los choferes del sistema"
           fields={fields}
           data={choferes ?? []}

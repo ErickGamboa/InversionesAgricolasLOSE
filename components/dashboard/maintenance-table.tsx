@@ -1,11 +1,19 @@
 "use client"
 
 import { useState, useEffect } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Switch } from "@/components/ui/switch"
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select"
 import {
   Table,
   TableBody,
@@ -39,27 +47,29 @@ import { Spinner } from "@/components/ui/spinner"
 interface Field {
   name: string
   label: string
-  type: "text" | "boolean"
+  type: "text" | "boolean" | "select"
   required?: boolean
+  options?: { value: string; label: string }[]
 }
 
 interface MaintenanceTableProps<T> {
   tableName: string
   title: string
+  singularTitle?: string
   description: string
   fields: Field[]
   data: T[]
-  onRefresh: () => void
 }
 
 export function MaintenanceTable<T extends { id: number; activo: boolean }>({
   tableName,
   title,
+  singularTitle,
   description,
   fields,
   data: initialData,
-  onRefresh,
 }: MaintenanceTableProps<T>) {
+  const router = useRouter()
   const [data, setData] = useState<T[]>(initialData)
   const [searchTerm, setSearchTerm] = useState("")
   const [isDialogOpen, setIsDialogOpen] = useState(false)
@@ -73,13 +83,9 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
   const supabase = createClient()
 
   useEffect(() => {
-    if (data.length === 0) {
-      onRefresh()
-      setInitialLoading(false)
-    } else {
-      setInitialLoading(false)
-    }
-  }, [])
+    setData(initialData)
+    setInitialLoading(false)
+  }, [initialData])
 
   const filteredData = data.filter((item) => {
     const searchLower = searchTerm.toLowerCase()
@@ -134,7 +140,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
         toast.success("Registro creado exitosamente")
       }
       setIsDialogOpen(false)
-      onRefresh()
+      router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
       toast.error(`Error: ${message}`)
@@ -155,7 +161,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
       if (error) throw error
       toast.success("Registro eliminado exitosamente")
       setIsDeleteDialogOpen(false)
-      onRefresh()
+      router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
       toast.error(`Error: ${message}`)
@@ -172,7 +178,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
         .eq("id", item.id)
 
       if (error) throw error
-      onRefresh()
+      router.refresh()
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
       toast.error(`Error: ${message}`)
@@ -272,7 +278,7 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
         <DialogContent>
           <DialogHeader>
             <DialogTitle>
-              {editingItem ? "Editar" : "Agregar"} {title.slice(0, -1)}
+              {editingItem ? "Editar" : "Agregar"} {singularTitle || title}
             </DialogTitle>
             <DialogDescription>
               {editingItem
@@ -292,6 +298,24 @@ export function MaintenanceTable<T extends { id: number; activo: boolean }>({
                       setFormData((prev) => ({ ...prev, [field.name]: checked }))
                     }
                   />
+                ) : field.type === "select" ? (
+                  <Select
+                    value={formData[field.name] as string}
+                    onValueChange={(value) =>
+                      setFormData((prev) => ({ ...prev, [field.name]: value }))
+                    }
+                  >
+                    <SelectTrigger id={field.name}>
+                      <SelectValue placeholder="Seleccione..." />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {field.options?.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 ) : (
                   <Input
                     id={field.name}

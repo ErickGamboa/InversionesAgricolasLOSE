@@ -51,6 +51,7 @@ export default async function PlantasPage() {
         <MaintenanceTable
           tableName="plantas"
           title="Plantas"
+          singularTitle="Planta"
           description="Administre las plantas procesadoras del sistema"
           fields={fields}
           data={plantas ?? []}
