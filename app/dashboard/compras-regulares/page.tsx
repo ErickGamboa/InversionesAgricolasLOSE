@@ -3,8 +3,8 @@
 import { useState, useCallback } from "react";
 import useSWR from "swr";
 import { createClient } from "@/lib/supabase/client";
-import { TransactionForm } from "@/components/dashboard/transaction-form";
-import { TransactionTable } from "@/components/dashboard/transaction-table";
+import { ComprasRegularesForm } from "@/components/dashboard/forms/compras-regulares-form";
+import { ComprasRegularesTable } from "@/components/dashboard/tables/compras-regulares-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, ShoppingCart } from "lucide-react";
@@ -33,10 +33,8 @@ const fetcher = async () => {
     .from("compras_regulares")
     .select(`
       *,
-      cliente:clientes(id, nombre, tipo_cliente),
-      planta:plantas(id, nombre),
+      cliente:clientes(id, nombre),
       chofer:choferes(id, nombre),
-      placa:placas(id, codigo),
       tipo_pago:tipos_pago(id, nombre)
     `)
     .order("fecha", { ascending: false })
@@ -47,64 +45,47 @@ const fetcher = async () => {
 };
 
 const fetchLookups = async () => {
-  const [clientes, plantas, chofer, placas, tiposPago] = await Promise.all([
-    supabase.from("clientes").select("id, nombre, tipo_cliente").eq("activo", true).order("nombre"),
-    supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
+  const [clientes, choferes, tiposPago] = await Promise.all([
+    supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
     supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
-    supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
     supabase.from("tipos_pago").select("id, nombre").eq("activo", true).order("nombre"),
   ]);
 
   return {
     clientes: clientes.data || [],
-    plantas: plantas.data || [],
-    choferes: chofer.data || [],
-    placas: placas.data || [],
+    choferes: choferes.data || [],
     tiposPago: tiposPago.data || [],
   };
 };
 
 export default function ComprasRegularesPage() {
   const { toast } = useToast();
-  const { data: transactions = [], mutate, isLoading } = useSWR("compras_regulares", fetcher);
-  const { data: lookups } = useSWR("lookups_compras", fetchLookups);
+  const { data: compras = [], mutate, isLoading } = useSWR("compras_regulares", fetcher);
+  const { data: lookups } = useSWR("lookups_compras_regulares", fetchLookups);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Record<string, unknown> | null>(null);
+  const [editingCompra, setEditingCompra] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async (formData: Record<string, unknown>) => {
     setIsSubmitting(true);
     try {
-      const payload = {
-        fecha: formData.fecha,
-        cliente_id: formData.cliente_id,
-        planta_id: formData.planta_id,
-        chofer_id: formData.chofer_id,
-        placa_id: formData.placa_id,
-        boleta: formData.boleta || null,
-        kilos_bruto: formData.kilos_bruto,
-        kilos_tara: formData.kilos_tara,
-        precio: formData.precio,
-        tipo_pago_id: formData.tipo_pago_id || null,
-      };
-
-      if (editingTransaction) {
+      if (editingCompra) {
         const { error } = await supabase
           .from("compras_regulares")
-          .update(payload)
-          .eq("id", editingTransaction.id);
+          .update(formData)
+          .eq("id", editingCompra.id);
 
         if (error) throw error;
-        toast({ title: "Registro actualizado exitosamente" });
+        toast({ title: "Compra actualizada exitosamente" });
       } else {
-        const { error } = await supabase.from("compras_regulares").insert(payload);
+        const { error } = await supabase.from("compras_regulares").insert(formData);
         if (error) throw error;
-        toast({ title: "Registro creado exitosamente" });
+        toast({ title: "Compra creada exitosamente" });
       }
 
       mutate();
       setIsDialogOpen(false);
-      setEditingTransaction(null);
+      setEditingCompra(null);
     } catch (error) {
       toast({
         title: "Error",
@@ -114,21 +95,27 @@ export default function ComprasRegularesPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [editingTransaction, mutate, toast]);
+  }, [editingCompra, mutate, toast]);
 
-  const handleEdit = useCallback((transaction: Record<string, unknown>) => {
-    setEditingTransaction({
-      id: transaction.id,
-      fecha: transaction.fecha,
-      cliente_id: (transaction.cliente as Record<string, unknown>)?.id,
-      planta_id: (transaction.planta as Record<string, unknown>)?.id,
-      chofer_id: (transaction.chofer as Record<string, unknown>)?.id,
-      placa_id: (transaction.placa as Record<string, unknown>)?.id,
-      boleta: transaction.boleta,
-      kilos_bruto: transaction.kilos_bruto,
-      kilos_tara: transaction.kilos_tara,
-      precio: transaction.precio,
-      tipo_pago_id: (transaction.tipo_pago as Record<string, unknown>)?.id,
+  const handleEdit = useCallback((compra: Record<string, unknown>) => {
+    setEditingCompra({
+      id: compra.id,
+      fecha: compra.fecha,
+      numero_semana: compra.numero_semana,
+      pago_dolares: compra.pago_dolares,
+      lugar_procedencia: compra.lugar_procedencia,
+      procedencia_tipo: compra.procedencia_tipo,
+      cliente_id: (compra.cliente as Record<string, unknown>)?.id,
+      numero_boleta: compra.numero_boleta,
+      nb_tickete: compra.nb_tickete,
+      chofer_id: (compra.chofer as Record<string, unknown>)?.id,
+      tipo_pina: compra.tipo_pina,
+      numero_kilos: compra.numero_kilos,
+      precio_piña: compra.precio_piña,
+      pagado: compra.pagado,
+      tipo_pago_id: (compra.tipo_pago as Record<string, unknown>)?.id,
+      numero_deposito: compra.numero_deposito,
+      numero_factura: compra.numero_factura,
     });
     setIsDialogOpen(true);
   }, []);
@@ -137,7 +124,7 @@ export default function ComprasRegularesPage() {
     try {
       const { error } = await supabase.from("compras_regulares").delete().eq("id", id);
       if (error) throw error;
-      toast({ title: "Registro eliminado exitosamente" });
+      toast({ title: "Compra eliminada exitosamente" });
       mutate();
     } catch (error) {
       toast({
@@ -148,13 +135,14 @@ export default function ComprasRegularesPage() {
     }
   }, [mutate, toast]);
 
-  const todayStats = transactions.filter((t: Record<string, unknown>) => {
-    const today = new Date().toISOString().split("T")[0];
-    return t.fecha === today;
-  });
-
-  const todayKilos = todayStats.reduce((sum: number, t: Record<string, unknown>) => sum + Number(t.kilos_neto || 0), 0);
-  const todayMonto = todayStats.reduce((sum: number, t: Record<string, unknown>) => sum + Number(t.monto || 0), 0);
+  const today = new Date().toISOString().split("T")[0];
+  const todayStats = compras.filter((c: Record<string, unknown>) => c.fecha === today);
+  
+  const todayCount = todayStats.length;
+  const todayKilos = todayStats.reduce((sum: number, c: Record<string, unknown>) => 
+    sum + Number(c.numero_kilos || 0), 0);
+  const todayMonto = todayStats.reduce((sum: number, c: Record<string, unknown>) => 
+    sum + Number(c.total_a_pagar || 0), 0);
 
   return (
     <>
@@ -180,86 +168,88 @@ export default function ComprasRegularesPage() {
             <h1 className="text-2xl font-bold text-foreground">Compras Regulares</h1>
             <p className="text-muted-foreground">Registro de compras regulares de piña</p>
           </div>
-          <Button onClick={() => { setEditingTransaction(null); setIsDialogOpen(true); }}>
+          <Button onClick={() => { setEditingCompra(null); setIsDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Compra
           </Button>
         </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+        {/* Estadísticas */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Compras Hoy</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todayCount}</div>
+              <p className="text-xs text-muted-foreground">registros</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Kilos Hoy</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {new Intl.NumberFormat("es-CR").format(todayKilos)}
+              </div>
+              <p className="text-xs text-muted-foreground">kg</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monto Hoy</CardTitle>
+              <ShoppingCart className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
+              </div>
+              <p className="text-xs text-muted-foreground">colones</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabla de compras */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Compras Hoy</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Historial de Compras</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayStats.length}</div>
-            <p className="text-xs text-muted-foreground">registros</p>
+            <ComprasRegularesTable
+              compras={compras as never[]}
+              onEdit={handleEdit as never}
+              onDelete={handleDelete}
+              isLoading={isLoading}
+            />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kilos Neto Hoy</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("es-CR").format(todayKilos)}
-            </div>
-            <p className="text-xs text-muted-foreground">kg</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monto Hoy</CardTitle>
-            <ShoppingCart className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
-            </div>
-            <p className="text-xs text-muted-foreground">colones</p>
-          </CardContent>
-        </Card>
+
+        {/* Dialog de formulario */}
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { 
+          setIsDialogOpen(open); 
+          if (!open) setEditingCompra(null); 
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingCompra ? "Editar Compra Regular" : "Nueva Compra Regular"}
+              </DialogTitle>
+            </DialogHeader>
+            <ComprasRegularesForm
+              initialData={editingCompra || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => { setIsDialogOpen(false); setEditingCompra(null); }}
+              isSubmitting={isSubmitting}
+              clientes={lookups?.clientes || []}
+              choferes={lookups?.choferes || []}
+              tiposPago={lookups?.tiposPago || []}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Historial de Compras</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TransactionTable
-            transactions={transactions as never[]}
-            onEdit={handleEdit as never}
-            onDelete={handleDelete}
-            showTipoPago
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingTransaction(null); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingTransaction ? "Editar Compra" : "Nueva Compra Regular"}
-            </DialogTitle>
-          </DialogHeader>
-          <TransactionForm
-            initialData={editingTransaction || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => { setIsDialogOpen(false); setEditingTransaction(null); }}
-            isSubmitting={isSubmitting}
-            clientes={lookups?.clientes || []}
-            plantas={lookups?.plantas || []}
-            choferes={lookups?.choferes || []}
-            placas={lookups?.placas || []}
-            tiposPago={lookups?.tiposPago || []}
-            showTipoPago
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
     </>
   );
 }
