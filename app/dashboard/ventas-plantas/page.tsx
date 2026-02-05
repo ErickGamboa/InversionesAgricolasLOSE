@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useCallback } from "react";
 import useSWR from "swr";
 import { createClient } from "@/lib/supabase/client";
-import { TransactionForm } from "@/components/dashboard/transaction-form";
-import { TransactionTable } from "@/components/dashboard/transaction-table";
+import { VentasPlantasForm } from "@/components/dashboard/forms/ventas-plantas-form";
+import { VentasPlantasTable } from "@/components/dashboard/tables/ventas-plantas-table";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Plus, TrendingUp } from "lucide-react";
@@ -33,10 +33,8 @@ const fetcher = async () => {
     .from("ventas_plantas")
     .select(`
       *,
-      cliente:clientes(id, nombre, tipo_cliente),
       planta:plantas(id, nombre),
-      chofer:choferes(id, nombre),
-      placa:placas(id, codigo)
+      chofer:choferes(id, nombre)
     `)
     .order("fecha", { ascending: false })
     .order("id", { ascending: false });
@@ -46,61 +44,45 @@ const fetcher = async () => {
 };
 
 const fetchLookups = async () => {
-  const [clientes, plantas, chofer, placas] = await Promise.all([
-    supabase.from("clientes").select("id, nombre, tipo_cliente").eq("activo", true).order("nombre"),
+  const [plantas, choferes] = await Promise.all([
     supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
     supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
-    supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
   ]);
 
   return {
-    clientes: clientes.data || [],
     plantas: plantas.data || [],
-    choferes: chofer.data || [],
-    placas: placas.data || [],
+    choferes: choferes.data || [],
   };
 };
 
 export default function VentasPlantasPage() {
   const { toast } = useToast();
-  const { data: transactions = [], mutate, isLoading } = useSWR("ventas_plantas", fetcher);
-  const { data: lookups } = useSWR("lookups", fetchLookups);
+  const { data: ventas = [], mutate, isLoading } = useSWR("ventas_plantas", fetcher);
+  const { data: lookups } = useSWR("lookups_ventas_plantas", fetchLookups);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
-  const [editingTransaction, setEditingTransaction] = useState<Record<string, unknown> | null>(null);
+  const [editingVenta, setEditingVenta] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const handleSubmit = useCallback(async (formData: Record<string, unknown>) => {
     setIsSubmitting(true);
     try {
-      const payload = {
-        fecha: formData.fecha,
-        cliente_id: formData.cliente_id,
-        planta_id: formData.planta_id,
-        chofer_id: formData.chofer_id,
-        placa_id: formData.placa_id,
-        boleta: formData.boleta || null,
-        kilos_bruto: formData.kilos_bruto,
-        kilos_tara: formData.kilos_tara,
-        precio: formData.precio,
-      };
-
-      if (editingTransaction) {
+      if (editingVenta) {
         const { error } = await supabase
           .from("ventas_plantas")
-          .update(payload)
-          .eq("id", editingTransaction.id);
+          .update(formData)
+          .eq("id", editingVenta.id);
 
         if (error) throw error;
-        toast({ title: "Registro actualizado exitosamente" });
+        toast({ title: "Venta actualizada exitosamente" });
       } else {
-        const { error } = await supabase.from("ventas_plantas").insert(payload);
+        const { error } = await supabase.from("ventas_plantas").insert(formData);
         if (error) throw error;
-        toast({ title: "Registro creado exitosamente" });
+        toast({ title: "Venta creada exitosamente" });
       }
 
       mutate();
       setIsDialogOpen(false);
-      setEditingTransaction(null);
+      setEditingVenta(null);
     } catch (error) {
       toast({
         title: "Error",
@@ -110,20 +92,22 @@ export default function VentasPlantasPage() {
     } finally {
       setIsSubmitting(false);
     }
-  }, [editingTransaction, mutate, toast]);
+  }, [editingVenta, mutate, toast]);
 
-  const handleEdit = useCallback((transaction: Record<string, unknown>) => {
-    setEditingTransaction({
-      id: transaction.id,
-      fecha: transaction.fecha,
-      cliente_id: (transaction.cliente as Record<string, unknown>)?.id,
-      planta_id: (transaction.planta as Record<string, unknown>)?.id,
-      chofer_id: (transaction.chofer as Record<string, unknown>)?.id,
-      placa_id: (transaction.placa as Record<string, unknown>)?.id,
-      boleta: transaction.boleta,
-      kilos_bruto: transaction.kilos_bruto,
-      kilos_tara: transaction.kilos_tara,
-      precio: transaction.precio,
+  const handleEdit = useCallback((venta: Record<string, unknown>) => {
+    setEditingVenta({
+      id: venta.id,
+      fecha: venta.fecha,
+      numero_semana: venta.numero_semana,
+      planta_id: (venta.planta as Record<string, unknown>)?.id,
+      chofer_id: (venta.chofer as Record<string, unknown>)?.id,
+      numero_boleta: venta.numero_boleta,
+      nb_tickete: venta.nb_tickete,
+      tipo_pina: venta.tipo_pina,
+      kilos_reportados: venta.kilos_reportados,
+      porcentaje_castigo: venta.porcentaje_castigo,
+      precio_iqf: venta.precio_iqf,
+      precio_jugo: venta.precio_jugo,
     });
     setIsDialogOpen(true);
   }, []);
@@ -132,7 +116,7 @@ export default function VentasPlantasPage() {
     try {
       const { error } = await supabase.from("ventas_plantas").delete().eq("id", id);
       if (error) throw error;
-      toast({ title: "Registro eliminado exitosamente" });
+      toast({ title: "Venta eliminada exitosamente" });
       mutate();
     } catch (error) {
       toast({
@@ -143,13 +127,15 @@ export default function VentasPlantasPage() {
     }
   }, [mutate, toast]);
 
-  const todayStats = transactions.filter((t: Record<string, unknown>) => {
-    const today = new Date().toISOString().split("T")[0];
-    return t.fecha === today;
-  });
-
-  const todayKilos = todayStats.reduce((sum: number, t: Record<string, unknown>) => sum + Number(t.kilos_neto || 0), 0);
-  const todayMonto = todayStats.reduce((sum: number, t: Record<string, unknown>) => sum + Number(t.monto || 0), 0);
+  // Estadísticas de hoy
+  const today = new Date().toISOString().split("T")[0];
+  const todayStats = ventas.filter((v: Record<string, unknown>) => v.fecha === today);
+  
+  const todayCount = todayStats.length;
+  const todayKilos = todayStats.reduce((sum: number, v: Record<string, unknown>) => 
+    sum + Number(v.total_kilos || 0), 0);
+  const todayMonto = todayStats.reduce((sum: number, v: Record<string, unknown>) => 
+    sum + Number(v.total_pagar_pina || 0), 0);
 
   return (
     <>
@@ -175,83 +161,87 @@ export default function VentasPlantasPage() {
             <h1 className="text-2xl font-bold text-foreground">Ventas a Plantas</h1>
             <p className="text-muted-foreground">Registro de ventas de piña a plantas procesadoras</p>
           </div>
-          <Button onClick={() => { setEditingTransaction(null); setIsDialogOpen(true); }}>
+          <Button onClick={() => { setEditingVenta(null); setIsDialogOpen(true); }}>
             <Plus className="h-4 w-4 mr-2" />
             Nueva Venta
           </Button>
         </div>
 
-      <div className="grid gap-4 md:grid-cols-3">
+        {/* Estadísticas */}
+        <div className="grid gap-4 md:grid-cols-3">
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Ventas Hoy</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">{todayCount}</div>
+              <p className="text-xs text-muted-foreground">registros</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Kilos Neto Hoy</CardTitle>
+              <TrendingUp className="h-4 w-4 text-muted-foreground" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold">
+                {new Intl.NumberFormat("es-CR").format(todayKilos)}
+              </div>
+              <p className="text-xs text-muted-foreground">kg</p>
+            </CardContent>
+          </Card>
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
+              <CardTitle className="text-sm font-medium">Monto Hoy</CardTitle>
+              <TrendingUp className="h-4 w-4 text-primary" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-primary">
+                {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
+              </div>
+              <p className="text-xs text-muted-foreground">colones</p>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Tabla de ventas */}
         <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Ventas Hoy</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
+          <CardHeader>
+            <CardTitle>Historial de Ventas</CardTitle>
           </CardHeader>
           <CardContent>
-            <div className="text-2xl font-bold">{todayStats.length}</div>
-            <p className="text-xs text-muted-foreground">registros</p>
+            <VentasPlantasTable
+              ventas={ventas as never[]}
+              onEdit={handleEdit as never}
+              onDelete={handleDelete}
+              isLoading={isLoading}
+            />
           </CardContent>
         </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Kilos Neto Hoy</CardTitle>
-            <TrendingUp className="h-4 w-4 text-muted-foreground" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold">
-              {new Intl.NumberFormat("es-CR").format(todayKilos)}
-            </div>
-            <p className="text-xs text-muted-foreground">kg</p>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-            <CardTitle className="text-sm font-medium">Monto Hoy</CardTitle>
-            <TrendingUp className="h-4 w-4 text-primary" />
-          </CardHeader>
-          <CardContent>
-            <div className="text-2xl font-bold text-primary">
-              {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
-            </div>
-            <p className="text-xs text-muted-foreground">colones</p>
-          </CardContent>
-        </Card>
+
+        {/* Dialog de formulario */}
+        <Dialog open={isDialogOpen} onOpenChange={(open) => { 
+          setIsDialogOpen(open); 
+          if (!open) setEditingVenta(null); 
+        }}>
+          <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+            <DialogHeader>
+              <DialogTitle>
+                {editingVenta ? "Editar Venta" : "Nueva Venta a Planta"}
+              </DialogTitle>
+            </DialogHeader>
+            <VentasPlantasForm
+              initialData={editingVenta || undefined}
+              onSubmit={handleSubmit}
+              onCancel={() => { setIsDialogOpen(false); setEditingVenta(null); }}
+              isSubmitting={isSubmitting}
+              plantas={lookups?.plantas || []}
+              choferes={lookups?.choferes || []}
+            />
+          </DialogContent>
+        </Dialog>
       </div>
-
-      <Card>
-        <CardHeader>
-          <CardTitle>Historial de Ventas</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <TransactionTable
-            transactions={transactions as never[]}
-            onEdit={handleEdit as never}
-            onDelete={handleDelete}
-            isLoading={isLoading}
-          />
-        </CardContent>
-      </Card>
-
-      <Dialog open={isDialogOpen} onOpenChange={(open) => { setIsDialogOpen(open); if (!open) setEditingTransaction(null); }}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>
-              {editingTransaction ? "Editar Venta" : "Nueva Venta a Planta"}
-            </DialogTitle>
-          </DialogHeader>
-          <TransactionForm
-            initialData={editingTransaction || undefined}
-            onSubmit={handleSubmit}
-            onCancel={() => { setIsDialogOpen(false); setEditingTransaction(null); }}
-            isSubmitting={isSubmitting}
-            clientes={lookups?.clientes || []}
-            plantas={lookups?.plantas || []}
-            choferes={lookups?.choferes || []}
-            placas={lookups?.placas || []}
-          />
-        </DialogContent>
-      </Dialog>
-    </div>
     </>
   );
 }
