@@ -301,6 +301,7 @@ export function ComprasRegularesForm({
             <div className="space-y-2">
               <Label htmlFor="procedencia_tipo" className="whitespace-nowrap">Procedencia</Label>
               <Select
+                key={`procedencia-${formData.procedencia_tipo}`}
                 value={formData.procedencia_tipo}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, procedencia_tipo: value }))}
               >
@@ -385,6 +386,7 @@ export function ComprasRegularesForm({
             <div className="space-y-2">
               <Label htmlFor="tipo_pina" className="whitespace-nowrap">Tipo de Piña</Label>
               <Select
+                key={`tipo-pina-${formData.tipo_pina}`}
                 value={formData.tipo_pina}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_pina: value }))}
                 required
