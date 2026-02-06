@@ -172,17 +172,20 @@ export function DashboardSidebar({ user }: { user: User }) {
         <div className="flex items-center gap-3 px-2 py-2">
           <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground">
             <svg
-              className="h-5 w-5"
+              className="h-6 w-6"
+              viewBox="0 0 24 24"
               fill="none"
               stroke="currentColor"
-              viewBox="0 0 24 24"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeLinejoin="round"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"
-              />
+              {/* Hojas de la piña */}
+              <path d="M12 2c0 2-1 3.5-3 4.5M12 2c0 2 1 3.5 3 4.5M12 2v5" />
+              {/* Cuerpo de la piña */}
+              <path d="M12 22c-3.3 0-6-2.5-6-6s2.7-8 6-8 6 4.5 6 8-2.7 6-6 6z" />
+              {/* Patrón de la piña */}
+              <path d="M8 12l8 8M16 12l-8 8" />
             </svg>
           </div>
           <div className="flex flex-1 flex-col overflow-hidden">
