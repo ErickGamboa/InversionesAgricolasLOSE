@@ -63,7 +63,7 @@ export default async function ClientesPage() {
       </header>
 
       <div className="p-6">
-        <MaintenanceTable
+        <MaintenanceTable<Cliente>
           tableName="clientes"
           title="Clientes"
           singularTitle="Cliente"
