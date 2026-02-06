@@ -2,7 +2,7 @@
 
 import React from "react"
 
-import { useState, useEffect } from "react"
+import { useState } from "react"
 import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
@@ -18,21 +18,8 @@ export default function LoginPage() {
   const [password, setPassword] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
-  const [titulo, setTitulo] = useState("Recepción Piña")
   const router = useRouter()
   const supabase = createClient()
-
-  useEffect(() => {
-    const fetchTitulo = async () => {
-      const { data } = await supabase
-        .from("configuracion")
-        .select("valor")
-        .eq("clave", "titulo_sistema")
-        .single()
-      if (data) setTitulo(data.valor)
-    }
-    fetchTitulo()
-  }, [supabase])
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -76,9 +63,9 @@ export default function LoginPage() {
               <path d="M8 12l8 8M16 12l-8 8" />
             </svg>
           </div>
-          <CardTitle className="text-2xl font-bold">{titulo}</CardTitle>
+          <CardTitle className="text-2xl font-bold">Inversiones Agricolas LOSE</CardTitle>
           <CardDescription>
-            Sistema de Gestión - Costa Rica
+            Sistema de gestión
           </CardDescription>
         </CardHeader>
         <CardContent>
