@@ -265,12 +265,18 @@ export function ComprasEspecialesForm({
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="procedencia" className="whitespace-nowrap">Procedencia</Label>
-              <Input
-                id="procedencia"
+              <Select
                 value={formData.procedencia}
-                onChange={(e) => setFormData(prev => ({ ...prev, procedencia: e.target.value }))}
-                placeholder="Ingrese procedencia"
-              />
+                onValueChange={(value) => setFormData(prev => ({ ...prev, procedencia: value }))}
+              >
+                <SelectTrigger id="procedencia">
+                  <SelectValue placeholder="Seleccione..." />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="campo">Campo</SelectItem>
+                  <SelectItem value="planta">Planta</SelectItem>
+                </SelectContent>
+              </Select>
             </div>
 
             <div className="space-y-2">
