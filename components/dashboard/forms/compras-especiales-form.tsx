@@ -32,7 +32,6 @@ interface ComprasEspecialesFormProps {
   isSubmitting?: boolean
   clientes?: SelectOption[]
   choferes?: SelectOption[]
-  placas?: SelectOption[]
 }
 
 function getISOWeek(date: Date): number {
@@ -54,14 +53,12 @@ export function ComprasEspecialesForm({
   isSubmitting: isSubmittingProp,
   clientes: clientesProp,
   choferes: choferesProp,
-  placas: placasProp,
 }: ComprasEspecialesFormProps) {
   const isControlled = !!onSubmit
   const [loading, setLoading] = useState(false)
-  const [loadingOptions, setLoadingOptions] = useState(!clientesProp || !choferesProp || !placasProp)
+  const [loadingOptions, setLoadingOptions] = useState(!clientesProp || !choferesProp)
   const [clientes, setClientes] = useState<SelectOption[]>(clientesProp || [])
   const [choferes, setChoferes] = useState<SelectOption[]>(choferesProp || [])
-  const [placas, setPlacas] = useState<SelectOption[]>(placasProp || [])
 
   const [formData, setFormData] = useState({
     fecha: new Date().toISOString().split("T")[0],
@@ -71,7 +68,7 @@ export function ComprasEspecialesForm({
     lote: "",
     numero_boleta: "",
     chofer_id: "",
-    placa_id: "",
+    placa: "",
     numero_cajas: "",
     pinas_por_caja: "",
     total_kilos: "",
@@ -94,7 +91,7 @@ export function ComprasEspecialesForm({
         lote: String(initialData.lote || ""),
         numero_boleta: String(initialData.numero_boleta || ""),
         chofer_id: String(initialData.chofer_id || ""),
-        placa_id: String(initialData.placa_id || ""),
+        placa: String(initialData.placa || ""),
         numero_cajas: String(initialData.numero_cajas || ""),
         pinas_por_caja: String(initialData.pinas_por_caja || ""),
         total_kilos: String(initialData.total_kilos || ""),
@@ -105,7 +102,7 @@ export function ComprasEspecialesForm({
   }, [initialData])
 
   const fetchOptions = useCallback(async () => {
-    if (clientesProp && choferesProp && placasProp) {
+    if (clientesProp && choferesProp) {
       return
     }
 
@@ -113,21 +110,17 @@ export function ComprasEspecialesForm({
     const [
       { data: clientesData },
       { data: choferesData },
-      { data: placasData },
     ] = await Promise.all([
       clientesProp ? Promise.resolve({ data: clientesProp }) : 
         supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
         supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
-      placasProp ? Promise.resolve({ data: placasProp }) : 
-        supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
     ])
 
     if (!clientesProp) setClientes(clientesData ?? [])
     if (!choferesProp) setChoferes(choferesData ?? [])
-    if (!placasProp) setPlacas(placasData ?? [])
     setLoadingOptions(false)
-  }, [supabase, clientesProp, choferesProp, placasProp])
+  }, [supabase, clientesProp, choferesProp])
 
   useEffect(() => {
     fetchOptions()
@@ -165,7 +158,7 @@ export function ComprasEspecialesForm({
       lote: formData.lote || null,
       numero_boleta: formData.numero_boleta || null,
       chofer_id: Number(formData.chofer_id),
-      placa_id: Number(formData.placa_id),
+      placa: formData.placa || null,
       numero_cajas: numeroCajas,
       pinas_por_caja: pinasPorCaja,
       total_pinas: totalPinas,
@@ -196,7 +189,7 @@ export function ComprasEspecialesForm({
         lote: "",
         numero_boleta: "",
         chofer_id: "",
-        placa_id: "",
+        placa: "",
         numero_cajas: "",
         pinas_por_caja: "",
         total_kilos: "",
@@ -326,12 +319,11 @@ export function ComprasEspecialesForm({
 
             <div className="space-y-2">
               <Label htmlFor="placa" className="whitespace-nowrap">Placa</Label>
-              <SearchableSelect
-                options={placas.map((p) => ({ value: p.id.toString(), label: p.codigo || "" }))}
-                value={formData.placa_id}
-                onChange={(value) => setFormData(prev => ({ ...prev, placa_id: value }))}
-                placeholder="Seleccione placa..."
-                emptyText="No se encontró la placa"
+              <Input
+                id="placa"
+                value={formData.placa}
+                onChange={(e) => setFormData(prev => ({ ...prev, placa: e.target.value }))}
+                placeholder="Ingrese placa"
               />
             </div>
           </div>

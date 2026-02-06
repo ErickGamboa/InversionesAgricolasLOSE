@@ -33,7 +33,7 @@ interface CompraEspecial {
   lote?: string
   numero_boleta?: string
   chofer?: { nombre: string }
-  placa?: { codigo: string }
+  placa?: string
   numero_cajas: number
   pinas_por_caja: number
   total_pinas: number
@@ -56,6 +56,7 @@ const ALL_COLUMNS = [
   { key: "cliente.nombre", label: "Cliente" },
   { key: "procedencia", label: "Procedencia" },
   { key: "chofer.nombre", label: "Chofer" },
+  { key: "placa", label: "Placa" },
   { key: "numero_cajas", label: "Cajas" },
   { key: "total_pinas", label: "Piñas" },
   { key: "total_kilos", label: "Kilos" },
@@ -119,6 +120,8 @@ export function ComprasEspecialesTable({
           if (!c.chofer?.nombre?.toLowerCase().includes(searchLower)) return false
         } else if (key === "procedencia") {
           if (!c.procedencia?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "placa") {
+          if (!c.placa?.toLowerCase().includes(searchLower)) return false
         } else if (key === "pagado") {
           if (c.pagado.toString() !== value) return false
         } else if (key === "numero_semana") {
@@ -193,6 +196,7 @@ export function ComprasEspecialesTable({
                 {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
                 {visibleColumns.includes("procedencia") && <TableHead>Procedencia</TableHead>}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
+                {visibleColumns.includes("placa") && <TableHead>Placa</TableHead>}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
                 {visibleColumns.includes("total_pinas") && <TableHead className="text-right">Piñas</TableHead>}
                 {visibleColumns.includes("total_kilos") && <TableHead className="text-right">Kilos</TableHead>}
@@ -235,6 +239,11 @@ export function ComprasEspecialesTable({
                     <DebouncedInput placeholder="Chofer..." className="h-8 text-xs" value={filters.chofer || ""} onChange={(val) => setFilter("chofer", val.toString())} />
                   </TableHead>
                 )}
+                {visibleColumns.includes("placa") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Placa..." className="h-8 text-xs" value={filters.placa || ""} onChange={(val) => setFilter("placa", val.toString())} />
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_pinas") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_kilos") && <TableHead className="p-2" />}
@@ -270,6 +279,7 @@ export function ComprasEspecialesTable({
                       {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
                       {visibleColumns.includes("procedencia") && <TableCell>{compra.procedencia || "-"}</TableCell>}
                       {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
+                      {visibleColumns.includes("placa") && <TableCell>{compra.placa || "-"}</TableCell>}
                       {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(compra.numero_cajas)}</TableCell>}
                       {visibleColumns.includes("total_pinas") && <TableCell className="text-right">{formatNumber(compra.total_pinas)}</TableCell>}
                       {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{compra.total_kilos?.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</TableCell>}
@@ -288,7 +298,7 @@ export function ComprasEspecialesTable({
                     </TableRow>
                   ))}
                   <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={visibleColumns.filter(c => ["fecha", "numero_semana", "cliente.nombre", "procedencia", "chofer.nombre"].includes(c)).length} className="text-right">
+                    <TableCell colSpan={visibleColumns.filter(c => ["fecha", "numero_semana", "cliente.nombre", "procedencia", "chofer.nombre", "placa"].includes(c)).length} className="text-right">
                       Totales:
                     </TableCell>
                     {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(totals.cajas)}</TableCell>}

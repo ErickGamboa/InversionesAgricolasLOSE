@@ -34,8 +34,7 @@ const fetcher = async () => {
     .select(`
       *,
       cliente:clientes(id, nombre),
-      chofer:choferes(id, nombre),
-      placa:placas(id, codigo)
+      chofer:choferes(id, nombre)
     `)
     .order("fecha", { ascending: false })
     .order("id", { ascending: false });
@@ -45,16 +44,14 @@ const fetcher = async () => {
 };
 
 const fetchLookups = async () => {
-  const [clientes, choferes, placas] = await Promise.all([
+  const [clientes, choferes] = await Promise.all([
     supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
     supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
-    supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
   ]);
 
   return {
     clientes: clientes.data || [],
     choferes: choferes.data || [],
-    placas: placas.data || [],
   };
 };
 
@@ -107,7 +104,7 @@ export default function ComprasEspecialesPage() {
       lote: compra.lote,
       numero_boleta: compra.numero_boleta,
       chofer_id: (compra.chofer as Record<string, unknown>)?.id,
-      placa_id: (compra.placa as Record<string, unknown>)?.id,
+      placa: compra.placa,
       numero_cajas: compra.numero_cajas,
       pinas_por_caja: compra.pinas_por_caja,
       total_kilos: compra.total_kilos,
@@ -242,7 +239,6 @@ export default function ComprasEspecialesPage() {
               isSubmitting={isSubmitting}
               clientes={lookups?.clientes || []}
               choferes={lookups?.choferes || []}
-              placas={lookups?.placas || []}
             />
           </DialogContent>
         </Dialog>

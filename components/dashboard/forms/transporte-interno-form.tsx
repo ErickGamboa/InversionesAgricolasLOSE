@@ -271,7 +271,6 @@ export function TransporteInternoForm({
                 value={formData.diesel}
                 onChange={(e) => setFormData(prev => ({ ...prev, diesel: e.target.value }))}
                 placeholder="Gasto en diesel"
-                required
               />
             </div>
 
@@ -285,7 +284,6 @@ export function TransporteInternoForm({
                 value={formData.ingreso}
                 onChange={(e) => setFormData(prev => ({ ...prev, ingreso: e.target.value }))}
                 placeholder="Ingreso recibido"
-                required
               />
             </div>
           </div>
