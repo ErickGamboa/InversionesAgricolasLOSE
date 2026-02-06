@@ -1,9 +1,12 @@
 "use client"
 
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
+import { Input } from "@/components/ui/input"
+import { toast } from "sonner"
 import {
   Sidebar,
   SidebarContent,
@@ -35,6 +38,9 @@ import {
   LogOut,
   ChevronUp,
   ClipboardList,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react"
 
 const mainMenuItems = [
@@ -106,6 +112,54 @@ export function DashboardSidebar({ user }: { user: User }) {
   const router = useRouter()
   const supabase = createClient()
 
+  const [titulo, setTitulo] = useState("Recepción Piña")
+  const [isEditing, setIsEditing] = useState(false)
+  const [tempTitulo, setTempTitulo] = useState("")
+
+  useEffect(() => {
+    const fetchTitulo = async () => {
+      const { data, error } = await supabase
+        .from("configuracion")
+        .select("valor")
+        .eq("clave", "titulo_sistema")
+        .single()
+      
+      if (data && !error) {
+        setTitulo(data.valor)
+      }
+    }
+    fetchTitulo()
+  }, [supabase])
+
+  const handleStartEdit = () => {
+    setTempTitulo(titulo)
+    setIsEditing(true)
+  }
+
+  const handleSaveEdit = async () => {
+    if (!tempTitulo.trim()) {
+      setIsEditing(false)
+      return
+    }
+
+    const { error } = await supabase
+      .from("configuracion")
+      .update({ valor: tempTitulo.trim() })
+      .eq("clave", "titulo_sistema")
+
+    if (error) {
+      toast.error("Error al guardar el título")
+    } else {
+      setTitulo(tempTitulo.trim())
+      setIsEditing(false)
+      toast.success("Título actualizado")
+    }
+  }
+
+  const handleCancelEdit = () => {
+    setIsEditing(false)
+  }
+
   const handleLogout = async () => {
     await supabase.auth.signOut()
     router.push("/auth/login")
@@ -131,8 +185,45 @@ export function DashboardSidebar({ user }: { user: User }) {
               />
             </svg>
           </div>
-          <div className="flex flex-col">
-            <span className="font-semibold text-sidebar-foreground">Recepción Piña</span>
+          <div className="flex flex-1 flex-col overflow-hidden">
+            {isEditing ? (
+              <div className="flex items-center gap-1 pr-1">
+                <Input
+                  value={tempTitulo}
+                  onChange={(e) => setTempTitulo(e.target.value)}
+                  className="h-7 py-0 px-2 text-sm font-semibold"
+                  autoFocus
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter") handleSaveEdit()
+                    if (e.key === "Escape") handleCancelEdit()
+                  }}
+                />
+                <button
+                  onClick={handleSaveEdit}
+                  className="rounded-md p-1 hover:bg-sidebar-accent hover:text-green-600"
+                >
+                  <Check className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={handleCancelEdit}
+                  className="rounded-md p-1 hover:bg-sidebar-accent hover:text-destructive"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+            ) : (
+              <div className="group flex items-center justify-between">
+                <span className="font-semibold text-sidebar-foreground truncate pr-1">
+                  {titulo}
+                </span>
+                <button
+                  onClick={handleStartEdit}
+                  className="opacity-0 group-hover:opacity-100 rounded-md p-1 hover:bg-sidebar-accent transition-opacity"
+                >
+                  <Pencil className="h-3 w-3 text-muted-foreground" />
+                </button>
+              </div>
+            )}
             <span className="text-xs text-sidebar-foreground/70">Costa Rica</span>
           </div>
         </div>

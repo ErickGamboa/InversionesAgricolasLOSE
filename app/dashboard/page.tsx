@@ -39,30 +39,44 @@ async function getStats() {
     supabase.from('transporte_contratado').select('*', { count: 'exact', head: true }).eq('fecha', today),
     supabase.from('compras_especiales').select('*', { count: 'exact', head: true }).eq('fecha', today),
     supabase.from('transporte_interno').select('*', { count: 'exact', head: true }).eq('fecha', today),
-    supabase.from('ventas_plantas').select('kilos_neto, monto').eq('fecha', today),
-    supabase.from('compras_regulares').select('kilos_neto, monto').eq('fecha', today),
-    supabase.from('transporte_contratado').select('kilos_neto, monto').eq('fecha', today),
-    supabase.from('compras_especiales').select('kilos_neto, monto').eq('fecha', today),
-    supabase.from('transporte_interno').select('kilos_neto, monto').eq('fecha', today),
+    supabase.from('ventas_plantas').select('total_kilos, total_pagar_pina').eq('fecha', today),
+    supabase.from('compras_regulares').select('numero_kilos, total_a_pagar').eq('fecha', today),
+    supabase.from('transporte_contratado').select('total_kilos, total_a_pagar').eq('fecha', today),
+    supabase.from('compras_especiales').select('total_kilos, total_a_pagar').eq('fecha', today),
+    supabase.from('transporte_interno').select('ingreso').eq('fecha', today),
   ])
 
-  const sumKilos = (data: { kilos_neto: number }[] | null) => 
-    data?.reduce((acc, item) => acc + (Number(item.kilos_neto) || 0), 0) ?? 0
+  const ventasKilos = ventasData?.reduce((acc, item) => acc + (Number(item.total_kilos) || 0), 0) ?? 0
+  const ventasMonto = ventasData?.reduce((acc, item) => acc + (Number(item.total_pagar_pina) || 0), 0) ?? 0
   
-  const sumMonto = (data: { monto: number }[] | null) => 
-    data?.reduce((acc, item) => acc + (Number(item.monto) || 0), 0) ?? 0
+  const comprasRegKilos = comprasRegData?.reduce((acc, item) => acc + (Number(item.numero_kilos) || 0), 0) ?? 0
+  const comprasRegMonto = comprasRegData?.reduce((acc, item) => acc + (Number(item.total_a_pagar) || 0), 0) ?? 0
 
-  const totalKilos = sumKilos(ventasData) + sumKilos(comprasRegData) + sumKilos(transporteContData) + sumKilos(comprasEspData) + sumKilos(transporteIntData)
-  const totalMonto = sumMonto(ventasData) + sumMonto(comprasRegData) + sumMonto(transporteContData) + sumMonto(comprasEspData) + sumMonto(transporteIntData)
+  const transporteContKilos = transporteContData?.reduce((acc, item) => acc + (Number(item.total_kilos) || 0), 0) ?? 0
+  const transporteContMonto = transporteContData?.reduce((acc, item) => acc + (Number(item.total_a_pagar) || 0), 0) ?? 0
+
+  const comprasEspKilos = comprasEspData?.reduce((acc, item) => acc + (Number(item.total_kilos) || 0), 0) ?? 0
+  const comprasEspMonto = comprasEspData?.reduce((acc, item) => acc + (Number(item.total_a_pagar) || 0), 0) ?? 0
+
+  const transporteIntMonto = transporteIntData?.reduce((acc, item) => acc + (Number(item.ingreso) || 0), 0) ?? 0
+  const transporteIntKilos = 0 // No aplica para transporte interno
+
+  const kilosComprados = comprasRegKilos + comprasEspKilos
+  const montoComprado = comprasRegMonto + comprasEspMonto + transporteContMonto
+  
+  const kilosVendidos = ventasKilos
+  const montoVendido = ventasMonto + transporteIntMonto
 
   return {
-    ventas: { count: ventasCount ?? 0, kilos: sumKilos(ventasData), monto: sumMonto(ventasData) },
-    comprasReg: { count: comprasRegCount ?? 0, kilos: sumKilos(comprasRegData), monto: sumMonto(comprasRegData) },
-    transporteCont: { count: transporteContCount ?? 0, kilos: sumKilos(transporteContData), monto: sumMonto(transporteContData) },
-    comprasEsp: { count: comprasEspCount ?? 0, kilos: sumKilos(comprasEspData), monto: sumMonto(comprasEspData) },
-    transporteInt: { count: transporteIntCount ?? 0, kilos: sumKilos(transporteIntData), monto: sumMonto(transporteIntData) },
-    totalKilos,
-    totalMonto,
+    ventas: { count: ventasCount ?? 0, kilos: ventasKilos, monto: ventasMonto },
+    comprasReg: { count: comprasRegCount ?? 0, kilos: comprasRegKilos, monto: comprasRegMonto },
+    transporteCont: { count: transporteContCount ?? 0, kilos: transporteContKilos, monto: transporteContMonto },
+    comprasEsp: { count: comprasEspCount ?? 0, kilos: comprasEspKilos, monto: comprasEspMonto },
+    transporteInt: { count: transporteIntCount ?? 0, kilos: transporteIntKilos, monto: transporteIntMonto },
+    kilosComprados,
+    montoComprado,
+    kilosVendidos,
+    montoVendido
   }
 }
 
@@ -98,45 +112,59 @@ export default async function DashboardPage() {
           <p className="text-muted-foreground capitalize">{today}</p>
         </div>
 
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
-          <Card className="bg-primary/5 border-primary/20">
+        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
+          <Card className="bg-blue-500/5 border-blue-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Kilos Hoy
+                Kilos Comprados
               </CardTitle>
-              <Scale className="h-4 w-4 text-primary" />
+              <ShoppingCart className="h-4 w-4 text-blue-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-primary">
-                {formatNumber(stats.totalKilos)} kg
+              <div className="text-2xl font-bold text-blue-600">
+                {formatNumber(stats.kilosComprados)} kg
               </div>
             </CardContent>
           </Card>
 
-          <Card className="bg-accent/30 border-accent/40">
+          <Card className="bg-orange-500/5 border-orange-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Total Monto Hoy
+                Monto Comprado
               </CardTitle>
-              <TrendingUp className="h-4 w-4 text-accent-foreground" />
+              <TrendingUp className="h-4 w-4 text-orange-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold text-accent-foreground">
-                ₡{formatCurrency(stats.totalMonto)}
+              <div className="text-2xl font-bold text-orange-600">
+                ₡{formatCurrency(stats.montoComprado)}
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card className="bg-green-500/5 border-green-500/20">
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Transacciones Hoy
+                Kilos Vendidos
               </CardTitle>
-              <Package className="h-4 w-4 text-muted-foreground" />
+              <Scale className="h-4 w-4 text-green-500" />
             </CardHeader>
             <CardContent>
-              <div className="text-2xl font-bold">
-                {stats.ventas.count + stats.comprasReg.count + stats.transporteCont.count + stats.comprasEsp.count + stats.transporteInt.count}
+              <div className="text-2xl font-bold text-green-600">
+                {formatNumber(stats.kilosVendidos)} kg
+              </div>
+            </CardContent>
+          </Card>
+
+          <Card className="bg-emerald-500/5 border-emerald-500/20">
+            <CardHeader className="flex flex-row items-center justify-between pb-2">
+              <CardTitle className="text-sm font-medium text-muted-foreground">
+                Monto Vendido
+              </CardTitle>
+              <TrendingUp className="h-4 w-4 text-emerald-500" />
+            </CardHeader>
+            <CardContent>
+              <div className="text-2xl font-bold text-emerald-600">
+                ₡{formatCurrency(stats.montoVendido)}
               </div>
             </CardContent>
           </Card>
