@@ -143,6 +143,14 @@ export function TransporteContratadoTable({
     { kilos: 0, adelanto: 0, total: 0 }
   )
 
+  const footerData = useMemo(() => {
+    return {
+      total_kilos: formatNumber(totals.kilos),
+      adelanto: `₡${formatCurrency(totals.adelanto)}`,
+      total_a_pagar: `₡${formatCurrency(totals.total)}`
+    }
+  }, [totals])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -151,13 +159,6 @@ export function TransporteContratadoTable({
     )
   }
 
-  const footerData = useMemo(() => {
-    return {
-      total_kilos: formatNumber(totals.kilos),
-      adelanto: `₡${formatCurrency(totals.adelanto)}`,
-      total_a_pagar: `₡${formatCurrency(totals.total)}`
-    }
-  }, [totals])
 
   return (
     <div className="space-y-4">

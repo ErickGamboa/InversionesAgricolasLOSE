@@ -151,6 +151,12 @@ export function VentasPlantasTable({
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
 
+  const footerData = useMemo(() => {
+    return {
+      total_pagar_pina: `₡${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
+    }
+  }, [filteredVentas])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -159,11 +165,6 @@ export function VentasPlantasTable({
     )
   }
 
-  const footerData = useMemo(() => {
-    return {
-      total_pagar_pina: `₡${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
-    }
-  }, [filteredVentas])
 
   return (
     <div className="space-y-4">

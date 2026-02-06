@@ -145,14 +145,6 @@ export function ComprasEspecialesTable({
     { cajas: 0, pinas: 0, kilos: 0, total: 0 }
   )
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Spinner size="lg" text="Cargando compras..." />
-      </div>
-    )
-  }
-
   const footerData = useMemo(() => {
     return {
       numero_cajas: formatNumber(totals.cajas),
@@ -161,6 +153,15 @@ export function ComprasEspecialesTable({
       total_a_pagar: `₡${formatCurrency(totals.total)}`
     }
   }, [totals])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Spinner size="lg" text="Cargando compras..." />
+      </div>
+    )
+  }
+
 
   return (
     <div className="space-y-4">

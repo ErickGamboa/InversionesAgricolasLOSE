@@ -144,6 +144,14 @@ export function ComprasRegularesTable({
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
 
+  const footerData = useMemo(() => {
+    const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    return {
+      total_a_pagar: `CRC: ${formatCurrency(crc)} / USD: ${formatCurrency(usd, true)}`
+    }
+  }, [filteredCompras])
+
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
@@ -152,13 +160,6 @@ export function ComprasRegularesTable({
     )
   }
 
-  const footerData = useMemo(() => {
-    const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
-    const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
-    return {
-      total_a_pagar: `CRC: ${formatCurrency(crc)} / USD: ${formatCurrency(usd, true)}`
-    }
-  }, [filteredCompras])
 
   return (
     <div className="space-y-4">

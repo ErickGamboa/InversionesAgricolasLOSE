@@ -121,18 +121,10 @@ export function TransporteInternoTable({
     { diesel: 0, ingreso: 0, balance: 0 }
   )
 
-  if (isLoading) {
-    return (
-      <div className="flex items-center justify-center py-8">
-        <Spinner size="lg" text="Cargando transportes..." />
-      </div>
-    )
-  }
-
-  const exportData = filteredTransportes.map(t => ({
+  const exportData = useMemo(() => filteredTransportes.map(t => ({
     ...t,
     balance: t.ingreso - t.diesel
-  }))
+  })), [filteredTransportes])
 
   const footerData = useMemo(() => {
     return {
@@ -141,6 +133,15 @@ export function TransporteInternoTable({
       balance: `₡${formatCurrency(totals.balance)}`
     }
   }, [totals])
+
+  if (isLoading) {
+    return (
+      <div className="flex items-center justify-center py-8">
+        <Spinner size="lg" text="Cargando transportes..." />
+      </div>
+    )
+  }
+
 
   return (
     <div className="space-y-4">
