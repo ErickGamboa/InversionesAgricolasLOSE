@@ -143,11 +143,9 @@ export function VentasPlantasForm({
   const precioIQF = Number(formData.precio_iqf) || 0
   const precioJugo = Number(formData.precio_jugo) || 0
   
-  // Total a pagar castigo usa el precio correspondiente al tipo de piña
+  // Total a pagar castigo usa el precio de jugo si es IQF y hay castigo
   const totalPagarCastigo = castigoKilos > 0
-    ? formData.tipo_pina === "IQF"
-      ? castigoKilos * precioIQF
-      : formData.tipo_pina === "Jugo"
+    ? (formData.tipo_pina === "IQF" || formData.tipo_pina === "Jugo")
       ? castigoKilos * precioJugo
       : 0
     : 0
@@ -174,7 +172,7 @@ export function VentasPlantasForm({
       castigo_kilos: castigoKilos,
       total_kilos: totalKilos,
       precio_iqf: formData.tipo_pina === "IQF" ? precioIQF : null,
-      precio_jugo: formData.tipo_pina === "Jugo" ? precioJugo : null,
+      precio_jugo: (formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") ? precioJugo : null,
       total_pagar_castigo: totalPagarCastigo,
       total_pagar_pina: totalPagarPina,
     }
@@ -375,7 +373,7 @@ export function VentasPlantasForm({
               </div>
             )}
 
-            {formData.tipo_pina === "Jugo" && (
+            {(formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") && (
               <div className="space-y-2">
                 <Label htmlFor="precio_jugo" className="whitespace-nowrap">Precio Jugo (₡)</Label>
                 <Input
