@@ -37,10 +37,12 @@ const fields = [
 
 export default async function ClientesPage() {
   const supabase = await createClient()
-  const { data: clientes } = await supabase
+  const { data } = await supabase
     .from("clientes")
     .select("*")
     .order("nombre")
+
+  const clientes = (data || []) as Cliente[]
 
   return (
     <>
@@ -67,7 +69,7 @@ export default async function ClientesPage() {
           singularTitle="Cliente"
           description="Administre los clientes del sistema"
           fields={fields}
-          data={clientes ?? []}
+          data={clientes}
         />
       </div>
     </>

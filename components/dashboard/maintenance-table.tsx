@@ -52,7 +52,7 @@ interface Field {
   options?: { value: string; label: string }[]
 }
 
-interface MaintenanceTableProps<T> {
+interface MaintenanceTableProps<T extends { id: number; activo: boolean }> {
   tableName: string
   title: string
   singularTitle?: string
