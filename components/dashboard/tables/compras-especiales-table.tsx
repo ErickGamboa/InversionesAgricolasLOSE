@@ -64,6 +64,8 @@ const ALL_COLUMNS = [
   { key: "pagado", label: "Pagado" },
 ]
 
+const FILTERS_STORAGE_KEY = "compras_especiales_filters"
+
 export function ComprasEspecialesTable({
   compras,
   onEdit,
@@ -90,14 +92,55 @@ export function ComprasEspecialesTable({
     return Object.fromEntries(searchParams.entries())
   }, [searchParams])
 
+  // Restaurar filtros guardados al montar el componente
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    
+    // Solo restaurar si la URL no tiene filtros
+    if (searchParams.toString() === "") {
+      const savedFilters = localStorage.getItem(FILTERS_STORAGE_KEY)
+      if (savedFilters) {
+        try {
+          const parsedFilters = JSON.parse(savedFilters)
+          const params = new URLSearchParams()
+          Object.entries(parsedFilters).forEach(([key, value]) => {
+            if (value) params.set(key, value as string)
+          })
+          if (params.toString()) {
+            router.replace(`${pathname}?${params.toString()}`, { scroll: false })
+          }
+        } catch {
+          // Ignorar errores de parsing
+        }
+      }
+    }
+  }, []) // Solo ejecutar al montar
+
+  // Guardar filtros cuando cambien
+  useEffect(() => {
+    if (typeof window === "undefined") return
+    
+    const filtersObject = Object.fromEntries(searchParams.entries())
+    if (Object.keys(filtersObject).length > 0) {
+      localStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(filtersObject))
+    } else {
+      localStorage.removeItem(FILTERS_STORAGE_KEY)
+    }
+  }, [searchParams])
+
   const setFilter = (key: string, value: string) => {
     const params = new URLSearchParams(searchParams.toString())
     if (value) params.set(key, value)
     else params.delete(key)
-    router.replace(`${pathname}?${params.toString()}`)
+    router.replace(`${pathname}?${params.toString()}`, { scroll: false })
   }
 
-  const clearFilters = () => router.replace(pathname)
+  const clearFilters = () => {
+    router.replace(pathname, { scroll: false })
+    if (typeof window !== "undefined") {
+      localStorage.removeItem(FILTERS_STORAGE_KEY)
+    }
+  }
 
   const toggleColumn = (key: string) => {
     setVisibleColumns(prev => 
