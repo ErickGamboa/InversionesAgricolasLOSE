@@ -46,6 +46,14 @@ function getISOWeek(date: Date): number {
   return 1 + Math.ceil((firstThursday - tmpDate.valueOf()) / 604800000)
 }
 
+// Función para obtener la fecha local en formato YYYY-MM-DD (corrige bug de timezone)
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 export function ComprasRegularesForm({
   initialData,
   onSubmit,
@@ -63,7 +71,7 @@ export function ComprasRegularesForm({
   const [tiposPago, setTiposPago] = useState<SelectOption[]>(tiposPagoProp || [])
 
   const [formData, setFormData] = useState({
-    fecha: new Date().toISOString().split("T")[0],
+    fecha: getLocalDateString(new Date()),
     numero_semana: getISOWeek(new Date()),
     pago_dolares: false,
     lugar_procedencia: "",
@@ -85,7 +93,7 @@ export function ComprasRegularesForm({
 
   useEffect(() => {
     if (initialData) {
-      const fecha = (initialData.fecha as string) || new Date().toISOString().split("T")[0]
+      const fecha = (initialData.fecha as string) || getLocalDateString(new Date())
       const fechaDate = new Date(fecha)
       
       setFormData({
@@ -197,7 +205,7 @@ export function ComprasRegularesForm({
       
       // Reset form
       setFormData({
-        fecha: new Date().toISOString().split("T")[0],
+        fecha: getLocalDateString(new Date()),
         numero_semana: getISOWeek(new Date()),
         pago_dolares: false,
         lugar_procedencia: "",
