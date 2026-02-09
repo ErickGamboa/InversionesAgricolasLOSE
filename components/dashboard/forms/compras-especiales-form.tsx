@@ -238,7 +238,6 @@ export function ComprasEspecialesForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
@@ -338,7 +337,6 @@ export function ComprasEspecialesForm({
                 min="0"
                 value={formData.numero_cajas}
                 onChange={(e) => setFormData(prev => ({ ...prev, numero_cajas: e.target.value }))}
-                required
               />
             </div>
 
@@ -350,7 +348,6 @@ export function ComprasEspecialesForm({
                 min="0"
                 value={formData.pinas_por_caja}
                 onChange={(e) => setFormData(prev => ({ ...prev, pinas_por_caja: e.target.value }))}
-                required
               />
             </div>
 
@@ -373,7 +370,6 @@ export function ComprasEspecialesForm({
                 min="0"
                 value={formData.total_kilos}
                 onChange={(e) => setFormData(prev => ({ ...prev, total_kilos: e.target.value }))}
-                required
               />
             </div>
 
@@ -386,7 +382,6 @@ export function ComprasEspecialesForm({
                 min="0"
                 value={formData.precio_por_kilo}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_por_kilo: e.target.value }))}
-                required
               />
             </div>
 

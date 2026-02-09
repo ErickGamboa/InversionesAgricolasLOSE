@@ -242,7 +242,6 @@ export function TransporteContratadoForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
@@ -328,7 +327,6 @@ export function TransporteContratadoForm({
                 min="0"
                 value={formData.total_kilos}
                 onChange={(e) => setFormData(prev => ({ ...prev, total_kilos: e.target.value }))}
-                required
               />
             </div>
 
@@ -341,7 +339,6 @@ export function TransporteContratadoForm({
                 min="0"
                 value={formData.precio_por_kilo}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_por_kilo: e.target.value }))}
-                required
               />
             </div>
 

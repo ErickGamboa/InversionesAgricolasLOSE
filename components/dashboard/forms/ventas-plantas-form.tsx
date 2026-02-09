@@ -248,7 +248,6 @@ export function VentasPlantasForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
@@ -317,7 +316,6 @@ export function VentasPlantasForm({
                 key={`tipo-pina-${formData.tipo_pina}`}
                 value={formData.tipo_pina}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_pina: value }))}
-                required
               >
                 <SelectTrigger id="tipo_pina">
                   <SelectValue placeholder="Seleccione..." />
@@ -338,7 +336,6 @@ export function VentasPlantasForm({
                 min="0"
                 value={formData.kilos_reportados}
                 onChange={(e) => setFormData(prev => ({ ...prev, kilos_reportados: e.target.value }))}
-                required
               />
             </div>
 
@@ -362,14 +359,13 @@ export function VentasPlantasForm({
               <div className="space-y-2">
                 <Label htmlFor="precio_iqf" className="whitespace-nowrap">Precio IQF (₡)</Label>
                 <Input
-                  id="precio_iqf"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.precio_iqf}
-                  onChange={(e) => setFormData(prev => ({ ...prev, precio_iqf: e.target.value }))}
-                  required
-                />
+                id="precio_iqf"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.precio_iqf}
+                onChange={(e) => setFormData(prev => ({ ...prev, precio_iqf: e.target.value }))}
+              />
               </div>
             )}
 
@@ -377,14 +373,13 @@ export function VentasPlantasForm({
               <div className="space-y-2">
                 <Label htmlFor="precio_jugo" className="whitespace-nowrap">Precio Jugo (₡)</Label>
                 <Input
-                  id="precio_jugo"
-                  type="number"
-                  step="0.01"
-                  min="0"
-                  value={formData.precio_jugo}
-                  onChange={(e) => setFormData(prev => ({ ...prev, precio_jugo: e.target.value }))}
-                  required
-                />
+                id="precio_jugo"
+                type="number"
+                step="0.01"
+                min="0"
+                value={formData.precio_jugo}
+                onChange={(e) => setFormData(prev => ({ ...prev, precio_jugo: e.target.value }))}
+              />
               </div>
             )}
           </div>

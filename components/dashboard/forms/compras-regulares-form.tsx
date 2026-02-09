@@ -256,7 +256,6 @@ export function ComprasRegularesForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
@@ -370,7 +369,6 @@ export function ComprasRegularesForm({
                 key={`tipo-pina-${formData.tipo_pina}`}
                 value={formData.tipo_pina}
                 onValueChange={(value) => setFormData(prev => ({ ...prev, tipo_pina: value }))}
-                required
               >
                 <SelectTrigger id="tipo_pina">
                   <SelectValue placeholder="Seleccione..." />
@@ -391,7 +389,6 @@ export function ComprasRegularesForm({
                 min="0"
                 value={formData.numero_kilos}
                 onChange={(e) => setFormData(prev => ({ ...prev, numero_kilos: e.target.value }))}
-                required
               />
             </div>
 
@@ -406,7 +403,6 @@ export function ComprasRegularesForm({
                 min="0"
                 value={formData.precio_piña}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_piña: e.target.value }))}
-                required
               />
             </div>
           </div>

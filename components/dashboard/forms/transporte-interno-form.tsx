@@ -207,7 +207,6 @@ export function TransporteInternoForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
