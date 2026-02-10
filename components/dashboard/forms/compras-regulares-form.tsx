@@ -80,6 +80,7 @@ export function ComprasRegularesForm({
     numero_boleta: "",
     nb_tickete: "",
     chofer_id: "",
+    choferes_info: "",
     tipo_pina: "",
     numero_kilos: "",
     precio_piña: "",
@@ -106,6 +107,7 @@ export function ComprasRegularesForm({
         numero_boleta: String(initialData.numero_boleta || ""),
         nb_tickete: String(initialData.nb_tickete || ""),
         chofer_id: String(initialData.chofer_id || ""),
+        choferes_info: String(initialData.choferes_info || ""),
         tipo_pina: String(initialData.tipo_pina || ""),
         numero_kilos: String(initialData.numero_kilos || ""),
         precio_piña: String(initialData.precio_piña || ""),
@@ -214,6 +216,7 @@ export function ComprasRegularesForm({
         numero_boleta: "",
         nb_tickete: "",
         chofer_id: "",
+        choferes_info: "",
         tipo_pina: "",
         numero_kilos: "",
         precio_piña: "",
@@ -359,14 +362,28 @@ export function ComprasRegularesForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
-              <SearchableSelect
-                options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
-                value={formData.chofer_id}
-                onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
-                placeholder="Seleccione chofer..."
-                emptyText="No se encontró el chofer"
-              />
+              <Label htmlFor="chofer" className="whitespace-nowrap">
+                Chofer {formData.choferes_info && <span className="text-amber-600 text-xs">(Desde Recepción)</span>}
+              </Label>
+              {formData.choferes_info ? (
+                <div className="rounded-md border bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Distribución de choferes:</p>
+                  <pre className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
+                    {formData.choferes_info}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2 italic">
+                    No editable - Definido en sistema de recepción
+                  </p>
+                </div>
+              ) : (
+                <SearchableSelect
+                  options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
+                  value={formData.chofer_id}
+                  onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
+                  placeholder="Seleccione chofer..."
+                  emptyText="No se encontró el chofer"
+                />
+              )}
             </div>
           </div>
 

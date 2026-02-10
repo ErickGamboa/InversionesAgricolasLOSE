@@ -35,6 +35,8 @@ interface CompraRegular {
   cliente?: { nombre: string }
   numero_boleta?: string
   nb_tickete?: string
+  chofer_id?: number | null
+  choferes_info?: string
   chofer?: { nombre: string }
   tipo_pina: string
   numero_kilos: number
@@ -162,7 +164,9 @@ export function ComprasRegularesTable({
         if (key === "cliente") {
           if (!compra.cliente?.nombre?.toLowerCase().includes(searchLower)) return false
         } else if (key === "chofer") {
-          if (!compra.chofer?.nombre?.toLowerCase().includes(searchLower)) return false
+          const hasInList = compra.choferes_info?.toLowerCase().includes(searchLower)
+          const hasInName = compra.chofer?.nombre?.toLowerCase().includes(searchLower)
+          if (!hasInList && !hasInName) return false
         } else if (key === "tipo_pina") {
           if (compra.tipo_pina !== value) return false
         } else if (key === "procedencia") {
@@ -325,7 +329,26 @@ export function ComprasRegularesTable({
                         {compra.procedencia_tipo && <Badge variant="outline" className="ml-1 text-[10px]">{compra.procedencia_tipo}</Badge>}
                       </TableCell>
                     )}
-                    {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
+                    {visibleColumns.includes("chofer.nombre") && (
+                      <TableCell>
+                        {compra.choferes_info ? (
+                          <div>
+                            <pre className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
+                              {compra.choferes_info}
+                            </pre>
+                            {compra.chofer?.nombre && (
+                              <span className="text-[10px] text-muted-foreground mt-1 block">
+                                Principal: {compra.chofer.nombre}
+                              </span>
+                            )}
+                          </div>
+                        ) : compra.chofer?.nombre ? (
+                          <span>{compra.chofer.nombre}</span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                    )}
                     {visibleColumns.includes("tipo_pina") && (
                       <TableCell>
                         <Badge className={compra.tipo_pina === "IQF" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"}>

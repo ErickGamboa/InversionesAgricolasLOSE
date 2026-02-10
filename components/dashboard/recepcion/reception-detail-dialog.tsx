@@ -253,22 +253,80 @@ export function ReceptionDetailDialog({
   }
 
   const confirmFinalize = async () => {
-    if (!recepcionId) return
+    if (!recepcionId || !recepcion) return
 
     try {
-      const { error } = await supabase
+      // 1. Finalizar la recepción
+      const { error: updateError } = await supabase
         .from("recepciones")
         .update({ estado: 'finalizado' })
         .eq("id", recepcionId)
 
-      if (error) throw error
+      if (updateError) throw updateError
 
-      toast.success("Tarjeta finalizada")
+      // 2. Calcular kilos totales y por chofer
+      const binesDespachados = bines.filter(b => b.estado === 'despachado')
+      const totalKilosDespachados = binesDespachados.reduce((sum, b) => sum + (b.peso_neto || 0), 0)
+      
+      // Agrupar por chofer
+      const choferesPorKilos: { [key: string]: { nombre: string; kilos: number } } = {}
+      binesDespachados.forEach(bin => {
+        const choferNombre = bin.choferes?.nombre || "Sin asignar"
+        if (!choferesPorKilos[choferNombre]) {
+          choferesPorKilos[choferNombre] = { nombre: choferNombre, kilos: 0 }
+        }
+        choferesPorKilos[choferNombre].kilos += bin.peso_neto || 0
+      })
+
+      // Formatear lista de choferes con saltos de línea
+      const choferesFormateados = Object.values(choferesPorKilos)
+        .map(c => {
+          const porcentaje = totalKilosDespachados > 0 
+            ? ((c.kilos / totalKilosDespachados) * 100).toFixed(1)
+            : "0.0"
+          return `${c.nombre}: ${porcentaje}% (${c.kilos.toLocaleString()}kg)`
+        })
+        .join('\n')
+
+      // 3. Calcular número de semana
+      const fecha = new Date(recepcion.fecha_creacion)
+      const inicioAno = new Date(fecha.getFullYear(), 0, 1)
+      const diasDiferencia = Math.floor((fecha.getTime() - inicioAno.getTime()) / (1000 * 60 * 60 * 24))
+      const numeroSemana = Math.ceil((diasDiferencia + inicioAno.getDay() + 1) / 7)
+
+      // 4. Crear registro en compras_regulares
+      const { error: compraError } = await supabase
+        .from("compras_regulares")
+        .insert({
+          fecha: fecha.toISOString().split('T')[0], // Solo la fecha (YYYY-MM-DD)
+          numero_semana: numeroSemana,
+          cliente_id: recepcion.cliente_id,
+          chofer_id: null, // NULL porque viene de recepción
+          choferes_info: choferesFormateados, // Lista completa con porcentajes
+          tipo_pina: recepcion.tipo_pina || 'IQF', // Default a IQF si no está definido
+          procedencia_tipo: recepcion.procedencia_tipo || 'campo', // Default a campo
+          numero_kilos: totalKilosDespachados,
+          // Campos financieros vacíos (para que el admin los complete después)
+          precio_piña: null,
+          total_a_pagar: null,
+          numero_boleta: null,
+          nb_tickete: null,
+          tipo_pago_id: null,
+          numero_deposito: null,
+          numero_factura: null,
+          lugar_procedencia: null,
+          pago_dolares: false,
+          pagado: false
+        })
+
+      if (compraError) throw compraError
+
+      toast.success("Tarjeta finalizada y registrada en Compras Regulares")
       onOpenChange(false)
       onUpdate()
     } catch (error) {
       console.error(error)
-      toast.error("Error al finalizar")
+      toast.error("Error al finalizar: " + (error instanceof Error ? error.message : "Error desconocido"))
     } finally {
       setShowFinalizeAlert(false)
     }
