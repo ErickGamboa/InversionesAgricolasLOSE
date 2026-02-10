@@ -182,7 +182,7 @@ export function ComprasRegularesForm({
       cliente_id: Number(formData.cliente_id),
       numero_boleta: formData.numero_boleta || null,
       nb_tickete: formData.nb_tickete || null,
-      chofer_id: Number(formData.chofer_id),
+      chofer_id: formData.chofer_id ? Number(formData.chofer_id) : null,
       tipo_pina: formData.tipo_pina,
       numero_kilos: numeroKilos,
       precio_piña: precioPiña,
