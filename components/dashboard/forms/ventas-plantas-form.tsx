@@ -32,17 +32,29 @@ interface VentasPlantasFormProps {
   choferes?: SelectOption[]
 }
 
-// Función para obtener el número de semana ISO
-function getISOWeek(date: Date): number {
-  const tmpDate = new Date(date.valueOf())
-  const dayNumber = (tmpDate.getDay() + 6) % 7
-  tmpDate.setDate(tmpDate.getDate() - dayNumber + 3)
-  const firstThursday = tmpDate.valueOf()
-  tmpDate.setMonth(0, 1)
-  if (tmpDate.getDay() !== 4) {
-    tmpDate.setMonth(0, 1 + ((4 - tmpDate.getDay()) + 7) % 7)
+function getWeekNumber(date: Date): number {
+  const year = date.getFullYear()
+  const startOfYear = new Date(year, 0, 1)
+  const dayOfWeek = startOfYear.getDay() // 0=domingo, 1=lunes, ..., 6=sábado
+  
+  // Encontrar el domingo de inicio de la semana 1
+  // Si 1 enero es domingo (0), empieza el 1 de enero
+  // Si 1 enero es lunes (1), empieza el 31 de diciembre (1 día antes)
+  // Si 1 enero es martes (2), empieza el 30 de diciembre (2 días antes)
+  const daysToSubtract = dayOfWeek === 0 ? 0 : dayOfWeek
+  const week1Start = new Date(year, 0, 1 - daysToSubtract)
+  
+  // Si la fecha es anterior al inicio de la semana 1, calcular del año anterior
+  if (date < week1Start) {
+    return getWeekNumber(new Date(year - 1, 11, 31))
   }
-  return 1 + Math.ceil((firstThursday - tmpDate.valueOf()) / 604800000)
+  
+  // Días transcurridos desde el inicio de la semana 1
+  const diffTime = date.getTime() - week1Start.getTime()
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  // Calcular número de semana (1-indexed)
+  return Math.floor(diffDays / 7) + 1
 }
 
 // Función para obtener la fecha local en formato YYYY-MM-DD (corrige bug de timezone)
@@ -69,7 +81,7 @@ export function VentasPlantasForm({
 
   const [formData, setFormData] = useState({
     fecha: getLocalDateString(new Date()),
-    numero_semana: getISOWeek(new Date()),
+    numero_semana: getWeekNumber(new Date()),
     planta_id: "",
     chofer_id: "",
     numero_boleta: "",
@@ -79,6 +91,7 @@ export function VentasPlantasForm({
     porcentaje_castigo: "0",
     precio_iqf: "",
     precio_jugo: "",
+    pago_dolares: true,
   })
 
   const supabase = createClient()
@@ -91,7 +104,7 @@ export function VentasPlantasForm({
       
       setFormData({
         fecha: fecha,
-        numero_semana: initialData.numero_semana as number || getISOWeek(fechaDate),
+        numero_semana: initialData.numero_semana as number || getWeekNumber(fechaDate),
         planta_id: String(initialData.planta_id || ""),
         chofer_id: String(initialData.chofer_id || ""),
         numero_boleta: String(initialData.numero_boleta || ""),
@@ -101,6 +114,7 @@ export function VentasPlantasForm({
         porcentaje_castigo: String(initialData.porcentaje_castigo || "0"),
         precio_iqf: String(initialData.precio_iqf || ""),
         precio_jugo: String(initialData.precio_jugo || ""),
+        pago_dolares: (initialData.pago_dolares as boolean) ?? true,
       })
     }
   }, [initialData])
@@ -133,8 +147,10 @@ export function VentasPlantasForm({
 
   // Actualizar número de semana cuando cambia la fecha
   const handleFechaChange = (fecha: string) => {
-    const date = new Date(fecha)
-    const weekNumber = getISOWeek(date)
+    // Crear fecha ajustando para timezone local
+    const [year, month, day] = fecha.split('-').map(Number)
+    const date = new Date(year, month - 1, day) // Mes es 0-indexed
+    const weekNumber = getWeekNumber(date)
     setFormData(prev => ({
       ...prev,
       fecha,
@@ -183,6 +199,7 @@ export function VentasPlantasForm({
       precio_jugo: (formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") ? precioJugo : null,
       total_pagar_castigo: totalPagarCastigo,
       total_pagar_pina: totalPagarPina,
+      pago_dolares: true,
     }
 
     if (isControlled && onSubmit) {
@@ -200,7 +217,7 @@ export function VentasPlantasForm({
       // Reset form
       setFormData({
         fecha: getLocalDateString(new Date()),
-        numero_semana: getISOWeek(new Date()),
+        numero_semana: getWeekNumber(new Date()),
         planta_id: "",
         chofer_id: "",
         numero_boleta: "",
@@ -210,6 +227,7 @@ export function VentasPlantasForm({
         porcentaje_castigo: "0",
         precio_iqf: "",
         precio_jugo: "",
+        pago_dolares: true,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
@@ -282,7 +300,20 @@ export function VentasPlantasForm({
             </div>
           </div>
 
-          {/* Fila 2: Chofer, Boleta, Ticket */}
+           {/* Indicador de Moneda */}
+          <div className="flex items-center space-x-2 bg-blue-50 p-3 rounded-md border border-blue-100">
+            <input 
+              type="checkbox" 
+              checked={true} 
+              disabled 
+              className="h-4 w-4 text-blue-600"
+            />
+            <Label className="text-sm font-medium text-blue-800">
+              Todas las ventas a plantas se realizan en Dólares ($)
+            </Label>
+          </div>
+
+           {/* Fila 2: Chofer, Boleta, Ticket */}
           <div className="grid gap-6 sm:grid-cols-3">
             <div className="space-y-2">
               <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
@@ -365,7 +396,7 @@ export function VentasPlantasForm({
           <div className="grid gap-6 sm:grid-cols-2">
             {formData.tipo_pina === "IQF" && (
               <div className="space-y-2">
-                <Label htmlFor="precio_iqf" className="whitespace-nowrap">Precio IQF (₡)</Label>
+                <Label htmlFor="precio_iqf" className="whitespace-nowrap">Precio IQF ($)</Label>
                 <Input
                 id="precio_iqf"
                 type="number"
@@ -379,7 +410,7 @@ export function VentasPlantasForm({
 
             {(formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") && (
               <div className="space-y-2">
-                <Label htmlFor="precio_jugo" className="whitespace-nowrap">Precio Jugo (₡)</Label>
+                <Label htmlFor="precio_jugo" className="whitespace-nowrap">Precio Jugo ($)</Label>
                 <Input
                 id="precio_jugo"
                 type="number"
@@ -414,14 +445,14 @@ export function VentasPlantasForm({
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar Castigo</Label>
                 <div className="flex h-9 items-center rounded-md border bg-background px-3 text-sm font-medium overflow-hidden">
-                  <span className="truncate">₡{formatCurrency(totalPagarCastigo)}</span>
+                  <span className="truncate">${formatCurrency(totalPagarCastigo)}</span>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar Piña</Label>
                 <div className="flex h-9 items-center rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary overflow-hidden">
-                  <span className="truncate">₡{formatCurrency(totalPagarPina)}</span>
+                  <span className="truncate">${formatCurrency(totalPagarPina)}</span>
                 </div>
               </div>
             </div>
