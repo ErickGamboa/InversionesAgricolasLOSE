@@ -40,7 +40,6 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
-import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   Loader2,
   Scale,
@@ -286,41 +285,52 @@ export function ReceptionDetailDialog({
   return (
     <>
       <Dialog open={open} onOpenChange={onOpenChange}>
-        <DialogContent className="max-w-[95vw] w-full max-h-[90vh] h-full flex flex-col p-0 gap-0 overflow-hidden sm:max-w-[95vw]">
+        <DialogContent className="max-w-[95vw] w-full h-[85dvh] flex flex-col p-0 gap-0 overflow-hidden sm:max-w-[95vw] sm:h-[90vh] [&>button]:hidden">
           {/* Header */}
-          <div className={cn("px-6 py-4 border-b flex justify-between items-center shrink-0", recepcion.color_etiqueta)}>
-            <div className="text-white">
-              <DialogTitle className="text-2xl font-bold flex items-center gap-2">
-                {recepcion.clientes?.nombre}
-                {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white">Rechazo</Badge>}
+          <div className={cn("px-4 sm:px-6 py-3 border-b flex justify-between items-center shrink-0", recepcion.color_etiqueta)}>
+            <div className="text-white min-w-0 flex-1">
+              <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
+                <span className="truncate">{recepcion.clientes?.nombre}</span>
+                {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
               </DialogTitle>
-              <DialogDescription className="text-white/80 mt-1 flex gap-4">
-                <span className="flex items-center gap-1"><User className="h-4 w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
-                <span className="flex items-center gap-1"><Scale className="h-4 w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+              <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
+                <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
+                <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
               </DialogDescription>
             </div>
-            <div className="flex items-center gap-2">
-              <Badge variant="secondary" className="text-lg px-3 py-1">
+            <div className="flex items-center gap-3 sm:gap-6 ml-4">
+              <Badge variant="secondary" className="text-xs sm:text-lg px-2 sm:px-3 py-0.5 sm:py-1">
                 #{recepcion.id}
               </Badge>
               <Button 
-                variant="destructive" 
+                variant={allDispatched ? "destructive" : "secondary"}
                 size="sm"
                 onClick={() => setShowFinalizeAlert(true)}
-                disabled={bines.length === 0}
-                className={cn(allDispatched ? "animate-pulse" : "opacity-80")}
+                disabled={!allDispatched}
+                className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
               >
-                {allDispatched ? "Finalizar Tarjeta" : "Cerrar (Pendientes)"}
+                {allDispatched 
+                  ? "Finalizar Tarjeta" 
+                  : `Pendientes: ${binesPendientes.length}/${bines.length}`
+                }
+              </Button>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => onOpenChange(false)}
+                className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
+              >
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-5 w-5 sm:h-6 sm:w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
               </Button>
             </div>
           </div>
 
           <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
             {/* Panel Izquierdo: Input y Resumen */}
-            <div className="w-full md:w-96 shrink-0 bg-muted/20 border-r-0 md:border-r border-b md:border-b-0 p-4 flex flex-col gap-4 overflow-y-auto max-h-[40vh] md:max-h-full">
+            <div className="w-full md:w-80 lg:w-96 shrink-0 bg-muted/20 border-r-0 md:border-r border-b md:border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 overflow-y-auto max-h-[35vh] md:max-h-full">
               {recepcion.estado !== 'finalizado' && (
-                <div className="bg-card p-4 rounded-lg border shadow-sm space-y-3">
-                  <h3 className="font-semibold flex items-center gap-2">
+                <div className="bg-card p-3 sm:p-4 rounded-lg border shadow-sm space-y-2 sm:space-y-3">
+                  <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">
                     <Scale className="h-4 w-4 text-primary" /> Nuevo Pesaje
                   </h3>
                   <div className="space-y-2">
@@ -328,71 +338,67 @@ export function ReceptionDetailDialog({
                       <Input
                         ref={inputRef}
                         type="number"
-                        placeholder="Peso Bruto"
+                        placeholder="Peso"
                         value={pesoInput}
                         onChange={(e) => setPesoInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddBin()}
-                        className="text-lg font-bold h-12"
+                        className="text-base sm:text-lg font-bold h-10 sm:h-12"
                         autoComplete="off"
                       />
                       <Button 
                         size="icon" 
-                        className="h-12 w-12 shrink-0" 
+                        className="h-10 w-10 sm:h-12 sm:w-12 shrink-0" 
                         onClick={handleAddBin}
                         disabled={addingBin || !pesoInput}
                       >
-                        {addingBin ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-6 w-6" />}
+                        {addingBin ? <Loader2 className="h-5 w-5 animate-spin" /> : <CheckCircle2 className="h-5 w-5 sm:h-6 sm:w-6" />}
                       </Button>
                     </div>
                     {pesoInput && !isNaN(parseFloat(pesoInput)) && (
-                      <div className="text-sm text-center text-muted-foreground bg-muted py-1 rounded">
-                        Neto estimado: <span className="font-bold text-foreground">{(parseFloat(pesoInput) - 100).toLocaleString()} kg</span>
+                      <div className="text-xs sm:text-sm text-center text-muted-foreground bg-muted py-1 rounded">
+                        Neto: <span className="font-bold text-foreground">{(parseFloat(pesoInput) - 100).toLocaleString()} kg</span>
                       </div>
                     )}
                   </div>
                 </div>
               )}
 
-              <div className="space-y-4">
-                <div className="grid grid-cols-2 gap-2">
-                  <div className="bg-green-50 p-3 rounded-lg border border-green-100">
-                    <span className="text-xs text-green-600 font-medium">En Patio</span>
-                    <div className="text-2xl font-bold text-green-700">{binesPendientes.length}</div>
-                    <div className="text-xs text-green-600">pares</div>
-                  </div>
-                  <div className="bg-blue-50 p-3 rounded-lg border border-blue-100">
-                    <span className="text-xs text-blue-600 font-medium">Despachados</span>
-                    <div className="text-2xl font-bold text-blue-700">{binesDespachados.length}</div>
-                    <div className="text-xs text-blue-600">pares</div>
-                  </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-green-50 p-2 sm:p-3 rounded-lg border border-green-100 text-center sm:text-left">
+                  <span className="text-[10px] sm:text-xs text-green-600 font-medium">En Patio</span>
+                  <div className="text-xl sm:text-2xl font-bold text-green-700 leading-tight">{binesPendientes.length}</div>
+                  <div className="text-[10px] sm:text-xs text-green-600">pares</div>
                 </div>
-
-                <div className="bg-card p-4 rounded-lg border shadow-sm">
-                  <h3 className="font-semibold mb-2">Acciones</h3>
-                  <Button 
-                    className="w-full" 
-                    variant="outline"
-                    disabled={selectedBins.length === 0}
-                    onClick={() => setShowDispatchDialog(true)}
-                  >
-                    <Truck className="mr-2 h-4 w-4" />
-                    Despachar ({selectedBins.length})
-                  </Button>
+                <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 text-center sm:text-left">
+                  <span className="text-[10px] sm:text-xs text-blue-600 font-medium">Despachados</span>
+                  <div className="text-xl sm:text-2xl font-bold text-blue-700 leading-tight">{binesDespachados.length}</div>
+                  <div className="text-[10px] sm:text-xs text-blue-600">pares</div>
                 </div>
               </div>
+
+              <Button 
+                className="w-full" 
+                variant="outline"
+                size="sm"
+                disabled={selectedBins.length === 0}
+                onClick={() => setShowDispatchDialog(true)}
+              >
+                <Truck className="mr-2 h-4 w-4" />
+                Despachar ({selectedBins.length})
+              </Button>
             </div>
 
             {/* Panel Derecho: Lista de Bines */}
-            <div className="flex-1 flex flex-col overflow-hidden bg-background">
-              <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-sm px-4">
-                <span className="font-medium text-muted-foreground">Listado de Bines ({bines.length})</span>
-                <span className="text-xs text-muted-foreground">Ordenados por llegada (Reciente arriba)</span>
+            <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-0">
+              <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-xs sm:text-sm px-3 sm:px-4 shrink-0">
+                <span className="font-medium text-muted-foreground">Listado ({bines.length})</span>
+                <span className="text-muted-foreground hidden sm:inline">Reciente arriba</span>
               </div>
-              <ScrollArea className="flex-1">
+              <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0">
                 <Table>
                   <TableHeader className="sticky top-0 bg-background z-10 shadow-sm">
                     <TableRow>
-                      <TableHead className="w-[50px] text-center">
+                      <TableHead className="w-[40px] text-center p-1 sm:p-2">
                         <Checkbox 
                           checked={binesPendientes.length > 0 && selectedBins.length === binesPendientes.length}
                           onCheckedChange={(checked) => {
@@ -405,19 +411,18 @@ export function ReceptionDetailDialog({
                           disabled={binesPendientes.length === 0}
                         />
                       </TableHead>
-                      <TableHead className="text-center"># Par</TableHead>
-                      <TableHead className="text-right">Peso Bruto</TableHead>
-                      <TableHead className="text-right">Peso Neto</TableHead>
-                      <TableHead className="text-center">Estado</TableHead>
-                      <TableHead>Destino / Chofer</TableHead>
-                      <TableHead className="w-[50px]"></TableHead>
+                      <TableHead className="text-center p-1 sm:p-2 text-[10px] sm:text-sm min-w-[50px]">#</TableHead>
+                      <TableHead className="text-right p-1 sm:p-2 text-[10px] sm:text-sm min-w-[70px]">Neto</TableHead>
+                      <TableHead className="text-center p-1 sm:p-2 text-[10px] sm:text-sm min-w-[60px]">Estado</TableHead>
+                      <TableHead className="p-1 sm:p-2 text-[10px] sm:text-sm min-w-[100px]">Destino</TableHead>
+                      <TableHead className="w-[40px] p-1 sm:p-2"></TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {bines.length === 0 ? (
                       <TableRow>
-                        <TableCell colSpan={7} className="h-24 text-center text-muted-foreground">
-                          No hay bines registrados. Comience a pesar.
+                        <TableCell colSpan={6} className="h-24 text-center text-muted-foreground text-xs sm:text-sm">
+                          Sin registros.
                         </TableCell>
                       </TableRow>
                     ) : (
@@ -425,10 +430,11 @@ export function ReceptionDetailDialog({
                         <TableRow 
                           key={bin.id} 
                           className={cn(
+                            "text-[10px] sm:text-sm",
                             bin.estado === 'despachado' && "bg-muted/40 text-muted-foreground hover:bg-muted/50"
                           )}
                         >
-                          <TableCell className="text-center">
+                          <TableCell className="text-center p-1 sm:p-2">
                             {bin.estado === 'en_patio' && (
                               <Checkbox 
                                 checked={selectedBins.includes(bin.id)}
@@ -436,32 +442,31 @@ export function ReceptionDetailDialog({
                               />
                             )}
                           </TableCell>
-                          <TableCell className="text-center font-medium">#{bin.numero_par}</TableCell>
-                          <TableCell className="text-right">{bin.peso_bruto.toLocaleString()} kg</TableCell>
-                          <TableCell className="text-right font-bold">{bin.peso_neto.toLocaleString()} kg</TableCell>
-                          <TableCell className="text-center">
-                            <Badge variant={bin.estado === 'en_patio' ? "secondary" : "outline"} className={cn(
-                              bin.estado === 'en_patio' ? "bg-green-100 text-green-700 hover:bg-green-200" : "text-muted-foreground"
+                          <TableCell className="text-center font-medium p-1 sm:p-2">#{bin.numero_par}</TableCell>
+                          <TableCell className="text-right font-bold p-1 sm:p-2">{bin.peso_neto.toLocaleString()}</TableCell>
+                          <TableCell className="text-center p-1 sm:p-2">
+                            <div className={cn(
+                              "inline-flex items-center rounded-full border px-1 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold",
+                              bin.estado === 'en_patio' 
+                                ? "border-transparent bg-green-100 text-green-700" 
+                                : "text-muted-foreground border-transparent bg-secondary"
                             )}>
-                              {bin.estado === 'en_patio' ? 'En Patio' : 'Despachado'}
-                            </Badge>
+                              {bin.estado === 'en_patio' ? 'Patio' : 'Fuera'}
+                            </div>
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="p-1 sm:p-2">
                             {bin.estado === 'despachado' ? (
-                              <div className="flex items-center gap-1 text-xs">
-                                <Truck className="h-3 w-3" />
-                                {bin.choferes?.nombre || "Sin datos"}
+                              <div className="flex items-center gap-1 text-[9px] sm:text-xs truncate max-w-[80px] sm:max-w-[100px]">
+                                {bin.choferes?.nombre || "-"}
                               </div>
-                            ) : (
-                              <span className="text-muted-foreground text-xs">-</span>
-                            )}
+                            ) : "-"}
                           </TableCell>
-                          <TableCell>
+                          <TableCell className="p-1 sm:p-2">
                             {bin.estado === 'en_patio' && (
                               <Button 
                                 variant="ghost" 
                                 size="icon" 
-                                className="h-6 w-6 text-destructive hover:bg-destructive/10"
+                                className="h-5 w-5 sm:h-6 sm:w-6 text-destructive hover:bg-destructive/10"
                                 onClick={() => setBinToDelete(bin.id)}
                               >
                                 <Trash2 className="h-3 w-3" />
@@ -473,7 +478,7 @@ export function ReceptionDetailDialog({
                     )}
                   </TableBody>
                 </Table>
-              </ScrollArea>
+              </div>
             </div>
           </div>
         </DialogContent>
