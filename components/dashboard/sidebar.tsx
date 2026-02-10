@@ -53,6 +53,11 @@ const mainMenuItems = [
 
 const operationsMenuItems = [
   {
+    title: "Recepción de Fruta",
+    url: "/dashboard/recepcion",
+    icon: Truck,
+  },
+  {
     title: "Ventas a Plantas",
     url: "/dashboard/ventas-plantas",
     icon: Building2,
