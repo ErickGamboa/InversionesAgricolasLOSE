@@ -363,7 +363,7 @@ export function TransactionForm({
               <Input
                 id="precio"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.precio}
                 onChange={(e) => setFormData((prev) => ({ ...prev, precio: e.target.value }))}

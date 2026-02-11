@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import Decimal from "decimal.js"
 
 interface SelectOption {
   id: number
@@ -65,6 +66,13 @@ function getLocalDateString(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+// Función para formatear a 4 decimales exactos sin redondeo
+const formatTo4Decimals = (value: unknown): string => {
+  if (!value && value !== 0) return ""
+  const num = new Decimal(value.toString())
+  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
 }
 
 export function ComprasEspecialesForm({
@@ -115,8 +123,8 @@ export function ComprasEspecialesForm({
         placa: String(initialData.placa || ""),
         numero_cajas: String(initialData.numero_cajas || ""),
         pinas_por_caja: String(initialData.pinas_por_caja || ""),
-        total_kilos: String(initialData.total_kilos || ""),
-        precio_por_kilo: String(initialData.precio_por_kilo || ""),
+        total_kilos: formatTo4Decimals(initialData.total_kilos),
+        precio_por_kilo: formatTo4Decimals(initialData.precio_por_kilo),
         pagado: (initialData.pagado as boolean) || false,
       })
     }
@@ -401,7 +409,7 @@ export function ComprasEspecialesForm({
               <Input
                 id="precio_por_kilo"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.precio_por_kilo}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_por_kilo: e.target.value }))}

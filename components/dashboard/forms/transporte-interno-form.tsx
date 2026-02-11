@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import Decimal from "decimal.js"
 
 interface SelectOption {
   id: number
@@ -67,6 +68,13 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+// Función para formatear a 4 decimales exactos sin redondeo
+const formatTo4Decimals = (value: unknown): string => {
+  if (!value && value !== 0) return ""
+  const num = new Decimal(value.toString())
+  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+}
+
 export function TransporteInternoForm({
   initialData,
   onSubmit,
@@ -106,8 +114,8 @@ export function TransporteInternoForm({
         chofer_id: String(initialData.chofer_id || ""),
         placa_id: String(initialData.placa_id || ""),
         cliente_id: String(initialData.cliente_id || ""),
-        diesel: String(initialData.diesel || ""),
-        ingreso: String(initialData.ingreso || ""),
+        diesel: formatTo4Decimals(initialData.diesel),
+        ingreso: formatTo4Decimals(initialData.ingreso),
       })
     }
   }, [initialData])
@@ -288,7 +296,7 @@ export function TransporteInternoForm({
               <Input
                 id="diesel"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.diesel}
                 onChange={(e) => setFormData(prev => ({ ...prev, diesel: e.target.value }))}
@@ -301,7 +309,7 @@ export function TransporteInternoForm({
               <Input
                 id="ingreso"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.ingreso}
                 onChange={(e) => setFormData(prev => ({ ...prev, ingreso: e.target.value }))}

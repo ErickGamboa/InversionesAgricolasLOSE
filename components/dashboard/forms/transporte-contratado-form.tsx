@@ -18,6 +18,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import Decimal from "decimal.js"
 
 interface SelectOption {
   id: number
@@ -68,6 +69,13 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+// Función para formatear a 4 decimales exactos sin redondeo
+const formatTo4Decimals = (value: unknown): string => {
+  if (!value && value !== 0) return ""
+  const num = new Decimal(value.toString())
+  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+}
+
 export function TransporteContratadoForm({
   initialData,
   onSubmit,
@@ -115,12 +123,12 @@ export function TransporteContratadoForm({
         planta_id: String(initialData.planta_id || ""),
         numero_boleta: String(initialData.numero_boleta || ""),
         nb_tickete: String(initialData.nb_tickete || ""),
-        total_kilos: String(initialData.total_kilos || ""),
-        precio_por_kilo: String(initialData.precio_por_kilo || ""),
+        total_kilos: formatTo4Decimals(initialData.total_kilos),
+        precio_por_kilo: formatTo4Decimals(initialData.precio_por_kilo),
         numero_factura: String(initialData.numero_factura || ""),
         numero_deposito: String(initialData.numero_deposito || ""),
         pagado: (initialData.pagado as boolean) || false,
-        adelanto: String(initialData.adelanto || ""),
+        adelanto: formatTo4Decimals(initialData.adelanto),
       })
     }
   }, [initialData])
@@ -358,7 +366,7 @@ export function TransporteContratadoForm({
               <Input
                 id="precio_por_kilo"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.precio_por_kilo}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_por_kilo: e.target.value }))}
@@ -370,7 +378,7 @@ export function TransporteContratadoForm({
               <Input
                 id="adelanto"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.adelanto}
                 onChange={(e) => setFormData(prev => ({ ...prev, adelanto: e.target.value }))}

@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import Decimal from "decimal.js"
 
 interface SelectOption {
   id: number
@@ -65,6 +66,13 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
+// Función para formatear a 4 decimales exactos sin redondeo
+const formatTo4Decimals = (value: unknown): string => {
+  if (!value && value !== 0) return ""
+  const num = new Decimal(value.toString())
+  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+}
+
 export function VentasPlantasForm({
   initialData,
   onSubmit,
@@ -91,7 +99,6 @@ export function VentasPlantasForm({
     porcentaje_castigo: "0",
     precio_iqf: "",
     precio_jugo: "",
-    pago_dolares: true,
   })
 
   const supabase = createClient()
@@ -110,11 +117,10 @@ export function VentasPlantasForm({
         numero_boleta: String(initialData.numero_boleta || ""),
         nb_tickete: String(initialData.nb_tickete || ""),
         tipo_pina: String(initialData.tipo_pina || ""),
-        kilos_reportados: String(initialData.kilos_reportados || ""),
-        porcentaje_castigo: String(initialData.porcentaje_castigo || "0"),
-        precio_iqf: String(initialData.precio_iqf || ""),
-        precio_jugo: String(initialData.precio_jugo || ""),
-        pago_dolares: (initialData.pago_dolares as boolean) ?? true,
+        kilos_reportados: formatTo4Decimals(initialData.kilos_reportados),
+        porcentaje_castigo: formatTo4Decimals(initialData.porcentaje_castigo) || "0",
+        precio_iqf: formatTo4Decimals(initialData.precio_iqf),
+        precio_jugo: formatTo4Decimals(initialData.precio_jugo),
       })
     }
   }, [initialData])
@@ -158,27 +164,27 @@ export function VentasPlantasForm({
     }))
   }
 
-  // Cálculos
-  const kilosReportados = Number(formData.kilos_reportados) || 0
-  const porcentajeCastigo = Number(formData.porcentaje_castigo) || 0
-  const castigoKilos = (porcentajeCastigo / 100) * kilosReportados
-  const totalKilos = kilosReportados - castigoKilos
+  // Cálculos con precisión decimal
+  const kilosReportados = new Decimal(formData.kilos_reportados || 0)
+  const porcentajeCastigo = new Decimal(formData.porcentaje_castigo || 0)
+  const castigoKilos = kilosReportados.mul(porcentajeCastigo).div(100)
+  const totalKilos = kilosReportados.sub(castigoKilos)
   
-  const precioIQF = Number(formData.precio_iqf) || 0
-  const precioJugo = Number(formData.precio_jugo) || 0
+  const precioIQF = new Decimal(formData.precio_iqf || 0)
+  const precioJugo = new Decimal(formData.precio_jugo || 0)
   
   // Total a pagar castigo usa el precio de jugo si es IQF y hay castigo
-  const totalPagarCastigo = castigoKilos > 0
+  const totalPagarCastigo = castigoKilos.gt(0)
     ? (formData.tipo_pina === "IQF" || formData.tipo_pina === "Jugo")
-      ? castigoKilos * precioJugo
-      : 0
-    : 0
+      ? castigoKilos.mul(precioJugo)
+      : new Decimal(0)
+    : new Decimal(0)
   
   const totalPagarPina = formData.tipo_pina === "Jugo"
-    ? totalKilos * precioJugo
+    ? totalKilos.mul(precioJugo)
     : formData.tipo_pina === "IQF"
-    ? totalKilos * precioIQF
-    : 0
+    ? totalKilos.mul(precioIQF)
+    : new Decimal(0)
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -191,15 +197,14 @@ export function VentasPlantasForm({
       numero_boleta: formData.numero_boleta || null,
       nb_tickete: formData.nb_tickete || null,
       tipo_pina: formData.tipo_pina,
-      kilos_reportados: kilosReportados,
-      porcentaje_castigo: porcentajeCastigo,
-      castigo_kilos: castigoKilos,
-      total_kilos: totalKilos,
-      precio_iqf: formData.tipo_pina === "IQF" ? precioIQF : null,
-      precio_jugo: (formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") ? precioJugo : null,
-      total_pagar_castigo: totalPagarCastigo,
-      total_pagar_pina: totalPagarPina,
-      pago_dolares: true,
+      kilos_reportados: kilosReportados.toNumber(),
+      porcentaje_castigo: porcentajeCastigo.toNumber(),
+      castigo_kilos: castigoKilos.toNumber(),
+      total_kilos: totalKilos.toNumber(),
+      precio_iqf: formData.tipo_pina === "IQF" ? precioIQF.toNumber() : null,
+      precio_jugo: (formData.tipo_pina === "Jugo" || formData.tipo_pina === "IQF") ? precioJugo.toNumber() : null,
+      total_pagar_castigo: totalPagarCastigo.toNumber(),
+      total_pagar_pina: totalPagarPina.toNumber(),
     }
 
     if (isControlled && onSubmit) {
@@ -227,7 +232,6 @@ export function VentasPlantasForm({
         porcentaje_castigo: "0",
         precio_iqf: "",
         precio_jugo: "",
-        pago_dolares: true,
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
@@ -237,8 +241,13 @@ export function VentasPlantasForm({
     }
   }
 
-  const formatCurrency = (num: number) =>
-    num.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const formatDecimal = (num: Decimal | number) => {
+    const value = num instanceof Decimal ? num.toNumber() : num
+    return value.toLocaleString("es-CR", { 
+      minimumFractionDigits: 0, 
+      maximumFractionDigits: 4 
+    })
+  }
 
   const isSubmittingState = isSubmittingProp || loading
 
@@ -298,19 +307,6 @@ export function VentasPlantasForm({
                 emptyText="No se encontró la planta"
               />
             </div>
-          </div>
-
-           {/* Indicador de Moneda */}
-          <div className="flex items-center space-x-2 bg-blue-50 p-3 rounded-md border border-blue-100">
-            <input 
-              type="checkbox" 
-              checked={true} 
-              disabled 
-              className="h-4 w-4 text-blue-600"
-            />
-            <Label className="text-sm font-medium text-blue-800">
-              Todas las ventas a plantas se realizan en Dólares ($)
-            </Label>
           </div>
 
            {/* Fila 2: Chofer, Boleta, Ticket */}
@@ -400,7 +396,7 @@ export function VentasPlantasForm({
                 <Input
                 id="precio_iqf"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.precio_iqf}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_iqf: e.target.value }))}
@@ -414,7 +410,7 @@ export function VentasPlantasForm({
                 <Input
                 id="precio_jugo"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.precio_jugo}
                 onChange={(e) => setFormData(prev => ({ ...prev, precio_jugo: e.target.value }))}
@@ -431,28 +427,28 @@ export function VentasPlantasForm({
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Castigo (kg)</Label>
                 <div className="flex h-9 items-center rounded-md border bg-background px-3 text-sm font-medium overflow-hidden">
-                  <span className="truncate">{castigoKilos.toLocaleString("es-CR", { minimumFractionDigits: 2 })} kg</span>
+                  <span className="truncate">{formatDecimal(castigoKilos)} kg</span>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Total Kilos</Label>
                 <div className="flex h-9 items-center rounded-md border bg-background px-3 text-sm font-medium overflow-hidden">
-                  <span className="truncate">{totalKilos.toLocaleString("es-CR", { minimumFractionDigits: 2 })} kg</span>
+                  <span className="truncate">{formatDecimal(totalKilos)} kg</span>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar Castigo</Label>
                 <div className="flex h-9 items-center rounded-md border bg-background px-3 text-sm font-medium overflow-hidden">
-                  <span className="truncate">${formatCurrency(totalPagarCastigo)}</span>
+                  <span className="truncate">${formatDecimal(totalPagarCastigo)}</span>
                 </div>
               </div>
 
               <div className="space-y-1">
                 <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar Piña</Label>
                 <div className="flex h-9 items-center rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary overflow-hidden">
-                  <span className="truncate">${formatCurrency(totalPagarPina)}</span>
+                  <span className="truncate">${formatDecimal(totalPagarPina)}</span>
                 </div>
               </div>
             </div>
