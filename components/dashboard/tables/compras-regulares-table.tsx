@@ -57,6 +57,8 @@ const ALL_COLUMNS = [
   { key: "fecha", label: "Fecha" },
   { key: "numero_semana", label: "Sem" },
   { key: "cliente.nombre", label: "Cliente" },
+  { key: "numero_boleta", label: "Boleta" },
+  { key: "nb_tickete", label: "NB/Tickete" },
   { key: "lugar_procedencia", label: "Procedencia" },
   { key: "chofer.nombre", label: "Chofer" },
   { key: "tipo_pina", label: "Tipo" },
@@ -64,6 +66,7 @@ const ALL_COLUMNS = [
   { key: "precio_piña", label: "Precio" },
   { key: "total_a_pagar", label: "Total" },
   { key: "pagado", label: "Pagado" },
+  { key: "numero_deposito", label: "Depósito" },
 ]
 
 const FILTERS_STORAGE_KEY = "compras_regulares_filters"
@@ -171,6 +174,12 @@ export function ComprasRegularesTable({
           if (compra.pagado.toString() !== value) return false
         } else if (key === "numero_semana") {
           if (compra.numero_semana.toString() !== value) return false
+        } else if (key === "numero_boleta") {
+          if (!compra.numero_boleta?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "nb_tickete") {
+          if (!compra.nb_tickete?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "numero_deposito") {
+          if (!compra.numero_deposito?.toLowerCase().includes(searchLower)) return false
         }
       }
       return true
@@ -232,6 +241,8 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
                 {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
+                {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
+                {visibleColumns.includes("nb_tickete") && <TableHead>NB/Tickete</TableHead>}
                 {visibleColumns.includes("lugar_procedencia") && <TableHead>Procedencia</TableHead>}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
                 {visibleColumns.includes("tipo_pina") && <TableHead>Tipo</TableHead>}
@@ -239,6 +250,7 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("precio_piña") && <TableHead className="text-right">Precio</TableHead>}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="text-right">Total</TableHead>}
                 {visibleColumns.includes("pagado") && <TableHead className="text-center">Pagado</TableHead>}
+                {visibleColumns.includes("numero_deposito") && <TableHead>Depósito</TableHead>}
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
 
@@ -264,6 +276,16 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("cliente.nombre") && (
                   <TableHead className="p-2">
                     <DebouncedInput placeholder="Cliente..." className="h-8 text-xs" value={filters.cliente || ""} onChange={(val) => setFilter("cliente", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Boleta..." className="h-8 text-xs" value={filters.numero_boleta || ""} onChange={(val) => setFilter("numero_boleta", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("nb_tickete") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Tickete..." className="h-8 text-xs" value={filters.nb_tickete || ""} onChange={(val) => setFilter("nb_tickete", val.toString())} />
                   </TableHead>
                 )}
                 {visibleColumns.includes("lugar_procedencia") && (
@@ -303,6 +325,11 @@ export function ComprasRegularesTable({
                     </Select>
                   </TableHead>
                 )}
+                {visibleColumns.includes("numero_deposito") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Depósito..." className="h-8 text-xs" value={filters.numero_deposito || ""} onChange={(val) => setFilter("numero_deposito", val.toString())} />
+                  </TableHead>
+                )}
                 <TableHead className="p-2" />
               </TableRow>
             </TableHeader>
@@ -319,6 +346,8 @@ export function ComprasRegularesTable({
                     {visibleColumns.includes("fecha") && <TableCell className="whitespace-nowrap">{compra.fecha}</TableCell>}
                     {visibleColumns.includes("numero_semana") && <TableCell>{compra.numero_semana}</TableCell>}
                     {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
+                    {visibleColumns.includes("numero_boleta") && <TableCell>{compra.numero_boleta || "-"}</TableCell>}
+                    {visibleColumns.includes("nb_tickete") && <TableCell>{compra.nb_tickete || "-"}</TableCell>}
                     {visibleColumns.includes("lugar_procedencia") && (
                       <TableCell>
                         {compra.lugar_procedencia || "-"}
@@ -349,6 +378,7 @@ export function ComprasRegularesTable({
                         <Checkbox checked={compra.pagado} disabled />
                       </TableCell>
                     )}
+                    {visibleColumns.includes("numero_deposito") && <TableCell>{compra.numero_deposito || "-"}</TableCell>}
                     <TableCell className="text-right">
                       <div className="flex justify-end gap-1">
                         <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => onEdit(compra)}><Pencil className="h-4 w-4" /></Button>
