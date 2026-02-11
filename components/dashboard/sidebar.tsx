@@ -51,12 +51,7 @@ const mainMenuItems = [
   },
 ]
 
-const operationsMenuItems = [
-  {
-    title: "Recepción de Fruta",
-    url: "/dashboard/recepcion",
-    icon: Truck,
-  },
+const adminOperationsMenuItems = [
   {
     title: "Ventas a Plantas",
     url: "/dashboard/ventas-plantas",
@@ -81,6 +76,14 @@ const operationsMenuItems = [
     title: "Transporte Interno",
     url: "/dashboard/transporte-interno",
     icon: ClipboardList,
+  },
+]
+
+const plantOperationsMenuItems = [
+  {
+    title: "Recepción de Fruta",
+    url: "/dashboard/recepcion",
+    icon: Truck,
   },
 ]
 
@@ -255,10 +258,28 @@ export function DashboardSidebar({ user }: { user: User }) {
         </SidebarGroup>
 
         <SidebarGroup>
-          <SidebarGroupLabel>Operaciones</SidebarGroupLabel>
+          <SidebarGroupLabel>Operaciones administrativas</SidebarGroupLabel>
           <SidebarGroupContent>
             <SidebarMenu>
-              {operationsMenuItems.map((item) => (
+              {adminOperationsMenuItems.map((item) => (
+                <SidebarMenuItem key={item.title}>
+                  <SidebarMenuButton asChild isActive={pathname === item.url}>
+                    <Link href={item.url}>
+                      <item.icon className="h-4 w-4" />
+                      <span>{item.title}</span>
+                    </Link>
+                  </SidebarMenuButton>
+                </SidebarMenuItem>
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
+
+        <SidebarGroup>
+          <SidebarGroupLabel>Operaciones en planta</SidebarGroupLabel>
+          <SidebarGroupContent>
+            <SidebarMenu>
+              {plantOperationsMenuItems.map((item) => (
                 <SidebarMenuItem key={item.title}>
                   <SidebarMenuButton asChild isActive={pathname === item.url}>
                     <Link href={item.url}>
