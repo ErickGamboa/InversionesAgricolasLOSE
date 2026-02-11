@@ -52,6 +52,14 @@ import {
 import { Recepcion, RecepcionBin } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
 
+// Función para obtener la fecha local en formato YYYY-MM-DD (corrige bug de timezone)
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 interface ReceptionDetailDialogProps {
   recepcionId: number | null
   open: boolean
@@ -298,7 +306,7 @@ export function ReceptionDetailDialog({
       const { error: compraError } = await supabase
         .from("compras_regulares")
         .insert({
-          fecha: fecha.toISOString().split('T')[0], // Solo la fecha (YYYY-MM-DD)
+          fecha: getLocalDateString(fecha), // Usa fecha local de Costa Rica, no UTC
           numero_semana: numeroSemana,
           cliente_id: recepcion.cliente_id,
           chofer_id: null, // NULL porque viene de recepción
