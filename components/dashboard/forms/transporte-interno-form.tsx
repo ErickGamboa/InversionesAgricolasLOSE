@@ -17,6 +17,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { toast } from "sonner"
 import { Plus, Save, X } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
+import Decimal from "decimal.js"
 
 interface SelectOption {
   id: number
@@ -34,16 +35,29 @@ interface TransporteInternoFormProps {
   clientes?: SelectOption[]
 }
 
-function getISOWeek(date: Date): number {
-  const tmpDate = new Date(date.valueOf())
-  const dayNumber = (tmpDate.getDay() + 6) % 7
-  tmpDate.setDate(tmpDate.getDate() - dayNumber + 3)
-  const firstThursday = tmpDate.valueOf()
-  tmpDate.setMonth(0, 1)
-  if (tmpDate.getDay() !== 4) {
-    tmpDate.setMonth(0, 1 + ((4 - tmpDate.getDay()) + 7) % 7)
+function getWeekNumber(date: Date): number {
+  const year = date.getFullYear()
+  const startOfYear = new Date(year, 0, 1)
+  const dayOfWeek = startOfYear.getDay() // 0=domingo, 1=lunes, ..., 6=sábado
+  
+  // Encontrar el domingo de inicio de la semana 1
+  // Si 1 enero es domingo (0), empieza el 1 de enero
+  // Si 1 enero es lunes (1), empieza el 31 de diciembre (1 día antes)
+  // Si 1 enero es martes (2), empieza el 30 de diciembre (2 días antes)
+  const daysToSubtract = dayOfWeek === 0 ? 0 : dayOfWeek
+  const week1Start = new Date(year, 0, 1 - daysToSubtract)
+  
+  // Si la fecha es anterior al inicio de la semana 1, calcular del año anterior
+  if (date < week1Start) {
+    return getWeekNumber(new Date(year - 1, 11, 31))
   }
-  return 1 + Math.ceil((firstThursday - tmpDate.valueOf()) / 604800000)
+  
+  // Días transcurridos desde el inicio de la semana 1
+  const diffTime = date.getTime() - week1Start.getTime()
+  const diffDays = Math.floor(diffTime / (1000 * 60 * 60 * 24))
+  
+  // Calcular número de semana (1-indexed)
+  return Math.floor(diffDays / 7) + 1
 }
 
 // Función para obtener la fecha local en formato YYYY-MM-DD (corrige bug de timezone)
@@ -52,6 +66,13 @@ function getLocalDateString(date: Date): string {
   const month = String(date.getMonth() + 1).padStart(2, '0')
   const day = String(date.getDate()).padStart(2, '0')
   return `${year}-${month}-${day}`
+}
+
+// Función para formatear a 4 decimales exactos sin redondeo
+const formatTo4Decimals = (value: unknown): string => {
+  if (!value && value !== 0) return ""
+  const num = new Decimal(value.toString())
+  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
 }
 
 export function TransporteInternoForm({
@@ -72,7 +93,7 @@ export function TransporteInternoForm({
 
   const [formData, setFormData] = useState({
     fecha: getLocalDateString(new Date()),
-    numero_semana: getISOWeek(new Date()),
+    numero_semana: getWeekNumber(new Date()),
     chofer_id: "",
     placa_id: "",
     cliente_id: "",
@@ -89,12 +110,12 @@ export function TransporteInternoForm({
       
       setFormData({
         fecha: fecha,
-        numero_semana: (initialData.numero_semana as number) || getISOWeek(fechaDate),
+        numero_semana: (initialData.numero_semana as number) || getWeekNumber(fechaDate),
         chofer_id: String(initialData.chofer_id || ""),
         placa_id: String(initialData.placa_id || ""),
         cliente_id: String(initialData.cliente_id || ""),
-        diesel: String(initialData.diesel || ""),
-        ingreso: String(initialData.ingreso || ""),
+        diesel: formatTo4Decimals(initialData.diesel),
+        ingreso: formatTo4Decimals(initialData.ingreso),
       })
     }
   }, [initialData])
@@ -129,8 +150,10 @@ export function TransporteInternoForm({
   }, [fetchOptions])
 
   const handleFechaChange = (fecha: string) => {
-    const date = new Date(fecha)
-    const weekNumber = getISOWeek(date)
+    // Crear fecha ajustando para timezone local
+    const [year, month, day] = fecha.split('-').map(Number)
+    const date = new Date(year, month - 1, day) // Mes es 0-indexed
+    const weekNumber = getWeekNumber(date)
     setFormData(prev => ({
       ...prev,
       fecha,
@@ -166,7 +189,7 @@ export function TransporteInternoForm({
       // Reset form
       setFormData({
         fecha: getLocalDateString(new Date()),
-        numero_semana: getISOWeek(new Date()),
+        numero_semana: getWeekNumber(new Date()),
         chofer_id: "",
         placa_id: "",
         cliente_id: "",
@@ -215,7 +238,6 @@ export function TransporteInternoForm({
                 type="date"
                 value={formData.fecha}
                 onChange={(e) => handleFechaChange(e.target.value)}
-                required
               />
             </div>
 
@@ -274,7 +296,7 @@ export function TransporteInternoForm({
               <Input
                 id="diesel"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.diesel}
                 onChange={(e) => setFormData(prev => ({ ...prev, diesel: e.target.value }))}
@@ -287,7 +309,7 @@ export function TransporteInternoForm({
               <Input
                 id="ingreso"
                 type="number"
-                step="0.01"
+                step="any"
                 min="0"
                 value={formData.ingreso}
                 onChange={(e) => setFormData(prev => ({ ...prev, ingreso: e.target.value }))}

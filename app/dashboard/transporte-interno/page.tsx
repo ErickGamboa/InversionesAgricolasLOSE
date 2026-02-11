@@ -126,7 +126,12 @@ export default function TransporteInternoPage() {
     }
   }, [mutate, toast]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'America/Costa_Rica',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
   const todayStats = transportes.filter((t: Record<string, unknown>) => t.fecha === today);
   
   const todayCount = todayStats.length;

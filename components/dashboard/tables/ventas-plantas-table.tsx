@@ -194,7 +194,7 @@ export function VentasPlantasTable({
 
   const footerData = useMemo(() => {
     return {
-      total_pagar_pina: `₡${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
+      total_pagar_pina: `$${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
     }
   }, [filteredVentas])
 
@@ -383,10 +383,10 @@ export function VentasPlantasTable({
                     {visibleColumns.includes("porcentaje_castigo") && <TableCell className="text-right">{venta.porcentaje_castigo}%</TableCell>}
                     {visibleColumns.includes("castigo_kilos") && <TableCell className="text-right">{formatNumber(venta.castigo_kilos)}</TableCell>}
                     {visibleColumns.includes("total_kilos") && <TableCell className="text-right font-medium">{formatNumber(venta.total_kilos)}</TableCell>}
-                    {visibleColumns.includes("total_pagar_castigo") && <TableCell className="text-right font-medium text-destructive">₡{formatCurrency(venta.total_pagar_castigo)}</TableCell>}
+                    {visibleColumns.includes("total_pagar_castigo") && <TableCell className="text-right font-medium text-destructive">${formatCurrency(venta.total_pagar_castigo)}</TableCell>}
                     {visibleColumns.includes("total_pagar_pina") && (
                       <TableCell className="text-right font-bold text-primary">
-                        ₡{formatCurrency(venta.total_pagar_pina)}
+                         ${formatCurrency(venta.total_pagar_pina)}
                       </TableCell>
                     )}
                     <TableCell className="text-right">
@@ -425,7 +425,7 @@ export function VentasPlantasTable({
           <div className="flex items-center gap-1">
             <span className="font-medium text-foreground">Total Piña:</span>
             <span className="text-primary font-bold">
-              ₡{formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}
+               ${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}
             </span>
           </div>
         </div>

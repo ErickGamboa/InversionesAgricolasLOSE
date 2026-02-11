@@ -128,13 +128,18 @@ export default function VentasPlantasPage() {
   }, [mutate, toast]);
 
   // Estadísticas de hoy
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'America/Costa_Rica',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
   const todayStats = ventas.filter((v: Record<string, unknown>) => v.fecha === today);
   
   const todayCount = todayStats.length;
   const todayKilos = todayStats.reduce((sum: number, v: Record<string, unknown>) => 
     sum + Number(v.total_kilos || 0), 0);
-  const todayMonto = todayStats.reduce((sum: number, v: Record<string, unknown>) => 
+  const todayMontoUSD = todayStats.reduce((sum: number, v: Record<string, unknown>) => 
     sum + Number(v.total_pagar_pina || 0), 0);
 
   return (
@@ -198,9 +203,9 @@ export default function VentasPlantasPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(todayMontoUSD)}
               </div>
-              <p className="text-xs text-muted-foreground">colones</p>
+              <p className="text-xs text-muted-foreground">dólares</p>
             </CardContent>
           </Card>
         </div>
