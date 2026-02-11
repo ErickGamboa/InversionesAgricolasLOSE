@@ -135,14 +135,23 @@ export default function ComprasRegularesPage() {
     }
   }, [mutate, toast]);
 
-  const today = new Date().toISOString().split("T")[0];
+  const today = new Date().toLocaleDateString('en-CA', { 
+    timeZone: 'America/Costa_Rica',
+    year: 'numeric',
+    month: '2-digit',
+    day: '2-digit'
+  });
   const todayStats = compras.filter((c: Record<string, unknown>) => c.fecha === today);
   
   const todayCount = todayStats.length;
   const todayKilos = todayStats.reduce((sum: number, c: Record<string, unknown>) => 
     sum + Number(c.numero_kilos || 0), 0);
-  const todayMonto = todayStats.reduce((sum: number, c: Record<string, unknown>) => 
-    sum + Number(c.total_a_pagar || 0), 0);
+  const todayMontoCRC = todayStats
+    .filter((c: Record<string, unknown>) => !c.pago_dolares)
+    .reduce((sum: number, c: Record<string, unknown>) => sum + Number(c.total_a_pagar || 0), 0);
+  const todayMontoUSD = todayStats
+    .filter((c: Record<string, unknown>) => c.pago_dolares)
+    .reduce((sum: number, c: Record<string, unknown>) => sum + Number(c.total_a_pagar || 0), 0);
 
   return (
     <>
@@ -205,9 +214,12 @@ export default function ComprasRegularesPage() {
             </CardHeader>
             <CardContent>
               <div className="text-2xl font-bold text-primary">
-                {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMonto)}
+                {new Intl.NumberFormat("es-CR", { style: "currency", currency: "CRC" }).format(todayMontoCRC)}
               </div>
-              <p className="text-xs text-muted-foreground">colones</p>
+              <div className="text-2xl font-bold text-blue-600">
+                {new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(todayMontoUSD)}
+              </div>
+              <p className="text-xs text-muted-foreground">CRC / USD</p>
             </CardContent>
           </Card>
         </div>
