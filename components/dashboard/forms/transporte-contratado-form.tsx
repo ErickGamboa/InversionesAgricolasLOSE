@@ -105,7 +105,6 @@ export function TransporteContratadoForm({
     numero_factura: "",
     numero_deposito: "",
     pagado: false,
-    adelanto: "",
   })
 
   const supabase = createClient()
@@ -128,7 +127,6 @@ export function TransporteContratadoForm({
         numero_factura: String(initialData.numero_factura || ""),
         numero_deposito: String(initialData.numero_deposito || ""),
         pagado: (initialData.pagado as boolean) || false,
-        adelanto: formatTo3Decimals(initialData.adelanto),
       })
     }
   }, [initialData])
@@ -177,8 +175,7 @@ export function TransporteContratadoForm({
   // Cálculos
   const totalKilos = Number(formData.total_kilos) || 0
   const precioPorKilo = Number(formData.precio_por_kilo) || 0
-  const adelanto = Number(formData.adelanto) || 0
-  const totalAPagar = (totalKilos * precioPorKilo) - adelanto
+  const totalAPagar = totalKilos * precioPorKilo
 
   const formatCurrency = (num: number) =>
     num.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
@@ -200,7 +197,6 @@ export function TransporteContratadoForm({
       numero_factura: formData.numero_factura || null,
       numero_deposito: formData.numero_deposito || null,
       pagado: formData.pagado,
-      adelanto: adelanto,
     }
 
     if (isControlled && onSubmit) {
@@ -229,7 +225,6 @@ export function TransporteContratadoForm({
         numero_factura: "",
         numero_deposito: "",
         pagado: false,
-        adelanto: "",
       })
     } catch (error) {
       const message = error instanceof Error ? error.message : "Error desconocido"
@@ -373,18 +368,6 @@ export function TransporteContratadoForm({
               />
             </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="adelanto" className="whitespace-nowrap">Adelanto (₡)</Label>
-              <Input
-                id="adelanto"
-                type="number"
-                step="any"
-                min="0"
-                value={formData.adelanto}
-                onChange={(e) => setFormData(prev => ({ ...prev, adelanto: e.target.value }))}
-                placeholder="0.00"
-              />
-            </div>
           </div>
 
           {/* Sección de Totales */}
@@ -393,7 +376,7 @@ export function TransporteContratadoForm({
             
             <div className="grid gap-4 sm:grid-cols-2">
               <div className="space-y-1">
-                <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar (después de adelanto)</Label>
+                <Label className="text-xs text-muted-foreground whitespace-nowrap">Total a Pagar</Label>
                 <div className="flex h-9 items-center rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary overflow-hidden">
                   <span className="truncate">₡{formatCurrency(totalAPagar)}</span>
                 </div>
