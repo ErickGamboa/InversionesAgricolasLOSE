@@ -153,7 +153,7 @@ export function TransporteInternoTable({
   }, [transportes, filters])
 
   const formatCurrency = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
 
   const totals = filteredTransportes.reduce(
     (acc, t) => ({

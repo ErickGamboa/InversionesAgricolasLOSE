@@ -183,9 +183,9 @@ export function ComprasRegularesTable({
 
   const formatCurrency = (num: number, dolares: boolean = false) => {
     if (dolares) {
-      return num?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+      return num?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
     }
-    return num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    return num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
   }
 
   const formatNumber = (num: number) =>

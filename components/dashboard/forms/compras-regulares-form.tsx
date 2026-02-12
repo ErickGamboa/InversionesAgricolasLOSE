@@ -68,11 +68,11 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
-// Función para formatear a 4 decimales exactos sin redondeo
-const formatTo4Decimals = (value: unknown): string => {
+// Función para formatear a 3 decimales exactos sin redondeo
+const formatTo3Decimals = (value: unknown): string => {
   if (!value && value !== 0) return ""
   const num = new Decimal(value.toString())
-  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+  return num.toFixed(3, Decimal.ROUND_DOWN) // Trunca a 3 decimales, no redondea
 }
 
 export function ComprasRegularesForm({
@@ -130,8 +130,8 @@ export function ComprasRegularesForm({
         chofer_id: String(initialData.chofer_id || ""),
         choferes_info: String(initialData.choferes_info || ""),
         tipo_pina: String(initialData.tipo_pina || ""),
-        numero_kilos: formatTo4Decimals(initialData.numero_kilos),
-        precio_piña: formatTo4Decimals(initialData.precio_piña),
+        numero_kilos: formatTo3Decimals(initialData.numero_kilos),
+        precio_piña: formatTo3Decimals(initialData.precio_piña),
         pagado: (initialData.pagado as boolean) || false,
         tipo_pago_id: String(initialData.tipo_pago_id || ""),
         numero_deposito: String(initialData.numero_deposito || ""),

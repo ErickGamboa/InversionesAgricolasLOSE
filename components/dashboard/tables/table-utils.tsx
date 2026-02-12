@@ -16,6 +16,20 @@ import * as XLSX from "xlsx"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
+// Función para detectar si un campo es de tipo precio/monto
+const isPriceField = (key: string): boolean => {
+  const priceKeywords = ['precio', 'total', 'monto', 'adelanto', 'ingreso', 'diesel', 'castigo']
+  return priceKeywords.some(keyword => key.toLowerCase().includes(keyword))
+}
+
+// Función para formatear números con 3 decimales
+const formatNumber3Decimals = (num: number): string => {
+  return num?.toLocaleString("es-CR", { 
+    minimumFractionDigits: 3, 
+    maximumFractionDigits: 3 
+  }) || "0.000"
+}
+
 // Componente para inputs con debounce (evita lentitud al escribir)
 export function DebouncedInput({
   value: initialValue,
@@ -104,11 +118,19 @@ export function ExportActions({
     const exportRows = data.map(item => {
       const row: any = {}
       columns.forEach(col => {
+        let value: any
         if (col.key.includes('.')) {
           const [parent, child] = col.key.split('.')
-          row[col.label] = item[parent]?.[child] || ""
+          value = item[parent]?.[child]
         } else {
-          row[col.label] = item[col.key] || ""
+          value = item[col.key]
+        }
+        
+        // Formatear campos de precio con 3 decimales
+        if (isPriceField(col.key) && typeof value === 'number') {
+          row[col.label] = formatNumber3Decimals(value)
+        } else {
+          row[col.label] = value || ""
         }
       })
       return row
@@ -140,11 +162,19 @@ export function ExportActions({
     const head = [columns.map(col => col.label)]
     const body = data.map(item => 
       columns.map(col => {
+        let value: any
         if (col.key.includes('.')) {
           const [parent, child] = col.key.split('.')
-          return item[parent]?.[child] || ""
+          value = item[parent]?.[child]
+        } else {
+          value = item[col.key]
         }
-        return item[col.key] || ""
+        
+        // Formatear campos de precio con 3 decimales
+        if (isPriceField(col.key) && typeof value === 'number') {
+          return formatNumber3Decimals(value)
+        }
+        return value || ""
       })
     )
 

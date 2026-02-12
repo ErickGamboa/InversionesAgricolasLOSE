@@ -172,7 +172,7 @@ export function TransporteContratadoTable({
   }, [transportes, filters])
 
   const formatCurrency = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
 
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
