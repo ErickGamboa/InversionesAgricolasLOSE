@@ -194,8 +194,11 @@ export function ComprasRegularesTable({
   const footerData = useMemo(() => {
     const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
     const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    // Formatear ambos valores con sus monedas
+    const crcFormatted = formatCurrency(crc)
+    const usdFormatted = formatCurrency(usd, true)
     return {
-      total_a_pagar: `CRC: ${formatCurrency(crc)} / USD: ${formatCurrency(usd, true)}`
+      total_a_pagar: `CRC ${crcFormatted} / USD ${usdFormatted}`
     }
   }, [filteredCompras])
 
@@ -217,6 +220,7 @@ export function ComprasRegularesTable({
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Compras Regulares" 
             footerData={footerData}
+            currencyField="pago_dolares"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

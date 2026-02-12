@@ -194,7 +194,7 @@ export function VentasPlantasTable({
 
   const footerData = useMemo(() => {
     return {
-      total_pagar_pina: `$${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
+      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0)
     }
   }, [filteredVentas])
 
@@ -217,6 +217,7 @@ export function VentasPlantasTable({
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Ventas a Plantas" 
             footerData={footerData}
+            currency="USD"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

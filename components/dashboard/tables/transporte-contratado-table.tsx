@@ -188,9 +188,9 @@ export function TransporteContratadoTable({
 
   const footerData = useMemo(() => {
     return {
-      total_kilos: formatNumber(totals.kilos),
-      adelanto: `₡${formatCurrency(totals.adelanto)}`,
-      total_a_pagar: `₡${formatCurrency(totals.total)}`
+      total_kilos: totals.kilos,
+      adelanto: totals.adelanto,
+      total_a_pagar: totals.total
     }
   }, [totals])
 
@@ -212,6 +212,7 @@ export function TransporteContratadoTable({
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Transporte Contratado" 
             footerData={footerData}
+            currency="CRC"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

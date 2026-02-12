@@ -40,9 +40,9 @@ const ALL_COLUMNS = [
   { key: "chofer.nombre", label: "Chofer" },
   { key: "placa.codigo", label: "Placa" },
   { key: "cliente.nombre", label: "Cliente" },
-  { key: "diesel", label: "Diesel (₡)" },
-  { key: "ingreso", label: "Ingreso (₡)" },
-  { key: "balance", label: "Balance (₡)" },
+  { key: "diesel", label: "Diesel (CRC)" },
+  { key: "ingreso", label: "Ingreso (CRC)" },
+  { key: "balance", label: "Balance (CRC)" },
 ]
 
 const FILTERS_STORAGE_KEY = "transporte_interno_filters"
@@ -171,9 +171,9 @@ export function TransporteInternoTable({
 
   const footerData = useMemo(() => {
     return {
-      diesel: `₡${formatCurrency(totals.diesel)}`,
-      ingreso: `₡${formatCurrency(totals.ingreso)}`,
-      balance: `₡${formatCurrency(totals.balance)}`
+      diesel: totals.diesel,
+      ingreso: totals.ingreso,
+      balance: totals.balance
     }
   }, [totals])
 
@@ -195,6 +195,7 @@ export function TransporteInternoTable({
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Transporte Interno" 
             footerData={footerData}
+            currency="CRC"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

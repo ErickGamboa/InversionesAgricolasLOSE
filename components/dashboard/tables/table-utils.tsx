@@ -18,8 +18,12 @@ import autoTable from "jspdf-autotable"
 
 // Función para detectar si un campo es de tipo precio/monto
 const isPriceField = (key: string): boolean => {
-  const priceKeywords = ['precio', 'total', 'monto', 'adelanto', 'ingreso', 'diesel', 'castigo']
-  return priceKeywords.some(keyword => key.toLowerCase().includes(keyword))
+  const priceKeywords = ['precio', 'total', 'monto', 'adelanto', 'ingreso', 'diesel', 'castigo', 'balance']
+  // Excluir campos de cantidades físicas (kilos, cajas, pinas)
+  const excludeKeywords = ['kilos', 'cajas', 'pinas']
+  const lowerKey = key.toLowerCase()
+  if (excludeKeywords.some(k => lowerKey.includes(k))) return false
+  return priceKeywords.some(keyword => lowerKey.includes(keyword))
 }
 
 // Función para formatear números con 3 decimales
@@ -28,6 +32,15 @@ const formatNumber3Decimals = (num: number): string => {
     minimumFractionDigits: 3, 
     maximumFractionDigits: 3 
   }) || "0.000"
+}
+
+// Función para formatear moneda con símbolos compatibles con PDF
+const formatCurrencyForExport = (num: number, currency: 'CRC' | 'USD' = 'CRC'): string => {
+  const formatted = num?.toLocaleString("es-CR", { 
+    minimumFractionDigits: 3, 
+    maximumFractionDigits: 3 
+  }) || "0.000"
+  return currency === 'USD' ? `USD ${formatted}` : `CRC ${formatted}`
 }
 
 // Componente para inputs con debounce (evita lentitud al escribir)
@@ -107,16 +120,24 @@ export function ExportActions({
   data, 
   columns, 
   title,
-  footerData
+  footerData,
+  currency = 'CRC',
+  currencyField
 }: { 
   data: any[], 
   columns: { key: string, label: string }[], 
   title: string,
   footerData?: Record<string, any>
+  currency?: 'CRC' | 'USD'
+  currencyField?: string
 }) {
   const exportToExcel = () => {
     const exportRows = data.map(item => {
       const row: any = {}
+      // Detectar moneda de la fila (solo para Compras Regulares)
+      const isUSD = currencyField ? item[currencyField] === true : false
+      const rowCurrency: 'CRC' | 'USD' = isUSD ? 'USD' : 'CRC'
+      
       columns.forEach(col => {
         let value: any
         if (col.key.includes('.')) {
@@ -126,9 +147,15 @@ export function ExportActions({
           value = item[col.key]
         }
         
-        // Formatear campos de precio con 3 decimales
+        // Formatear campos de precio
         if (isPriceField(col.key) && typeof value === 'number') {
-          row[col.label] = formatNumber3Decimals(value)
+          // Solo Compras Regulares: formato con moneda según fila
+          if (currencyField) {
+            row[col.label] = formatCurrencyForExport(value, rowCurrency)
+          } else {
+            // Otros módulos: solo número con 3 decimales, sin prefijo
+            row[col.label] = formatNumber3Decimals(value)
+          }
         } else {
           row[col.label] = value || ""
         }
@@ -143,7 +170,15 @@ export function ExportActions({
         if (index === 0) {
           footerRow[col.label] = "TOTALES"
         } else if (footerData[col.key] !== undefined) {
-          footerRow[col.label] = footerData[col.key]
+          const value = footerData[col.key]
+          // Si es un string ya formateado, usarlo tal cual
+          if (typeof value === 'string') {
+            footerRow[col.label] = value
+          } else if (typeof value === 'number' && isPriceField(col.key)) {
+            footerRow[col.label] = formatCurrencyForExport(value, currency)
+          } else {
+            footerRow[col.label] = value
+          }
         } else {
           footerRow[col.label] = ""
         }
@@ -160,8 +195,12 @@ export function ExportActions({
   const exportToPDF = () => {
     const doc = new jsPDF("l", "mm", "a4")
     const head = [columns.map(col => col.label)]
-    const body = data.map(item => 
-      columns.map(col => {
+    const body = data.map(item => {
+      // Detectar moneda de la fila (solo para Compras Regulares)
+      const isUSD = currencyField ? item[currencyField] === true : false
+      const rowCurrency: 'CRC' | 'USD' = isUSD ? 'USD' : 'CRC'
+      
+      return columns.map(col => {
         let value: any
         if (col.key.includes('.')) {
           const [parent, child] = col.key.split('.')
@@ -170,20 +209,35 @@ export function ExportActions({
           value = item[col.key]
         }
         
-        // Formatear campos de precio con 3 decimales
+        // Formatear campos de precio
         if (isPriceField(col.key) && typeof value === 'number') {
-          return formatNumber3Decimals(value)
+          // Solo Compras Regulares: formato con moneda según fila
+          if (currencyField) {
+            return formatCurrencyForExport(value, rowCurrency)
+          } else {
+            // Otros módulos: solo número con 3 decimales, sin prefijo
+            return formatNumber3Decimals(value)
+          }
         }
         return value || ""
       })
-    )
+    })
 
     let foot: any[][] | undefined = undefined
     if (footerData) {
       foot = [
         columns.map((col, index) => {
           if (index === 0) return "TOTALES"
-          return footerData[col.key] || ""
+          const value = footerData[col.key]
+          // Si es un string ya formateado, usarlo tal cual
+          if (typeof value === 'string') {
+            return value
+          }
+          // Si es un número y es campo de precio, formatear con moneda
+          if (typeof value === 'number' && isPriceField(col.key)) {
+            return formatCurrencyForExport(value, currency)
+          }
+          return value || ""
         })
       ]
     }
@@ -196,7 +250,8 @@ export function ExportActions({
       theme: 'striped',
       styles: { fontSize: 8 },
       headStyles: { fillColor: [41, 128, 185] },
-      footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+      footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+      showFoot: 'lastPage'
     })
     
     doc.text(title, 14, 15)
