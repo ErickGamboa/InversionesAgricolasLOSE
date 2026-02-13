@@ -132,7 +132,7 @@ export function TransporteInternoForm({
       { data: clientesData },
     ] = await Promise.all([
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
       placasProp ? Promise.resolve({ data: placasProp }) : 
         supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
       clientesProp ? Promise.resolve({ data: clientesProp }) : 

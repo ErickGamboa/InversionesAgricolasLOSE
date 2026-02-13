@@ -153,6 +153,7 @@ export function ReceptionDetailDialog({
       .from("choferes")
       .select("id, nombre")
       .eq("activo", true)
+      .eq("tipo", "interno")
       .order("nombre")
     if (data) setChoferes(data)
   }

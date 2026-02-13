@@ -143,7 +143,7 @@ export function ComprasEspecialesForm({
       clientesProp ? Promise.resolve({ data: clientesProp }) : 
         supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "externo").order("nombre"),
     ])
 
     if (!clientesProp) setClientes(clientesData ?? [])

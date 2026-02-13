@@ -154,7 +154,7 @@ export function ComprasRegularesForm({
       clientesProp ? Promise.resolve({ data: clientesProp }) : 
         supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
       tiposPagoProp ? Promise.resolve({ data: tiposPagoProp }) : 
         supabase.from("tipos_pago").select("id, nombre").eq("activo", true).order("nombre"),
     ])

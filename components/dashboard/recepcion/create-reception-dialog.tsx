@@ -85,6 +85,7 @@ export function CreateReceptionDialog({
         .from("choferes")
         .select("id, nombre")
         .eq("activo", true)
+        .eq("tipo", "interno")
         .order("nombre")
 
       if (clientesData) setClientes(clientesData)

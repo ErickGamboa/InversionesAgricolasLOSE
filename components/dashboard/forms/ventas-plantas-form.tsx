@@ -139,7 +139,7 @@ export function VentasPlantasForm({
       plantasProp ? Promise.resolve({ data: plantasProp }) : 
         supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
     ])
 
     if (!plantasProp) setPlantas(plantasData ?? [])

@@ -46,7 +46,7 @@ const fetcher = async () => {
 const fetchLookups = async () => {
   const [plantas, choferes] = await Promise.all([
     supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
-    supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+    supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
   ]);
 
   return {
