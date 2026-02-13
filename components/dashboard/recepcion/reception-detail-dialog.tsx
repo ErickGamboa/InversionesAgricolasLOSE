@@ -78,6 +78,7 @@ export function ReceptionDetailDialog({
   const [choferes, setChoferes] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [pesoInput, setPesoInput] = useState("")
+  const [taraValue, setTaraValue] = useState<number>(100)
   const [addingBin, setAddingBin] = useState(false)
   
   // Selección para despacho
@@ -171,7 +172,7 @@ export function ReceptionDetailDialog({
       // Calcular siguiente número de par
       const maxPar = bines.length > 0 ? Math.max(...bines.map(b => b.numero_par)) : 0
       const nextPar = maxPar + 1
-      const pesoNeto = pesoBruto - 100
+      const pesoNeto = pesoBruto - taraValue
 
       const { data, error } = await supabase
         .from("recepcion_bines")
@@ -409,9 +410,18 @@ export function ReceptionDetailDialog({
                         value={pesoInput}
                         onChange={(e) => setPesoInput(e.target.value)}
                         onKeyDown={(e) => e.key === 'Enter' && handleAddBin()}
-                        className="text-base sm:text-lg font-bold h-10 sm:h-12"
+                        className="text-base sm:text-lg font-bold h-10 sm:h-12 flex-1"
                         autoComplete="off"
                       />
+                      <div className="flex items-center bg-muted rounded-md px-2 h-10 sm:h-12 shrink-0">
+                        <span className="text-lg font-bold text-muted-foreground mr-1">-</span>
+                        <Input
+                          type="number"
+                          value={taraValue}
+                          onChange={(e) => setTaraValue(Number(e.target.value) || 0)}
+                          className="w-16 sm:w-20 text-base sm:text-lg font-bold border-0 bg-transparent p-0 focus-visible:ring-0"
+                        />
+                      </div>
                       <Button 
                         size="icon" 
                         className="h-10 w-10 sm:h-12 sm:w-12 shrink-0" 
@@ -423,7 +433,10 @@ export function ReceptionDetailDialog({
                     </div>
                     {pesoInput && !isNaN(parseFloat(pesoInput)) && (
                       <div className="text-xs sm:text-sm text-center text-muted-foreground bg-muted py-1 rounded">
-                        Neto: <span className="font-bold text-foreground">{(parseFloat(pesoInput) - 100).toLocaleString()} kg</span>
+                        Bruto: <span className="font-medium">{parseFloat(pesoInput).toLocaleString()} kg</span>
+                        {" → "}
+                        Neto: <span className="font-bold text-foreground">{(parseFloat(pesoInput) - taraValue).toLocaleString()} kg</span>
+                        <span className="text-xs text-muted-foreground ml-1">(Tara: -{taraValue} kg)</span>
                       </div>
                     )}
                   </div>
