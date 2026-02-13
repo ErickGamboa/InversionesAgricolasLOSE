@@ -24,6 +24,16 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
 
 const supabase = createClient();
@@ -65,6 +75,8 @@ export default function TransporteInternoPage() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransporte, setEditingTransporte] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [itemToDelete, setItemToDelete] = useState<string | number | null>(null);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
 
   const handleSubmit = useCallback(async (formData: Record<string, unknown>) => {
     setIsSubmitting(true);
@@ -111,9 +123,15 @@ export default function TransporteInternoPage() {
     setIsDialogOpen(true);
   }, []);
 
-  const handleDelete = useCallback(async (id: string | number) => {
+  const handleDelete = useCallback((id: string | number) => {
+    setItemToDelete(id);
+    setShowDeleteDialog(true);
+  }, []);
+
+  const confirmDelete = useCallback(async () => {
+    if (!itemToDelete) return;
     try {
-      const { error } = await supabase.from("transporte_interno").delete().eq("id", id);
+      const { error } = await supabase.from("transporte_interno").delete().eq("id", itemToDelete);
       if (error) throw error;
       toast({ title: "Transporte eliminado exitosamente" });
       mutate();
@@ -123,8 +141,11 @@ export default function TransporteInternoPage() {
         description: error instanceof Error ? error.message : "Ocurrió un error",
         variant: "destructive",
       });
+    } finally {
+      setShowDeleteDialog(false);
+      setItemToDelete(null);
     }
-  }, [mutate, toast]);
+  }, [itemToDelete, mutate, toast]);
 
   const today = new Date().toLocaleDateString('en-CA', { 
     timeZone: 'America/Costa_Rica',
@@ -245,6 +266,26 @@ export default function TransporteInternoPage() {
             />
           </DialogContent>
         </Dialog>
+
+        {/* Dialog de confirmación de eliminación */}
+        <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Confirmar eliminación</AlertDialogTitle>
+              <AlertDialogDescription>
+                ¿Está seguro de eliminar este transporte interno? Esta acción no se puede deshacer.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel onClick={() => setShowDeleteDialog(false)}>
+                Cancelar
+              </AlertDialogCancel>
+              <AlertDialogAction onClick={confirmDelete} className="bg-destructive hover:bg-destructive/90">
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   );
