@@ -32,7 +32,7 @@ import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchableSelect } from "@/components/ui/searchable-select"
 import { COLOR_OPTIONS } from "@/types/recepcion"
-import { Loader2, Lock, RefreshCw } from "lucide-react"
+import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
 
 const formSchema = z.object({
@@ -57,16 +57,14 @@ export function CreateReceptionDialog({
 }: CreateReceptionDialogProps) {
   const [clientes, setClientes] = useState<any[]>([])
   const [choferes, setChoferes] = useState<any[]>([])
-  const [usedColors, setUsedColors] = useState<string[]>([])
   const [loading, setLoading] = useState(false)
-  const [checkingColors, setCheckingColors] = useState(false)
   const supabase = createClient()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       es_rechazo: false,
-      color_etiqueta: "", // Se establecerá dinámicamente
+      color_etiqueta: "bg-red-500", // Color por defecto
       tipo_pina: "IQF",
       procedencia_tipo: "campo",
     },
@@ -95,48 +93,9 @@ export function CreateReceptionDialog({
     if (open) fetchData()
   }, [open, supabase])
 
-  // Fetch used colors specifically when dialog opens
-  useEffect(() => {
-    const checkColors = async () => {
-      if (!open) return
-      setCheckingColors(true)
-      
-      const { data } = await supabase
-        .from("recepciones")
-        .select("color_etiqueta")
-        .eq("estado", "pendiente")
-      
-      const used = data?.map(r => r.color_etiqueta) || []
-      setUsedColors(used)
-      
-      // Auto-select first available color
-      const currentSelected = form.getValues("color_etiqueta")
-      const firstAvailable = COLOR_OPTIONS.find(c => !used.includes(c.value))
-      
-      // Si no hay color seleccionado O el seleccionado está usado, cambiar al primero libre
-      if ((!currentSelected || used.includes(currentSelected)) && firstAvailable) {
-        form.setValue("color_etiqueta", firstAvailable.value)
-      } else if (!firstAvailable) {
-        // Caso extremo: todos los colores usados
-        toast.error("¡Todos los colores están en uso! Finalice alguna tarjeta.")
-      }
-      
-      setCheckingColors(false)
-    }
 
-    checkColors()
-  }, [open, supabase, form])
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
-    // Doble verificación antes de enviar
-    if (usedColors.includes(values.color_etiqueta)) {
-      toast.error("Este color ya fue tomado por otra tarjeta. Seleccione otro.")
-      // Refrescar colores por si acaso
-      const { data } = await supabase.from("recepciones").select("color_etiqueta").eq("estado", "pendiente")
-      setUsedColors(data?.map(r => r.color_etiqueta) || [])
-      return
-    }
-
     setLoading(true)
     try {
       const { data, error } = await supabase
@@ -294,36 +253,24 @@ export function CreateReceptionDialog({
               name="color_etiqueta"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel className="flex justify-between">
-                    Color de Tarjeta (Único)
-                    {checkingColors && <RefreshCw className="h-3 w-3 animate-spin text-muted-foreground" />}
-                  </FormLabel>
+                  <FormLabel>Color de Tarjeta</FormLabel>
                   <div className="grid grid-cols-6 gap-3 mt-2 p-2 bg-muted/20 rounded-lg">
                     {COLOR_OPTIONS.map((color) => {
-                      const isUsed = usedColors.includes(color.value)
                       const isSelected = field.value === color.value
                       
                       return (
                         <button
                           key={color.value}
                           type="button"
-                          disabled={isUsed}
                           className={cn(
                             "group relative h-10 w-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black",
                             color.value,
                             isSelected && "ring-2 ring-offset-2 ring-black scale-110",
-                            isUsed && "opacity-20 cursor-not-allowed grayscale",
-                            !isUsed && !isSelected && "hover:scale-110 hover:shadow-md"
+                            !isSelected && "hover:scale-110 hover:shadow-md"
                           )}
                           onClick={() => field.onChange(color.value)}
-                          title={isUsed ? `${color.label} (En uso)` : color.label}
-                        >
-                          {isUsed && (
-                            <div className="absolute inset-0 flex items-center justify-center">
-                              <Lock className="h-4 w-4 text-white/80" />
-                            </div>
-                          )}
-                        </button>
+                          title={color.label}
+                        />
                       )
                     })}
                   </div>
@@ -333,7 +280,7 @@ export function CreateReceptionDialog({
             />
 
             <DialogFooter>
-              <Button type="submit" disabled={loading || checkingColors}>
+              <Button type="submit" disabled={loading}>
                 {loading && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
                 Crear Tarjeta
               </Button>
