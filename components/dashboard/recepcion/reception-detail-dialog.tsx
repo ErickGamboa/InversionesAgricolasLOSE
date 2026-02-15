@@ -48,8 +48,12 @@ import {
   CheckCircle2,
   Trash2,
   AlertTriangle,
+  Pencil,
+  X,
+  Check,
+  RotateCcw,
 } from "lucide-react"
-import { Recepcion, RecepcionBin } from "@/types/recepcion"
+import { Recepcion, RecepcionBin, COLOR_OPTIONS } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
 
 // Función para obtener la fecha local en formato YYYY-MM-DD (corrige bug de timezone)
@@ -76,6 +80,7 @@ export function ReceptionDetailDialog({
   const [recepcion, setRecepcion] = useState<Recepcion | null>(null)
   const [bines, setBines] = useState<RecepcionBin[]>([])
   const [choferes, setChoferes] = useState<any[]>([])
+  const [clientes, setClientes] = useState<any[]>([])
   const [loading, setLoading] = useState(false)
   const [pesoInput, setPesoInput] = useState("")
   const [taraValue, setTaraValue] = useState<number>(100)
@@ -91,6 +96,27 @@ export function ReceptionDetailDialog({
   const [binToDelete, setBinToDelete] = useState<number | null>(null)
   const [showFinalizeAlert, setShowFinalizeAlert] = useState(false)
 
+  // Estados para edición de tarjeta
+  const [isEditingCard, setIsEditingCard] = useState(false)
+  const [editedCard, setEditedCard] = useState({
+    cliente_id: 0,
+    chofer_ingreso_id: null as number | null,
+    tipo_pina: 'IQF' as 'IQF' | 'Jugo',
+    procedencia_tipo: 'campo' as 'campo' | 'planta',
+    color_etiqueta: '',
+    es_rechazo: false,
+  })
+  const [savingCard, setSavingCard] = useState(false)
+
+  // Estados para edición de bines
+  const [editingBinId, setEditingBinId] = useState<number | null>(null)
+  const [editedBin, setEditedBin] = useState({
+    peso_bruto: 0,
+    chofer_salida_id: null as number | null,
+  })
+  const [savingBin, setSavingBin] = useState(false)
+  const [revertingBin, setRevertingBin] = useState<number | null>(null)
+
   const supabase = createClient()
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -98,6 +124,7 @@ export function ReceptionDetailDialog({
     if (open && recepcionId) {
       fetchDetails()
       fetchChoferes()
+      fetchClientes()
     } else {
       setRecepcion(null)
       setBines([])
@@ -157,6 +184,15 @@ export function ReceptionDetailDialog({
       .eq("tipo", "interno")
       .order("nombre")
     if (data) setChoferes(data)
+  }
+
+  const fetchClientes = async () => {
+    const { data } = await supabase
+      .from("clientes")
+      .select("id, nombre")
+      .eq("activo", true)
+      .order("nombre")
+    if (data) setClientes(data)
   }
 
   const handleAddBin = async () => {
@@ -342,6 +378,128 @@ export function ReceptionDetailDialog({
     }
   }
 
+  // Funciones para editar tarjeta
+  const handleEditCard = () => {
+    if (!recepcion) return
+    setEditedCard({
+      cliente_id: recepcion.cliente_id || 0,
+      chofer_ingreso_id: recepcion.chofer_ingreso_id,
+      tipo_pina: recepcion.tipo_pina || 'IQF',
+      procedencia_tipo: recepcion.procedencia_tipo || 'campo',
+      color_etiqueta: recepcion.color_etiqueta,
+      es_rechazo: recepcion.es_rechazo,
+    })
+    setIsEditingCard(true)
+  }
+
+  const handleSaveCard = async () => {
+    if (!recepcionId) return
+    
+    // Validaciones
+    if (!editedCard.cliente_id) {
+      toast.error("Debe seleccionar un cliente")
+      return
+    }
+    if (!editedCard.es_rechazo && !editedCard.chofer_ingreso_id) {
+      toast.error("Debe seleccionar un chofer de ingreso")
+      return
+    }
+
+    setSavingCard(true)
+    try {
+      const { error } = await supabase
+        .from("recepciones")
+        .update({
+          cliente_id: editedCard.cliente_id,
+          chofer_ingreso_id: editedCard.es_rechazo ? null : editedCard.chofer_ingreso_id,
+          tipo_pina: editedCard.tipo_pina,
+          procedencia_tipo: editedCard.procedencia_tipo,
+          color_etiqueta: editedCard.color_etiqueta,
+          es_rechazo: editedCard.es_rechazo,
+        })
+        .eq("id", recepcionId)
+
+      if (error) throw error
+
+      toast.success("Tarjeta actualizada exitosamente")
+      fetchDetails()
+      onUpdate()
+      setIsEditingCard(false)
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al actualizar la tarjeta")
+    } finally {
+      setSavingCard(false)
+    }
+  }
+
+  // Funciones para editar bines
+  const handleEditBin = (bin: RecepcionBin) => {
+    setEditingBinId(bin.id)
+    setEditedBin({
+      peso_bruto: bin.peso_bruto,
+      chofer_salida_id: bin.chofer_salida_id,
+    })
+  }
+
+  const handleSaveBin = async (binId: number) => {
+    const pesoNeto = editedBin.peso_bruto - taraValue
+    
+    if (editedBin.peso_bruto <= 0) {
+      toast.error("El peso debe ser mayor a 0")
+      return
+    }
+
+    setSavingBin(true)
+    try {
+      const { error } = await supabase
+        .from("recepcion_bines")
+        .update({
+          peso_bruto: editedBin.peso_bruto,
+          peso_neto: pesoNeto,
+          chofer_salida_id: editedBin.chofer_salida_id,
+        })
+        .eq("id", binId)
+
+      if (error) throw error
+
+      toast.success("Bin actualizado exitosamente")
+      fetchDetails()
+      onUpdate()
+      setEditingBinId(null)
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al actualizar el bin")
+    } finally {
+      setSavingBin(false)
+    }
+  }
+
+  const handleRevertBin = async (binId: number) => {
+    setRevertingBin(binId)
+    try {
+      const { error } = await supabase
+        .from("recepcion_bines")
+        .update({
+          estado: 'en_patio',
+          chofer_salida_id: null,
+          fecha_despacho: null,
+        })
+        .eq("id", binId)
+
+      if (error) throw error
+
+      toast.success("Bin revertido a patio")
+      fetchDetails()
+      onUpdate()
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al revertir el bin")
+    } finally {
+      setRevertingBin(null)
+    }
+  }
+
   // Cálculos
   const totalKilos = bines.reduce((sum, b) => sum + (b.peso_neto || 0), 0)
   const binesPendientes = bines.filter(b => b.estado === 'en_patio')
@@ -356,41 +514,156 @@ export function ReceptionDetailDialog({
         <DialogContent className="max-w-[95vw] w-full h-[85dvh] flex flex-col p-0 gap-0 overflow-hidden sm:max-w-[95vw] sm:h-[90vh] [&>button]:hidden">
           {/* Header */}
           <div className={cn("px-4 sm:px-6 py-3 border-b flex justify-between items-center shrink-0", recepcion.color_etiqueta)}>
-            <div className="text-white min-w-0 flex-1">
-              <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
-                <span className="truncate">{recepcion.clientes?.nombre}</span>
-                {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
-              </DialogTitle>
-              <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
-                <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
-                <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
-              </DialogDescription>
-            </div>
-            <div className="flex items-center gap-3 sm:gap-6 ml-4">
-              <Badge variant="secondary" className="text-xs sm:text-lg px-2 sm:px-3 py-0.5 sm:py-1">
-                #{recepcion.id}
-              </Badge>
-              <Button 
-                variant={allDispatched ? "destructive" : "secondary"}
-                size="sm"
-                onClick={() => setShowFinalizeAlert(true)}
-                disabled={!allDispatched}
-                className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
-              >
-                {allDispatched 
-                  ? "Finalizar Tarjeta" 
-                  : `Pendientes: ${binesPendientes.length}/${bines.length}`
-                }
-              </Button>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => onOpenChange(false)}
-                className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
-              >
-                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-5 w-5 sm:h-6 sm:w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-              </Button>
-            </div>
+            {!isEditingCard ? (
+              // Vista normal
+              <>
+                <div className="text-white min-w-0 flex-1">
+                  <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
+                    <span className="truncate">{recepcion.clientes?.nombre}</span>
+                    {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
+                  </DialogTitle>
+                  <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
+                    <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
+                    <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                  </DialogDescription>
+                </div>
+                <div className="flex items-center gap-2 sm:gap-4 ml-4">
+                  <Badge variant="secondary" className="text-xs sm:text-lg px-2 sm:px-3 py-0.5 sm:py-1">
+                    #{recepcion.id}
+                  </Badge>
+                  {recepcion.estado !== 'finalizado' && (
+                    <>
+                      <Button 
+                        variant="secondary"
+                        size="sm"
+                        onClick={handleEditCard}
+                        className="h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap"
+                      >
+                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                        Editar
+                      </Button>
+                      <Button 
+                        variant={allDispatched ? "destructive" : "secondary"}
+                        size="sm"
+                        onClick={() => setShowFinalizeAlert(true)}
+                        disabled={!allDispatched}
+                        className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
+                      >
+                        {allDispatched 
+                          ? "Finalizar Tarjeta" 
+                          : `Pendientes: ${binesPendientes.length}/${bines.length}`
+                        }
+                      </Button>
+                    </>
+                  )}
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => onOpenChange(false)}
+                    className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
+                  >
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-5 w-5 sm:h-6 sm:w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
+                  </Button>
+                </div>
+              </>
+            ) : (
+              // Modo edición
+              <div className="flex flex-col w-full gap-3">
+                <div className="flex justify-between items-center">
+                  <span className="text-white font-semibold text-lg">Editar Tarjeta</span>
+                  <div className="flex gap-2">
+                    <Button 
+                      variant="ghost" 
+                      size="sm" 
+                      onClick={() => setIsEditingCard(false)}
+                      className="text-white hover:bg-white/20"
+                      disabled={savingCard}
+                    >
+                      <X className="h-4 w-4 mr-1" />
+                      Cancelar
+                    </Button>
+                    <Button 
+                      variant="secondary" 
+                      size="sm" 
+                      onClick={handleSaveCard}
+                      disabled={savingCard}
+                    >
+                      {savingCard ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Check className="h-4 w-4 mr-1" />}
+                      Guardar
+                    </Button>
+                  </div>
+                </div>
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                  <Select 
+                    value={editedCard.cliente_id.toString()} 
+                    onValueChange={(val) => setEditedCard({...editedCard, cliente_id: parseInt(val)})}
+                  >
+                    <SelectTrigger className="bg-white text-foreground h-8 text-xs">
+                      <SelectValue placeholder="Cliente" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {clientes.map((c) => (
+                        <SelectItem key={c.id} value={c.id.toString()}>{c.nombre}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  {!editedCard.es_rechazo && (
+                    <Select 
+                      value={editedCard.chofer_ingreso_id?.toString() || ''} 
+                      onValueChange={(val) => setEditedCard({...editedCard, chofer_ingreso_id: val ? parseInt(val) : null})}
+                    >
+                      <SelectTrigger className="bg-white text-foreground h-8 text-xs">
+                        <SelectValue placeholder="Chofer Ingreso" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {choferes.map((c) => (
+                          <SelectItem key={c.id} value={c.id.toString()}>{c.nombre}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  )}
+                  <Select 
+                    value={editedCard.tipo_pina} 
+                    onValueChange={(val) => setEditedCard({...editedCard, tipo_pina: val as 'IQF' | 'Jugo'})}
+                  >
+                    <SelectTrigger className="bg-white text-foreground h-8 text-xs">
+                      <SelectValue placeholder="Tipo" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="IQF">IQF</SelectItem>
+                      <SelectItem value="Jugo">Jugo</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select 
+                    value={editedCard.procedencia_tipo} 
+                    onValueChange={(val) => setEditedCard({...editedCard, procedencia_tipo: val as 'campo' | 'planta'})}
+                  >
+                    <SelectTrigger className="bg-white text-foreground h-8 text-xs">
+                      <SelectValue placeholder="Procedencia" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="campo">Campo</SelectItem>
+                      <SelectItem value="planta">Planta</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <div className="flex gap-1 flex-wrap">
+                    {COLOR_OPTIONS.map((color) => (
+                      <button
+                        key={color.value}
+                        type="button"
+                        className={cn(
+                          "h-6 w-6 rounded-full transition-all",
+                          color.value,
+                          editedCard.color_etiqueta === color.value && "ring-2 ring-white scale-110"
+                        )}
+                        onClick={() => setEditedCard({...editedCard, color_etiqueta: color.value})}
+                        title={color.label}
+                      />
+                    ))}
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
@@ -515,7 +788,7 @@ export function ReceptionDetailDialog({
                           )}
                         >
                           <TableCell className="text-center p-1 sm:p-2">
-                            {bin.estado === 'en_patio' && (
+                            {bin.estado === 'en_patio' && editingBinId !== bin.id && (
                               <Checkbox 
                                 checked={selectedBins.includes(bin.id)}
                                 onCheckedChange={(checked) => handleSelectBin(bin.id, !!checked)}
@@ -523,7 +796,30 @@ export function ReceptionDetailDialog({
                             )}
                           </TableCell>
                           <TableCell className="text-center font-medium p-1 sm:p-2">#{bin.numero_par}</TableCell>
-                          <TableCell className="text-right font-bold p-1 sm:p-2">{bin.peso_neto.toLocaleString()}</TableCell>
+                          
+                          {/* Peso - Editable */}
+                          <TableCell className="text-right font-bold p-1 sm:p-2">
+                            {editingBinId === bin.id ? (
+                              <div className="flex flex-col items-end gap-1">
+                                <Input
+                                  type="number"
+                                  value={editedBin.peso_bruto}
+                                  onChange={(e) => setEditedBin({...editedBin, peso_bruto: Number(e.target.value) || 0})}
+                                  className="w-20 h-6 text-xs text-right"
+                                  autoFocus
+                                />
+                                <span className="text-[9px] text-muted-foreground">
+                                  Neto: {(editedBin.peso_bruto - taraValue).toLocaleString()} kg
+                                </span>
+                              </div>
+                            ) : (
+                              <div className="flex flex-col items-end">
+                                <span>{bin.peso_neto.toLocaleString()}</span>
+                                <span className="text-[9px] text-muted-foreground">({bin.peso_bruto} - {taraValue})</span>
+                              </div>
+                            )}
+                          </TableCell>
+                          
                           <TableCell className="text-center p-1 sm:p-2">
                             <div className={cn(
                               "inline-flex items-center rounded-full border px-1 sm:px-2 py-0.5 text-[9px] sm:text-[10px] font-semibold",
@@ -534,23 +830,98 @@ export function ReceptionDetailDialog({
                               {bin.estado === 'en_patio' ? 'Patio' : 'Fuera'}
                             </div>
                           </TableCell>
+                          
+                          {/* Destino - Editable para despachados */}
                           <TableCell className="p-1 sm:p-2">
-                            {bin.estado === 'despachado' ? (
+                            {editingBinId === bin.id && bin.estado === 'despachado' ? (
+                              <Select 
+                                value={editedBin.chofer_salida_id?.toString() || ''} 
+                                onValueChange={(val) => setEditedBin({...editedBin, chofer_salida_id: val ? parseInt(val) : null})}
+                              >
+                                <SelectTrigger className="h-6 text-[10px] w-full">
+                                  <SelectValue placeholder="Chofer" />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {choferes.map((c) => (
+                                    <SelectItem key={c.id} value={c.id.toString()} className="text-xs">{c.nombre}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            ) : bin.estado === 'despachado' ? (
                               <div className="flex items-center gap-1 text-[9px] sm:text-xs truncate max-w-[80px] sm:max-w-[100px]">
                                 {bin.choferes?.nombre || "-"}
                               </div>
-                            ) : "-"}
+                            ) : (
+                              "-"
+                            )}
                           </TableCell>
+                          
+                          {/* Acciones */}
                           <TableCell className="p-1 sm:p-2">
-                            {bin.estado === 'en_patio' && (
-                              <Button 
-                                variant="ghost" 
-                                size="icon" 
-                                className="h-5 w-5 sm:h-6 sm:w-6 text-destructive hover:bg-destructive/10"
-                                onClick={() => setBinToDelete(bin.id)}
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                            {recepcion.estado !== 'finalizado' && (
+                              <div className="flex items-center gap-1">
+                                {editingBinId === bin.id ? (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-5 w-5 sm:h-6 sm:w-6 text-green-600 hover:bg-green-100"
+                                      onClick={() => handleSaveBin(bin.id)}
+                                      disabled={savingBin}
+                                    >
+                                      {savingBin ? <Loader2 className="h-3 w-3 animate-spin" /> : <Check className="h-3 w-3" />}
+                                    </Button>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-5 w-5 sm:h-6 sm:w-6 text-muted-foreground hover:bg-muted"
+                                      onClick={() => setEditingBinId(null)}
+                                      disabled={savingBin}
+                                    >
+                                      <X className="h-3 w-3" />
+                                    </Button>
+                                  </>
+                                ) : (
+                                  <>
+                                    <Button 
+                                      variant="ghost" 
+                                      size="icon" 
+                                      className="h-5 w-5 sm:h-6 sm:w-6 text-blue-600 hover:bg-blue-100"
+                                      onClick={() => handleEditBin(bin)}
+                                      title="Editar"
+                                    >
+                                      <Pencil className="h-3 w-3" />
+                                    </Button>
+                                    {bin.estado === 'en_patio' && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-destructive hover:bg-destructive/10"
+                                        onClick={() => setBinToDelete(bin.id)}
+                                        title="Eliminar"
+                                      >
+                                        <Trash2 className="h-3 w-3" />
+                                      </Button>
+                                    )}
+                                    {bin.estado === 'despachado' && (
+                                      <Button 
+                                        variant="ghost" 
+                                        size="icon" 
+                                        className="h-5 w-5 sm:h-6 sm:w-6 text-amber-600 hover:bg-amber-100"
+                                        onClick={() => handleRevertBin(bin.id)}
+                                        disabled={revertingBin === bin.id}
+                                        title="Revertir a patio"
+                                      >
+                                        {revertingBin === bin.id ? (
+                                          <Loader2 className="h-3 w-3 animate-spin" />
+                                        ) : (
+                                          <RotateCcw className="h-3 w-3" />
+                                        )}
+                                      </Button>
+                                    )}
+                                  </>
+                                )}
+                              </div>
                             )}
                           </TableCell>
                         </TableRow>
@@ -621,14 +992,28 @@ export function ReceptionDetailDialog({
       <AlertDialog open={showFinalizeAlert} onOpenChange={setShowFinalizeAlert}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Finalizar Tarjeta?</AlertDialogTitle>
-            <AlertDialogDescription>
-              La tarjeta pasará al histórico y no se podrán agregar más pesos.
+            <AlertDialogTitle className="flex items-center gap-2 text-destructive">
+              <AlertTriangle className="h-5 w-5" />
+              ¿Finalizar Tarjeta?
+            </AlertDialogTitle>
+            <AlertDialogDescription asChild>
+              <div className="space-y-3">
+                <p className="font-semibold text-destructive">
+                  ATENCIÓN: Revise que todos los datos estén correctos antes de despachar la piña.
+                </p>
+                <p>
+                  Una vez finalizada, la tarjeta pasará al histórico y no se podrán agregar más pesos ni editar los datos.
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  <strong>Total de bines:</strong> {bines.length} | 
+                  <strong> Total kilos netos:</strong> {totalKilos.toLocaleString()} kg
+                </p>
+              </div>
             </AlertDialogDescription>
             {!allDispatched && (
-              <div className="flex items-center gap-2 p-3 text-amber-600 bg-amber-50 rounded-md border border-amber-200">
+              <div className="flex items-center gap-2 p-3 text-amber-600 bg-amber-50 rounded-md border border-amber-200 mt-3">
                 <AlertTriangle className="h-5 w-5" />
-                <span className="font-semibold text-sm">Advertencia: Aún hay bines sin despachar en el patio.</span>
+                <span className="font-semibold text-sm">Advertencia: Aún hay {binesPendientes.length} bines sin despachar en el patio.</span>
               </div>
             )}
           </AlertDialogHeader>
