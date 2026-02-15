@@ -330,7 +330,7 @@ export function ReceptionDetailDialog({
           const porcentaje = totalKilosDespachados > 0 
             ? ((c.kilos / totalKilosDespachados) * 100).toFixed(1)
             : "0.0"
-          return `${c.nombre}: ${porcentaje}% (${c.kilos.toLocaleString()}kg)`
+          return `${c.nombre}: ${porcentaje}%`
         })
         .join('\n')
 
