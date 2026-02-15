@@ -215,7 +215,7 @@ export function VentasPlantasTable({
           <ExportActions 
             data={filteredVentas} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Ventas a Plantas" 
+            title="Venta de fruta" 
             footerData={footerData}
             currency="USD"
           />

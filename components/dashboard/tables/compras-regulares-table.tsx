@@ -221,7 +221,7 @@ export function ComprasRegularesTable({
           <ExportActions 
             data={filteredCompras} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Compras Regulares" 
+            title="Reporte de fruta" 
             footerData={footerData}
             currencyField="pago_dolares"
           />

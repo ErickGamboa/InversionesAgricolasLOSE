@@ -193,7 +193,7 @@ export function TransporteInternoTable({
           <ExportActions 
             data={exportData} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Transporte Interno" 
+            title="Transporte de fruta" 
             footerData={footerData}
             currency="CRC"
           />

@@ -43,6 +43,17 @@ const formatCurrencyForExport = (num: number, currency: 'CRC' | 'USD' = 'CRC'): 
   return currency === 'USD' ? `USD ${formatted}` : `CRC ${formatted}`
 }
 
+// Función para cargar imagen y convertir a base64
+const loadImageAsBase64 = async (imagePath: string): Promise<string> => {
+  const response = await fetch(imagePath)
+  const blob = await response.blob()
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.readAsDataURL(blob)
+  })
+}
+
 // Componente para inputs con debounce (evita lentitud al escribir)
 export function DebouncedInput({
   value: initialValue,
@@ -192,8 +203,35 @@ export function ExportActions({
     XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     const doc = new jsPDF("l", "mm", "a4")
+    
+    // Cargar logo como base64
+    let logoBase64 = ''
+    try {
+      logoBase64 = await loadImageAsBase64('/logo-empresa.jpeg')
+    } catch (error) {
+      console.warn('No se pudo cargar el logo:', error)
+    }
+    
+    // 1. Agregar logo (esquina superior izquierda)
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'JPEG', 10, 5, 25, 25)
+    }
+    
+    // 2. Agregar nombre de empresa (centrado)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const empresaText = "Inversiones agricolas LOSE de pital"
+    const textWidth = doc.getTextWidth(empresaText)
+    doc.text(empresaText, (pageWidth - textWidth) / 2, 18)
+    
+    // 3. Agregar título del reporte (debajo)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(title, 14, 35)
+    
     const head = [columns.map(col => col.label)]
     const body = data.map(item => {
       // Detectar moneda de la fila (solo para Compras Regulares)
@@ -246,7 +284,7 @@ export function ExportActions({
       head: head,
       body: body,
       foot: foot,
-      startY: 20,
+      startY: 40,
       theme: 'striped',
       styles: { fontSize: 8 },
       headStyles: { fillColor: [41, 128, 185] },
@@ -254,7 +292,6 @@ export function ExportActions({
       showFoot: 'lastPage'
     })
     
-    doc.text(title, 14, 15)
     doc.save(`${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
@@ -272,7 +309,7 @@ export function ExportActions({
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Excel
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={exportToPDF}>
+          <DropdownMenuItem onClick={() => exportToPDF()}>
             <FileText className="mr-2 h-4 w-4" />
             PDF
           </DropdownMenuItem>

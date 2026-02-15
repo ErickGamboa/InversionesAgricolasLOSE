@@ -206,7 +206,7 @@ export function TransporteContratadoTable({
           <ExportActions 
             data={filteredTransportes} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Transporte Contratado" 
+            title="Transporte de fruta" 
             footerData={footerData}
             currency="CRC"
           />
