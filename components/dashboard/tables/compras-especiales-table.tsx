@@ -176,7 +176,7 @@ export function ComprasEspecialesTable({
   }, [compras, filters])
 
   const formatCurrency = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
 
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 0, maximumFractionDigits: 0 }) || "0"
@@ -193,10 +193,10 @@ export function ComprasEspecialesTable({
 
   const footerData = useMemo(() => {
     return {
-      numero_cajas: formatNumber(totals.cajas),
-      total_pinas: formatNumber(totals.pinas),
-      total_kilos: totals.kilos.toLocaleString("es-CR", { minimumFractionDigits: 2 }),
-      total_a_pagar: `₡${formatCurrency(totals.total)}`
+      numero_cajas: totals.cajas,
+      total_pinas: totals.pinas,
+      total_kilos: totals.kilos,
+      total_a_pagar: totals.total
     }
   }, [totals])
 
@@ -216,8 +216,9 @@ export function ComprasEspecialesTable({
           <ExportActions 
             data={filteredCompras} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Compras Especiales" 
+            title="Reporte de fruta" 
             footerData={footerData}
+            currency="CRC"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

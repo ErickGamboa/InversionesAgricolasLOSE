@@ -39,7 +39,6 @@ interface TransporteContratado {
   numero_factura?: string
   numero_deposito?: string
   pagado: boolean
-  adelanto: number
 }
 
 interface TransporteContratadoTableProps {
@@ -57,7 +56,6 @@ const ALL_COLUMNS = [
   { key: "planta.nombre", label: "Planta" },
   { key: "total_kilos", label: "Kilos" },
   { key: "precio_por_kilo", label: "Precio/kg" },
-  { key: "adelanto", label: "Adelanto" },
   { key: "total_a_pagar", label: "Total a Pagar" },
   { key: "pagado", label: "Pagado" },
 ]
@@ -172,7 +170,7 @@ export function TransporteContratadoTable({
   }, [transportes, filters])
 
   const formatCurrency = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
 
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
@@ -180,17 +178,15 @@ export function TransporteContratadoTable({
   const totals = filteredTransportes.reduce(
     (acc, t) => ({
       kilos: acc.kilos + Number(t.total_kilos || 0),
-      adelanto: acc.adelanto + Number(t.adelanto || 0),
       total: acc.total + Number(t.total_a_pagar || 0),
     }),
-    { kilos: 0, adelanto: 0, total: 0 }
+    { kilos: 0, total: 0 }
   )
 
   const footerData = useMemo(() => {
     return {
-      total_kilos: formatNumber(totals.kilos),
-      adelanto: `₡${formatCurrency(totals.adelanto)}`,
-      total_a_pagar: `₡${formatCurrency(totals.total)}`
+      total_kilos: totals.kilos,
+      total_a_pagar: totals.total
     }
   }, [totals])
 
@@ -210,8 +206,9 @@ export function TransporteContratadoTable({
           <ExportActions 
             data={filteredTransportes} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Transporte Contratado" 
+            title="Transporte de fruta" 
             footerData={footerData}
+            currency="CRC"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
@@ -235,7 +232,6 @@ export function TransporteContratadoTable({
                 {visibleColumns.includes("planta.nombre") && <TableHead>Planta</TableHead>}
                 {visibleColumns.includes("total_kilos") && <TableHead className="text-right">Kilos</TableHead>}
                 {visibleColumns.includes("precio_por_kilo") && <TableHead className="text-right">Precio/kg</TableHead>}
-                {visibleColumns.includes("adelanto") && <TableHead className="text-right">Adelanto</TableHead>}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="text-right">Total a Pagar</TableHead>}
                 {visibleColumns.includes("pagado") && <TableHead className="text-center">Pagado</TableHead>}
                 <TableHead className="text-right">Acciones</TableHead>
@@ -277,7 +273,6 @@ export function TransporteContratadoTable({
                 )}
                 {visibleColumns.includes("total_kilos") && <TableHead className="p-2" />}
                 {visibleColumns.includes("precio_por_kilo") && <TableHead className="p-2" />}
-                {visibleColumns.includes("adelanto") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="p-2" />}
                 {visibleColumns.includes("pagado") && (
                   <TableHead className="p-2 text-center">
@@ -312,7 +307,6 @@ export function TransporteContratadoTable({
                       {visibleColumns.includes("planta.nombre") && <TableCell>{t.planta?.nombre || "-"}</TableCell>}
                       {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{formatNumber(t.total_kilos)}</TableCell>}
                       {visibleColumns.includes("precio_por_kilo") && <TableCell className="text-right">₡{formatCurrency(t.precio_por_kilo)}</TableCell>}
-                      {visibleColumns.includes("adelanto") && <TableCell className="text-right">₡{formatCurrency(t.adelanto)}</TableCell>}
                       {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right font-medium">₡{formatCurrency(t.total_a_pagar)}</TableCell>}
                       {visibleColumns.includes("pagado") && (
                         <TableCell className="text-center">
@@ -333,7 +327,6 @@ export function TransporteContratadoTable({
                     </TableCell>
                     {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{formatNumber(totals.kilos)}</TableCell>}
                     {visibleColumns.includes("precio_por_kilo") && <TableCell />}
-                    {visibleColumns.includes("adelanto") && <TableCell className="text-right">₡{formatCurrency(totals.adelanto)}</TableCell>}
                     {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right text-primary">₡{formatCurrency(totals.total)}</TableCell>}
                     <TableCell colSpan={2} />
                   </TableRow>

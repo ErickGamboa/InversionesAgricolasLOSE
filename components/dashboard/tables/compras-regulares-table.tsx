@@ -35,6 +35,8 @@ interface CompraRegular {
   cliente?: { nombre: string }
   numero_boleta?: string
   nb_tickete?: string
+  chofer_id?: number | null
+  choferes_info?: string
   chofer?: { nombre: string }
   tipo_pina: string
   numero_kilos: number
@@ -57,6 +59,8 @@ const ALL_COLUMNS = [
   { key: "fecha", label: "Fecha" },
   { key: "numero_semana", label: "Sem" },
   { key: "cliente.nombre", label: "Cliente" },
+  { key: "lugar_procedencia", label: "Lugar de Procedencia" },
+  { key: "procedencia_tipo", label: "Tipo de Procedencia" },
   { key: "numero_boleta", label: "Boleta" },
   { key: "nb_tickete", label: "NB/Tickete" },
   { key: "lugar_procedencia", label: "Procedencia" },
@@ -165,11 +169,15 @@ export function ComprasRegularesTable({
         if (key === "cliente") {
           if (!compra.cliente?.nombre?.toLowerCase().includes(searchLower)) return false
         } else if (key === "chofer") {
-          if (!compra.chofer?.nombre?.toLowerCase().includes(searchLower)) return false
+          const hasInList = compra.choferes_info?.toLowerCase().includes(searchLower)
+          const hasInName = compra.chofer?.nombre?.toLowerCase().includes(searchLower)
+          if (!hasInList && !hasInName) return false
         } else if (key === "tipo_pina") {
           if (compra.tipo_pina !== value) return false
-        } else if (key === "procedencia") {
+        } else if (key === "lugar_procedencia") {
           if (!compra.lugar_procedencia?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "procedencia_tipo") {
+          if (!compra.procedencia_tipo?.toLowerCase().includes(searchLower)) return false
         } else if (key === "pagado") {
           if (compra.pagado.toString() !== value) return false
         } else if (key === "numero_semana") {
@@ -188,9 +196,9 @@ export function ComprasRegularesTable({
 
   const formatCurrency = (num: number, dolares: boolean = false) => {
     if (dolares) {
-      return num?.toLocaleString("en-US", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+      return num?.toLocaleString("en-US", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
     }
-    return num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    return num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
   }
 
   const formatNumber = (num: number) =>
@@ -199,8 +207,11 @@ export function ComprasRegularesTable({
   const footerData = useMemo(() => {
     const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
     const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
+    // Formatear ambos valores con sus monedas
+    const crcFormatted = formatCurrency(crc)
+    const usdFormatted = formatCurrency(usd, true)
     return {
-      total_a_pagar: `CRC: ${formatCurrency(crc)} / USD: ${formatCurrency(usd, true)}`
+      total_a_pagar: `CRC ${crcFormatted} / USD ${usdFormatted}`
     }
   }, [filteredCompras])
 
@@ -220,8 +231,9 @@ export function ComprasRegularesTable({
           <ExportActions 
             data={filteredCompras} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Compras Regulares" 
+            title="Reporte de fruta" 
             footerData={footerData}
+            currencyField="pago_dolares"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
@@ -241,6 +253,8 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
                 {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
+                {visibleColumns.includes("lugar_procedencia") && <TableHead>Lugar de Procedencia</TableHead>}
+                {visibleColumns.includes("procedencia_tipo") && <TableHead>Tipo de Procedencia</TableHead>}
                 {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
                 {visibleColumns.includes("nb_tickete") && <TableHead>NB/Tickete</TableHead>}
                 {visibleColumns.includes("lugar_procedencia") && <TableHead>Procedencia</TableHead>}
@@ -290,7 +304,12 @@ export function ComprasRegularesTable({
                 )}
                 {visibleColumns.includes("lugar_procedencia") && (
                   <TableHead className="p-2">
-                    <DebouncedInput placeholder="Lugar..." className="h-8 text-xs" value={filters.procedencia || ""} onChange={(val) => setFilter("procedencia", val.toString())} />
+                    <DebouncedInput placeholder="Lugar..." className="h-8 text-xs" value={filters.lugar_procedencia || ""} onChange={(val) => setFilter("lugar_procedencia", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("procedencia_tipo") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Tipo..." className="h-8 text-xs" value={filters.procedencia_tipo || ""} onChange={(val) => setFilter("procedencia_tipo", val.toString())} />
                   </TableHead>
                 )}
                 {visibleColumns.includes("chofer.nombre") && (
@@ -310,6 +329,7 @@ export function ComprasRegularesTable({
                     </Select>
                   </TableHead>
                 )}
+                {visibleColumns.includes("procedencia_tipo") && <TableHead className="p-2" />}
                 {visibleColumns.includes("numero_kilos") && <TableHead className="p-2" />}
                 {visibleColumns.includes("precio_piña") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="p-2" />}
@@ -351,10 +371,33 @@ export function ComprasRegularesTable({
                     {visibleColumns.includes("lugar_procedencia") && (
                       <TableCell>
                         {compra.lugar_procedencia || "-"}
-                        {compra.procedencia_tipo && <Badge variant="outline" className="ml-1 text-[10px]">{compra.procedencia_tipo}</Badge>}
                       </TableCell>
                     )}
-                    {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
+                    {visibleColumns.includes("procedencia_tipo") && (
+                      <TableCell>
+                        {compra.procedencia_tipo || "-"}
+                      </TableCell>
+                    )}
+                    {visibleColumns.includes("chofer.nombre") && (
+                      <TableCell>
+                        {compra.choferes_info ? (
+                          <div>
+                            <pre className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
+                              {compra.choferes_info}
+                            </pre>
+                            {compra.chofer?.nombre && (
+                              <span className="text-[10px] text-muted-foreground mt-1 block">
+                                Principal: {compra.chofer.nombre}
+                              </span>
+                            )}
+                          </div>
+                        ) : compra.chofer?.nombre ? (
+                          <span>{compra.chofer.nombre}</span>
+                        ) : (
+                          "-"
+                        )}
+                      </TableCell>
+                    )}
                     {visibleColumns.includes("tipo_pina") && (
                       <TableCell>
                         <Badge className={compra.tipo_pina === "IQF" ? "bg-blue-100 text-blue-800" : "bg-orange-100 text-orange-800"}>

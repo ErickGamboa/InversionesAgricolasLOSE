@@ -127,7 +127,7 @@ export function TransactionForm({
     ] = await Promise.all([
       clientesProp ? Promise.resolve({ data: clientesProp }) : supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
       plantasProp ? Promise.resolve({ data: plantasProp }) : supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
-      choferesProp ? Promise.resolve({ data: choferesProp }) : supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+      choferesProp ? Promise.resolve({ data: choferesProp }) : supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
       placasProp ? Promise.resolve({ data: placasProp }) : supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
       showTipoPago && !tiposPagoProp ? supabase.from("tipos_pago").select("id, nombre").eq("activo", true).order("nombre") : Promise.resolve({ data: tiposPagoProp || [] }),
     ])

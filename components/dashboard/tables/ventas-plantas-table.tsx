@@ -187,14 +187,14 @@ export function VentasPlantasTable({
   }, [ventas, filters])
 
   const formatCurrency = (num: number) =>
-    num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
+    num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
 
   const formatNumber = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
 
   const footerData = useMemo(() => {
     return {
-      total_pagar_pina: `$${formatCurrency(filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0))}`
+      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0)
     }
   }, [filteredVentas])
 
@@ -215,8 +215,9 @@ export function VentasPlantasTable({
           <ExportActions 
             data={filteredVentas} 
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
-            title="Ventas a Plantas" 
+            title="Venta de fruta" 
             footerData={footerData}
+            currency="USD"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">

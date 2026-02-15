@@ -68,11 +68,11 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
-// Función para formatear a 4 decimales exactos sin redondeo
-const formatTo4Decimals = (value: unknown): string => {
+// Función para formatear a 3 decimales exactos sin redondeo
+const formatTo3Decimals = (value: unknown): string => {
   if (!value && value !== 0) return ""
   const num = new Decimal(value.toString())
-  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+  return num.toFixed(3, Decimal.ROUND_DOWN) // Trunca a 3 decimales, no redondea
 }
 
 export function ComprasRegularesForm({
@@ -101,6 +101,7 @@ export function ComprasRegularesForm({
     numero_boleta: "",
     nb_tickete: "",
     chofer_id: "",
+    choferes_info: "",
     tipo_pina: "",
     numero_kilos: "",
     precio_piña: "",
@@ -127,9 +128,10 @@ export function ComprasRegularesForm({
         numero_boleta: String(initialData.numero_boleta || ""),
         nb_tickete: String(initialData.nb_tickete || ""),
         chofer_id: String(initialData.chofer_id || ""),
+        choferes_info: String(initialData.choferes_info || ""),
         tipo_pina: String(initialData.tipo_pina || ""),
-        numero_kilos: formatTo4Decimals(initialData.numero_kilos),
-        precio_piña: formatTo4Decimals(initialData.precio_piña),
+        numero_kilos: formatTo3Decimals(initialData.numero_kilos),
+        precio_piña: formatTo3Decimals(initialData.precio_piña),
         pagado: (initialData.pagado as boolean) || false,
         tipo_pago_id: String(initialData.tipo_pago_id || ""),
         numero_deposito: String(initialData.numero_deposito || ""),
@@ -152,7 +154,7 @@ export function ComprasRegularesForm({
       clientesProp ? Promise.resolve({ data: clientesProp }) : 
         supabase.from("clientes").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
       tiposPagoProp ? Promise.resolve({ data: tiposPagoProp }) : 
         supabase.from("tipos_pago").select("id, nombre").eq("activo", true).order("nombre"),
     ])
@@ -203,7 +205,7 @@ export function ComprasRegularesForm({
       cliente_id: Number(formData.cliente_id),
       numero_boleta: formData.numero_boleta || null,
       nb_tickete: formData.nb_tickete || null,
-      chofer_id: Number(formData.chofer_id),
+      chofer_id: formData.chofer_id ? Number(formData.chofer_id) : null,
       tipo_pina: formData.tipo_pina,
       numero_kilos: numeroKilos,
       precio_piña: precioPiña,
@@ -237,6 +239,7 @@ export function ComprasRegularesForm({
         numero_boleta: "",
         nb_tickete: "",
         chofer_id: "",
+        choferes_info: "",
         tipo_pina: "",
         numero_kilos: "",
         precio_piña: "",
@@ -381,14 +384,28 @@ export function ComprasRegularesForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="chofer" className="whitespace-nowrap">Chofer</Label>
-              <SearchableSelect
-                options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
-                value={formData.chofer_id}
-                onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
-                placeholder="Seleccione chofer..."
-                emptyText="No se encontró el chofer"
-              />
+              <Label htmlFor="chofer" className="whitespace-nowrap">
+                Chofer {formData.choferes_info && <span className="text-amber-600 text-xs">(Desde Recepción)</span>}
+              </Label>
+              {formData.choferes_info ? (
+                <div className="rounded-md border bg-muted/50 p-3">
+                  <p className="text-xs text-muted-foreground mb-1">Distribución de choferes:</p>
+                  <pre className="text-xs whitespace-pre-wrap font-mono leading-relaxed">
+                    {formData.choferes_info}
+                  </pre>
+                  <p className="text-[10px] text-muted-foreground mt-2 italic">
+                    No editable - Definido en sistema de recepción
+                  </p>
+                </div>
+              ) : (
+                <SearchableSelect
+                  options={choferes.map((ch) => ({ value: ch.id.toString(), label: ch.nombre || "" }))}
+                  value={formData.chofer_id}
+                  onChange={(value) => setFormData(prev => ({ ...prev, chofer_id: value }))}
+                  placeholder="Seleccione chofer..."
+                  emptyText="No se encontró el chofer"
+                />
+              )}
             </div>
           </div>
 

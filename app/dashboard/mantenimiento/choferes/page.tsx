@@ -15,10 +15,15 @@ interface Chofer {
   id: number
   nombre: string
   activo: boolean
+  tipo: 'interno' | 'externo'
 }
 
 const fields = [
   { name: "nombre", label: "Nombre", type: "text" as const, required: true },
+  { name: "tipo", label: "Tipo", type: "select" as const, options: [
+    { value: "interno", label: "Interno" },
+    { value: "externo", label: "Externo" }
+  ], required: true },
   { name: "activo", label: "Activo", type: "boolean" as const },
 ]
 

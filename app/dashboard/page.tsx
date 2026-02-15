@@ -107,7 +107,7 @@ export default async function DashboardPage() {
   })
 
   const formatNumber = (num: number) => num.toLocaleString('es-CR')
-  const formatCurrency = (num: number) => num.toLocaleString('es-CR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+  const formatCurrency = (num: number) => num.toLocaleString('es-CR', { minimumFractionDigits: 3, maximumFractionDigits: 3 })
 
   return (
     <>

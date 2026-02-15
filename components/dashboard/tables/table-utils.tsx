@@ -16,6 +16,44 @@ import * as XLSX from "xlsx"
 import jsPDF from "jspdf"
 import autoTable from "jspdf-autotable"
 
+// Función para detectar si un campo es de tipo precio/monto
+const isPriceField = (key: string): boolean => {
+  const priceKeywords = ['precio', 'total', 'monto', 'adelanto', 'ingreso', 'diesel', 'castigo', 'balance']
+  // Excluir campos de cantidades físicas (kilos, cajas, pinas)
+  const excludeKeywords = ['kilos', 'cajas', 'pinas']
+  const lowerKey = key.toLowerCase()
+  if (excludeKeywords.some(k => lowerKey.includes(k))) return false
+  return priceKeywords.some(keyword => lowerKey.includes(keyword))
+}
+
+// Función para formatear números con 3 decimales
+const formatNumber3Decimals = (num: number): string => {
+  return num?.toLocaleString("es-CR", { 
+    minimumFractionDigits: 3, 
+    maximumFractionDigits: 3 
+  }) || "0.000"
+}
+
+// Función para formatear moneda con símbolos compatibles con PDF
+const formatCurrencyForExport = (num: number, currency: 'CRC' | 'USD' = 'CRC'): string => {
+  const formatted = num?.toLocaleString("es-CR", { 
+    minimumFractionDigits: 3, 
+    maximumFractionDigits: 3 
+  }) || "0.000"
+  return currency === 'USD' ? `USD ${formatted}` : `CRC ${formatted}`
+}
+
+// Función para cargar imagen y convertir a base64
+const loadImageAsBase64 = async (imagePath: string): Promise<string> => {
+  const response = await fetch(imagePath)
+  const blob = await response.blob()
+  return new Promise((resolve) => {
+    const reader = new FileReader()
+    reader.onloadend = () => resolve(reader.result as string)
+    reader.readAsDataURL(blob)
+  })
+}
+
 // Componente para inputs con debounce (evita lentitud al escribir)
 export function DebouncedInput({
   value: initialValue,
@@ -93,22 +131,44 @@ export function ExportActions({
   data, 
   columns, 
   title,
-  footerData
+  footerData,
+  currency = 'CRC',
+  currencyField
 }: { 
   data: any[], 
   columns: { key: string, label: string }[], 
   title: string,
   footerData?: Record<string, any>
+  currency?: 'CRC' | 'USD'
+  currencyField?: string
 }) {
   const exportToExcel = () => {
     const exportRows = data.map(item => {
       const row: any = {}
+      // Detectar moneda de la fila (solo para Compras Regulares)
+      const isUSD = currencyField ? item[currencyField] === true : false
+      const rowCurrency: 'CRC' | 'USD' = isUSD ? 'USD' : 'CRC'
+      
       columns.forEach(col => {
+        let value: any
         if (col.key.includes('.')) {
           const [parent, child] = col.key.split('.')
-          row[col.label] = item[parent]?.[child] || ""
+          value = item[parent]?.[child]
         } else {
-          row[col.label] = item[col.key] || ""
+          value = item[col.key]
+        }
+        
+        // Formatear campos de precio
+        if (isPriceField(col.key) && typeof value === 'number') {
+          // Solo Compras Regulares: formato con moneda según fila
+          if (currencyField) {
+            row[col.label] = formatCurrencyForExport(value, rowCurrency)
+          } else {
+            // Otros módulos: solo número con 3 decimales, sin prefijo
+            row[col.label] = formatNumber3Decimals(value)
+          }
+        } else {
+          row[col.label] = value || ""
         }
       })
       return row
@@ -121,7 +181,15 @@ export function ExportActions({
         if (index === 0) {
           footerRow[col.label] = "TOTALES"
         } else if (footerData[col.key] !== undefined) {
-          footerRow[col.label] = footerData[col.key]
+          const value = footerData[col.key]
+          // Si es un string ya formateado, usarlo tal cual
+          if (typeof value === 'string') {
+            footerRow[col.label] = value
+          } else if (typeof value === 'number' && isPriceField(col.key)) {
+            footerRow[col.label] = formatCurrencyForExport(value, currency)
+          } else {
+            footerRow[col.label] = value
+          }
         } else {
           footerRow[col.label] = ""
         }
@@ -135,25 +203,79 @@ export function ExportActions({
     XLSX.writeFile(wb, `${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.xlsx`)
   }
 
-  const exportToPDF = () => {
+  const exportToPDF = async () => {
     const doc = new jsPDF("l", "mm", "a4")
+    
+    // Cargar logo como base64
+    let logoBase64 = ''
+    try {
+      logoBase64 = await loadImageAsBase64('/logo-empresa.jpeg')
+    } catch (error) {
+      console.warn('No se pudo cargar el logo:', error)
+    }
+    
+    // 1. Agregar logo (esquina superior izquierda)
+    if (logoBase64) {
+      doc.addImage(logoBase64, 'JPEG', 10, 5, 25, 25)
+    }
+    
+    // 2. Agregar nombre de empresa (centrado)
+    doc.setFontSize(16)
+    doc.setFont('helvetica', 'bold')
+    const pageWidth = doc.internal.pageSize.getWidth()
+    const empresaText = "Inversiones agricolas LOSE de pital"
+    const textWidth = doc.getTextWidth(empresaText)
+    doc.text(empresaText, (pageWidth - textWidth) / 2, 18)
+    
+    // 3. Agregar título del reporte (debajo)
+    doc.setFontSize(12)
+    doc.setFont('helvetica', 'normal')
+    doc.text(title, 14, 35)
+    
     const head = [columns.map(col => col.label)]
-    const body = data.map(item => 
-      columns.map(col => {
+    const body = data.map(item => {
+      // Detectar moneda de la fila (solo para Compras Regulares)
+      const isUSD = currencyField ? item[currencyField] === true : false
+      const rowCurrency: 'CRC' | 'USD' = isUSD ? 'USD' : 'CRC'
+      
+      return columns.map(col => {
+        let value: any
         if (col.key.includes('.')) {
           const [parent, child] = col.key.split('.')
-          return item[parent]?.[child] || ""
+          value = item[parent]?.[child]
+        } else {
+          value = item[col.key]
         }
-        return item[col.key] || ""
+        
+        // Formatear campos de precio
+        if (isPriceField(col.key) && typeof value === 'number') {
+          // Solo Compras Regulares: formato con moneda según fila
+          if (currencyField) {
+            return formatCurrencyForExport(value, rowCurrency)
+          } else {
+            // Otros módulos: solo número con 3 decimales, sin prefijo
+            return formatNumber3Decimals(value)
+          }
+        }
+        return value || ""
       })
-    )
+    })
 
     let foot: any[][] | undefined = undefined
     if (footerData) {
       foot = [
         columns.map((col, index) => {
           if (index === 0) return "TOTALES"
-          return footerData[col.key] || ""
+          const value = footerData[col.key]
+          // Si es un string ya formateado, usarlo tal cual
+          if (typeof value === 'string') {
+            return value
+          }
+          // Si es un número y es campo de precio, formatear con moneda
+          if (typeof value === 'number' && isPriceField(col.key)) {
+            return formatCurrencyForExport(value, currency)
+          }
+          return value || ""
         })
       ]
     }
@@ -162,14 +284,14 @@ export function ExportActions({
       head: head,
       body: body,
       foot: foot,
-      startY: 20,
+      startY: 40,
       theme: 'striped',
       styles: { fontSize: 8 },
       headStyles: { fillColor: [41, 128, 185] },
-      footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' }
+      footStyles: { fillColor: [240, 240, 240], textColor: [0, 0, 0], fontStyle: 'bold' },
+      showFoot: 'lastPage'
     })
     
-    doc.text(title, 14, 15)
     doc.save(`${title.replace(/\s+/g, '_')}_${new Date().toISOString().split('T')[0]}.pdf`)
   }
 
@@ -187,7 +309,7 @@ export function ExportActions({
             <FileSpreadsheet className="mr-2 h-4 w-4" />
             Excel
           </DropdownMenuItem>
-          <DropdownMenuItem onClick={exportToPDF}>
+          <DropdownMenuItem onClick={() => exportToPDF()}>
             <FileText className="mr-2 h-4 w-4" />
             PDF
           </DropdownMenuItem>

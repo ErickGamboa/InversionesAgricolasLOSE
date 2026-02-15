@@ -68,11 +68,11 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
-// Función para formatear a 4 decimales exactos sin redondeo
-const formatTo4Decimals = (value: unknown): string => {
+// Función para formatear a 3 decimales exactos sin redondeo
+const formatTo3Decimals = (value: unknown): string => {
   if (!value && value !== 0) return ""
   const num = new Decimal(value.toString())
-  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+  return num.toFixed(3, Decimal.ROUND_DOWN) // Trunca a 3 decimales, no redondea
 }
 
 export function TransporteInternoForm({
@@ -114,8 +114,8 @@ export function TransporteInternoForm({
         chofer_id: String(initialData.chofer_id || ""),
         placa_id: String(initialData.placa_id || ""),
         cliente_id: String(initialData.cliente_id || ""),
-        diesel: formatTo4Decimals(initialData.diesel),
-        ingreso: formatTo4Decimals(initialData.ingreso),
+        diesel: formatTo3Decimals(initialData.diesel),
+        ingreso: formatTo3Decimals(initialData.ingreso),
       })
     }
   }, [initialData])
@@ -132,7 +132,7 @@ export function TransporteInternoForm({
       { data: clientesData },
     ] = await Promise.all([
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
       placasProp ? Promise.resolve({ data: placasProp }) : 
         supabase.from("placas").select("id, codigo").eq("activo", true).order("codigo"),
       clientesProp ? Promise.resolve({ data: clientesProp }) : 

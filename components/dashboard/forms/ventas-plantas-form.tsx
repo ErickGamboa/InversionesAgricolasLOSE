@@ -66,11 +66,11 @@ function getLocalDateString(date: Date): string {
   return `${year}-${month}-${day}`
 }
 
-// Función para formatear a 4 decimales exactos sin redondeo
-const formatTo4Decimals = (value: unknown): string => {
+// Función para formatear a 3 decimales exactos sin redondeo
+const formatTo3Decimals = (value: unknown): string => {
   if (!value && value !== 0) return ""
   const num = new Decimal(value.toString())
-  return num.toFixed(4, Decimal.ROUND_DOWN) // Trunca a 4 decimales, no redondea
+  return num.toFixed(3, Decimal.ROUND_DOWN) // Trunca a 3 decimales, no redondea
 }
 
 export function VentasPlantasForm({
@@ -117,10 +117,10 @@ export function VentasPlantasForm({
         numero_boleta: String(initialData.numero_boleta || ""),
         nb_tickete: String(initialData.nb_tickete || ""),
         tipo_pina: String(initialData.tipo_pina || ""),
-        kilos_reportados: formatTo4Decimals(initialData.kilos_reportados),
-        porcentaje_castigo: formatTo4Decimals(initialData.porcentaje_castigo) || "0",
-        precio_iqf: formatTo4Decimals(initialData.precio_iqf),
-        precio_jugo: formatTo4Decimals(initialData.precio_jugo),
+        kilos_reportados: formatTo3Decimals(initialData.kilos_reportados),
+        porcentaje_castigo: formatTo3Decimals(initialData.porcentaje_castigo) || "0",
+        precio_iqf: formatTo3Decimals(initialData.precio_iqf),
+        precio_jugo: formatTo3Decimals(initialData.precio_jugo),
       })
     }
   }, [initialData])
@@ -139,7 +139,7 @@ export function VentasPlantasForm({
       plantasProp ? Promise.resolve({ data: plantasProp }) : 
         supabase.from("plantas").select("id, nombre").eq("activo", true).order("nombre"),
       choferesProp ? Promise.resolve({ data: choferesProp }) : 
-        supabase.from("choferes").select("id, nombre").eq("activo", true).order("nombre"),
+        supabase.from("choferes").select("id, nombre").eq("activo", true).eq("tipo", "interno").order("nombre"),
     ])
 
     if (!plantasProp) setPlantas(plantasData ?? [])
@@ -245,7 +245,7 @@ export function VentasPlantasForm({
     const value = num instanceof Decimal ? num.toNumber() : num
     return value.toLocaleString("es-CR", { 
       minimumFractionDigits: 0, 
-      maximumFractionDigits: 4 
+      maximumFractionDigits: 3 
     })
   }
 

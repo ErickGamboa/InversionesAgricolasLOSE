@@ -74,8 +74,8 @@ export function TransactionTable({
 
   const formatNumber = (num: number) => {
     return new Intl.NumberFormat("es-CR", {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: 3,
+      maximumFractionDigits: 3,
     }).format(num);
   };
 
@@ -83,7 +83,7 @@ export function TransactionTable({
     return new Intl.NumberFormat("es-CR", {
       style: "currency",
       currency: "CRC",
-      minimumFractionDigits: 2,
+      minimumFractionDigits: 3,
     }).format(num);
   };
 
