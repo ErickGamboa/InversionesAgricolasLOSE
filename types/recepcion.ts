@@ -43,7 +43,7 @@ export const COLOR_OPTIONS = [
   { id: 3, value: "bg-yellow-400", label: "Amarillo", hex: "#facc15" },
   { id: 4, value: "bg-lime-500", label: "Lima", hex: "#84cc16" },
   { id: 5, value: "bg-green-600", label: "Verde", hex: "#16a34a" },
-  { id: 6, value: "bg-teal-500", label: "Turquesa", hex: "#14b8a6" },
+  { id: 6, value: "bg-black", label: "Negro", hex: "#000000" },
   { id: 7, value: "bg-cyan-500", label: "Cian", hex: "#06b6d4" },
   { id: 8, value: "bg-blue-600", label: "Azul", hex: "#2563eb" },
   { id: 9, value: "bg-indigo-600", label: "Índigo", hex: "#4f46e5" },

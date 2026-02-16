@@ -540,7 +540,7 @@ export function ReceptionDetailDialog({
                         <div className="flex flex-col">
                           <span className="flex items-center gap-1" suppressHydrationWarning><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
                           {binesPendientes.length > 0 && (
-                            <span className="flex items-center gap-1 text-red-300 font-bold ml-5 text-xs" suppressHydrationWarning>
+                            <span className="flex items-center gap-1 text-white font-bold ml-5 text-xs" suppressHydrationWarning>
                               Faltan: {binesPendientes.reduce((sum, b) => sum + (b.peso_neto || 0), 0).toLocaleString()} kg
                             </span>
                           )}
