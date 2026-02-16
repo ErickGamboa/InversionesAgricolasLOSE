@@ -29,6 +29,7 @@ export interface RecepcionBin {
   estado: BinesEstado
   chofer_salida_id: number | null
   fecha_despacho: string | null
+  tara_aplicada: number
 
   // Relaciones
   choferes?: { nombre: string }
