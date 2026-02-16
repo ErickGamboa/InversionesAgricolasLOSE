@@ -227,7 +227,7 @@ export function ReceptionDetailDialog({
 
       setBines([data, ...bines])
       setPesoInput("")
-      toast.success(`Par #${nextPar} agregado`)
+      toast.success(`Par agregado`)
       onUpdate() // Actualizar tarjeta padre
       
       // Mantener foco
@@ -753,7 +753,7 @@ export function ReceptionDetailDialog({
             {/* Panel Derecho: Lista de Bines */}
             <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-0">
               <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-xs sm:text-sm px-3 sm:px-4 shrink-0">
-                <span className="font-medium text-muted-foreground">Listado ({bines.length})</span>
+                <span className="font-medium text-muted-foreground">Pesas ({bines.length})</span>
                 <span className="text-muted-foreground hidden sm:inline">Reciente arriba</span>
               </div>
               <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0">
@@ -788,7 +788,7 @@ export function ReceptionDetailDialog({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      bines.map((bin) => (
+                      bines.map((bin, index) => (
                         <TableRow 
                           key={bin.id} 
                           className={cn(
@@ -804,7 +804,7 @@ export function ReceptionDetailDialog({
                               />
                             )}
                           </TableCell>
-                          <TableCell className="text-center font-medium p-1 sm:p-2">#{bin.numero_par}</TableCell>
+                          <TableCell className="text-center font-medium p-1 sm:p-2">#{index + 1}</TableCell>
                           
                           {/* Peso - Editable */}
                           <TableCell className="text-right font-bold p-1 sm:p-2">
@@ -983,7 +983,7 @@ export function ReceptionDetailDialog({
       <AlertDialog open={!!binToDelete} onOpenChange={(open) => !open && setBinToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este par de bines?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar esta pesa de bines?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. El peso se restará del total de la tarjeta.
             </AlertDialogDescription>
