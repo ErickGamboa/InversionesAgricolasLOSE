@@ -42,10 +42,9 @@ export function BoletaRecepcionForm({
     placa: initialData?.placa || "",
     numero_cajas: initialData?.numero_cajas || "",
     pinas_por_caja: initialData?.pinas_por_caja || "",
-    total_kilos: initialData?.total_kilos || "",
     cantidad_bines: initialData?.cantidad_bines || "",
+    total_kilos: initialData?.total_kilos || "",
     tipo_fruta: initialData?.tipo_fruta || "JUGO",
-    precio_por_kilo: initialData?.precio_por_kilo || "",
   })
 
   const [errors, setErrors] = useState<Record<string, string>>({})
@@ -251,6 +250,22 @@ export function BoletaRecepcionForm({
             <h3 className="font-semibold text-lg">Datos de Campo</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
+                <Label htmlFor="cantidad_bines">Cantidad de Bines *</Label>
+                <Input
+                  id="cantidad_bines"
+                  type="number"
+                  min="0"
+                  value={formData.cantidad_bines}
+                  onChange={(e) =>
+                    setFormData({ ...formData, cantidad_bines: e.target.value })
+                  }
+                  placeholder="Ej: 24"
+                />
+                {errors.cantidad_bines && (
+                  <p className="text-sm text-destructive">{errors.cantidad_bines}</p>
+                )}
+              </div>
+              <div className="space-y-2">
                 <Label htmlFor="total_kilos">Total de Kilos *</Label>
                 <Input
                   id="total_kilos"
@@ -265,22 +280,6 @@ export function BoletaRecepcionForm({
                 />
                 {errors.total_kilos && (
                   <p className="text-sm text-destructive">{errors.total_kilos}</p>
-                )}
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="cantidad_bines">Cantidad de Bines *</Label>
-                <Input
-                  id="cantidad_bines"
-                  type="number"
-                  min="0"
-                  value={formData.cantidad_bines}
-                  onChange={(e) =>
-                    setFormData({ ...formData, cantidad_bines: e.target.value })
-                  }
-                  placeholder="Ej: 24"
-                />
-                {errors.cantidad_bines && (
-                  <p className="text-sm text-destructive">{errors.cantidad_bines}</p>
                 )}
               </div>
             </div>
@@ -314,25 +313,6 @@ export function BoletaRecepcionForm({
             </div>
           </div>
         )}
-
-        {/* Precio (opcional) */}
-        <div className="space-y-2 border-t pt-4">
-          <Label htmlFor="precio">Precio por Kilo (opcional - para completar después)</Label>
-          <Input
-            id="precio"
-            type="number"
-            step="0.001"
-            min="0"
-            value={formData.precio_por_kilo}
-            onChange={(e) =>
-              setFormData({ ...formData, precio_por_kilo: e.target.value })
-            }
-            placeholder="Ej: 450.000"
-          />
-          <p className="text-xs text-muted-foreground">
-            Este campo puede completarse más tarde por el administrador
-          </p>
-        </div>
 
         {/* Botones */}
         <div className="flex gap-3 pt-4">

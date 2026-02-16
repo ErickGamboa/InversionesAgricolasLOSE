@@ -111,15 +111,15 @@ export function BoletaPreview({ boleta }: BoletaPreviewProps) {
             <h3 className="text-center font-bold text-gray-700 uppercase text-sm border-b pb-1">
               Datos de Campo
             </h3>
-            <div className="space-y-3 text-sm">
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500 uppercase">Total de Kilos:</span>
-                <span className="font-bold text-xl">{boleta.total_kilos?.toLocaleString('es-CR', {minimumFractionDigits: 3}) || "-"}</span>
-              </div>
-              <div className="flex justify-between items-center">
-                <span className="text-xs text-gray-500 uppercase">Cantidad de Bines:</span>
-                <span className="font-bold text-xl">{boleta.cantidad_bines || "-"}</span>
-              </div>
+             <div className="space-y-3 text-sm">
+               <div className="flex justify-between items-center">
+                 <span className="text-xs text-gray-500 uppercase">Cantidad de Bines:</span>
+                 <span className="font-bold text-xl">{boleta.cantidad_bines || "-"}</span>
+               </div>
+               <div className="flex justify-between items-center">
+                 <span className="text-xs text-gray-500 uppercase">Total de Kilos:</span>
+                 <span className="font-bold text-xl">{boleta.total_kilos?.toLocaleString('es-CR', {minimumFractionDigits: 3}) || "-"}</span>
+               </div>
               {boleta.tipo_fruta && (
                 <div className="flex justify-between items-center border-t border-gray-200 pt-2 mt-2">
                   <span className="text-xs text-gray-500 uppercase">Tipo de Fruta:</span>

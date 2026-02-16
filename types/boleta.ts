@@ -45,10 +45,7 @@ export interface BoletaFormData {
   pinas_por_caja: string
   
   // CAMPO
-  total_kilos: string
   cantidad_bines: string
+  total_kilos: string
   tipo_fruta: string
-  
-  // Para completar después
-  precio_por_kilo: string
 }

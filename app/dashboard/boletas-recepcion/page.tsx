@@ -87,14 +87,9 @@ export default function BoletasRecepcionPage() {
           : null,
         
         // CAMPO
-        total_kilos: !isPlanta ? (parseFloat(formData.total_kilos) || null) : null,
         cantidad_bines: !isPlanta ? (parseInt(formData.cantidad_bines) || null) : null,
+        total_kilos: !isPlanta ? (parseFloat(formData.total_kilos) || null) : null,
         tipo_fruta: !isPlanta ? formData.tipo_fruta : null,
-        
-        // Precio (opcional)
-        precio_por_kilo: formData.precio_por_kilo 
-          ? parseFloat(formData.precio_por_kilo) 
-          : null,
       }
 
       const { data, error } = await supabase
@@ -131,6 +126,30 @@ export default function BoletasRecepcionPage() {
       })
     } finally {
       setIsSubmitting(false)
+    }
+  }, [mutate, toast])
+
+  const handleUpdateBoleta = useCallback(async (
+    id: number, 
+    data: { total_kilos?: number; precio_por_kilo?: number }
+  ) => {
+    try {
+      const { error } = await supabase
+        .from("boletas_recepcion")
+        .update(data)
+        .eq("id", id)
+
+      if (error) throw error
+
+      toast({ title: "Boleta actualizada exitosamente" })
+      mutate()
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Error",
+        description: "No se pudo actualizar la boleta",
+        variant: "destructive",
+      })
     }
   }, [mutate, toast])
 
@@ -178,6 +197,7 @@ export default function BoletasRecepcionPage() {
             <BoletasRecepcionTable
               boletas={boletas as BoletaRecepcion[]}
               onViewBoleta={setViewingBoleta}
+              onUpdateBoleta={handleUpdateBoleta}
               isLoading={isLoading}
             />
           </CardContent>
