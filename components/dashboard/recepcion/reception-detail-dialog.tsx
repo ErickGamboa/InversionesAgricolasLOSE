@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Loader2,
   Scale,
@@ -52,6 +53,7 @@ import {
   X,
   Check,
   RotateCcw,
+  FileText,
 } from "lucide-react"
 import { Recepcion, RecepcionBin, COLOR_OPTIONS } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
@@ -105,6 +107,7 @@ export function ReceptionDetailDialog({
     procedencia_tipo: 'campo' as 'campo' | 'planta',
     color_etiqueta: '',
     es_rechazo: false,
+    notas: '',
   })
   const [savingCard, setSavingCard] = useState(false)
 
@@ -389,6 +392,7 @@ export function ReceptionDetailDialog({
       procedencia_tipo: recepcion.procedencia_tipo || 'campo',
       color_etiqueta: recepcion.color_etiqueta,
       es_rechazo: recepcion.es_rechazo,
+      notas: recepcion.notas || '',
     })
     setIsEditingCard(true)
   }
@@ -401,11 +405,8 @@ export function ReceptionDetailDialog({
       toast.error("Debe seleccionar un cliente")
       return
     }
-    if (!editedCard.es_rechazo && !editedCard.chofer_ingreso_id) {
-      toast.error("Debe seleccionar un chofer de ingreso")
-      return
-    }
-
+    // Chofer no es obligatorio al editar
+    
     setSavingCard(true)
     try {
       const { error } = await supabase
@@ -417,6 +418,7 @@ export function ReceptionDetailDialog({
           procedencia_tipo: editedCard.procedencia_tipo,
           color_etiqueta: editedCard.color_etiqueta,
           es_rechazo: editedCard.es_rechazo,
+          notas: editedCard.notas || null,
         })
         .eq("id", recepcionId)
 
@@ -528,12 +530,29 @@ export function ReceptionDetailDialog({
               <>
                 <div className="text-white min-w-0 flex-1">
                   <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
-                    <span className="truncate">{recepcion.clientes?.nombre}</span>
+                    <span className="truncate">{COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id} - {recepcion.clientes?.nombre}</span>
                     {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
                   </DialogTitle>
-                  <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
-                    <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
-                    <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                  <DialogDescription asChild>
+                    <div className="text-white/80 mt-1 flex flex-col gap-1 text-xs sm:text-sm">
+                      <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
+                        <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
+                        <div className="flex flex-col">
+                          <span className="flex items-center gap-1" suppressHydrationWarning><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                          {binesPendientes.length > 0 && (
+                            <span className="flex items-center gap-1 text-red-300 font-bold ml-5 text-xs" suppressHydrationWarning>
+                              Faltan: {binesPendientes.reduce((sum, b) => sum + (b.peso_neto || 0), 0).toLocaleString()} kg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {recepcion.notas && (
+                        <span className="flex items-start gap-1 italic mt-1" title={recepcion.notas}>
+                          <FileText className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 shrink-0" />
+                          <span className="truncate">{recepcion.notas}</span>
+                        </span>
+                      )}
+                    </div>
                   </DialogDescription>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 ml-4">
@@ -661,14 +680,29 @@ export function ReceptionDetailDialog({
                         key={color.value}
                         type="button"
                         className={cn(
-                          "h-6 w-6 rounded-full transition-all",
+                          "h-6 w-6 rounded-full transition-all flex items-center justify-center text-[10px] text-white font-bold",
                           color.value,
                           editedCard.color_etiqueta === color.value && "ring-2 ring-white scale-110"
                         )}
                         onClick={() => setEditedCard({...editedCard, color_etiqueta: color.value})}
                         title={color.label}
-                      />
+                      >
+                        {color.id}
+                      </button>
                     ))}
+                  </div>
+                </div>
+                {/* Notas Editables */}
+                <div className="relative">
+                  <Textarea
+                    value={editedCard.notas || ''}
+                    onChange={(e) => setEditedCard({...editedCard, notas: e.target.value})}
+                    placeholder="Notas adicionales..."
+                    className="min-h-[60px] resize-none bg-white text-foreground text-xs"
+                    maxLength={500}
+                  />
+                  <div className="absolute bottom-1 right-2 text-[10px] text-muted-foreground">
+                    {editedCard.notas?.length || 0}/500
                   </div>
                 </div>
               </div>

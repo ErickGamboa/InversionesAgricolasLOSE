@@ -6,12 +6,13 @@ import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { Package, Truck, User, Clock } from "lucide-react"
-import { Recepcion } from "@/types/recepcion"
+import { Recepcion, COLOR_OPTIONS } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
 
 interface ReceptionCardProps {
   recepcion: Recepcion
   totalKilos: number
+  kilosPendientes?: number
   binesTotal: number
   binesDespachados: number
   onClick: () => void
@@ -20,6 +21,7 @@ interface ReceptionCardProps {
 export function ReceptionCard({
   recepcion,
   totalKilos,
+  kilosPendientes = 0,
   binesTotal,
   binesDespachados,
   onClick,
@@ -29,6 +31,7 @@ export function ReceptionCard({
   // Extraer el color base para usarlo en estilos dinámicos
   // Asumimos que color_etiqueta es una clase como "bg-red-500"
   const colorClass = recepcion.color_etiqueta || "bg-gray-500"
+  const colorId = COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id || 0
 
   return (
     <Card 
@@ -40,9 +43,13 @@ export function ReceptionCard({
       onClick={onClick}
     >
       {/* Indicador de color visual */}
-      <div className={cn("h-2 w-full", colorClass)} />
+      <div className={cn("h-4 w-full flex items-center px-2", colorClass)}>
+        <span className="flex items-center justify-center bg-white text-[10px] font-bold h-3 w-3 rounded-full text-black leading-none">
+          {colorId}
+        </span>
+      </div>
       
-      <CardHeader className="pb-2 pt-4">
+      <CardHeader className="pb-2 pt-2">
         <div className="flex justify-between items-start gap-2">
           <CardTitle className="text-lg font-bold line-clamp-2 min-h-[3.5rem] leading-tight flex items-center" title={recepcion.clientes?.nombre || "Sin Cliente"}>
             {recepcion.clientes?.nombre || "Sin Cliente"}
@@ -53,7 +60,9 @@ export function ReceptionCard({
         </div>
         <div className="flex items-center text-xs text-muted-foreground gap-1 mt-1">
           <Clock className="h-3 w-3" />
-          {format(new Date(recepcion.fecha_creacion), "dd MMM, HH:mm", { locale: es })}
+          <span suppressHydrationWarning>
+            {format(new Date(recepcion.fecha_creacion), "dd MMM, HH:mm", { locale: es })}
+          </span>
         </div>
       </CardHeader>
       
@@ -71,9 +80,14 @@ export function ReceptionCard({
             <span className="text-muted-foreground text-xs flex items-center gap-1">
               <Package className="h-3 w-3" /> Total Kilos
             </span>
-            <span className="font-bold text-lg">
+            <span className="font-bold text-lg" suppressHydrationWarning>
               {totalKilos.toLocaleString('es-CR')} kg
             </span>
+            {kilosPendientes > 0 && (
+              <span className="text-[10px] text-destructive font-bold" suppressHydrationWarning>
+                Faltan: {kilosPendientes.toLocaleString('es-CR')} kg
+              </span>
+            )}
           </div>
         </div>
 
