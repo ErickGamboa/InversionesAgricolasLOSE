@@ -41,6 +41,7 @@ import {
   Pencil,
   Check,
   X,
+  Receipt,
 } from "lucide-react"
 
 const mainMenuItems = [
@@ -84,6 +85,11 @@ const plantOperationsMenuItems = [
     title: "Recepción de Fruta",
     url: "/dashboard/recepcion",
     icon: Truck,
+  },
+  {
+    title: "Boletas de Recepción",
+    url: "/dashboard/boletas-recepcion",
+    icon: Receipt,
   },
 ]
 
