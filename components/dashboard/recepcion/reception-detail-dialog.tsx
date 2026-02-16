@@ -524,74 +524,76 @@ export function ReceptionDetailDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[95vw] w-full h-[85dvh] flex flex-col p-0 gap-0 overflow-hidden sm:max-w-[95vw] sm:h-[90vh] [&>button]:hidden">
           {/* Header */}
-          <div className={cn("px-4 sm:px-6 py-3 border-b flex justify-between items-center shrink-0", recepcion.color_etiqueta)}>
+          <div className={cn("px-4 sm:px-6 py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-3 sm:gap-0", recepcion.color_etiqueta)}>
             {!isEditingCard ? (
               // Vista normal
               <>
-                <div className="text-white min-w-0 flex-1">
-                  <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
-                    <span className="truncate">{COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id} - {recepcion.clientes?.nombre}</span>
+                <div className="text-white min-w-0 flex-1 w-full">
+                  <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+                    <span className="truncate flex-1">{COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id} - {recepcion.clientes?.nombre}</span>
                     {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
                   </DialogTitle>
                   <DialogDescription asChild>
-                    <div className="text-white/80 mt-1 flex flex-col gap-1 text-xs sm:text-sm">
+                    <div className="text-white/80 mt-2 flex flex-col gap-1 text-xs sm:text-sm">
                       <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
                         <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
-                        <div className="flex flex-col">
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
                           <span className="flex items-center gap-1" suppressHydrationWarning><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
                           {binesPendientes.length > 0 && (
-                            <span className="flex items-center gap-1 text-white font-bold ml-5 text-xs" suppressHydrationWarning>
+                            <span className="flex items-center gap-1 text-white font-bold text-xs mt-1 sm:mt-0" suppressHydrationWarning>
                               Faltan: {binesPendientes.reduce((sum, b) => sum + (b.peso_neto || 0), 0).toLocaleString()} kg
                             </span>
                           )}
                         </div>
                       </div>
                       {recepcion.notas && (
-                        <span className="flex items-start gap-1 italic mt-1" title={recepcion.notas}>
+                        <span className="flex items-start gap-1 italic mt-1 w-full" title={recepcion.notas}>
                           <FileText className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 shrink-0" />
-                          <span className="truncate">{recepcion.notas}</span>
+                          <span className="truncate w-full">{recepcion.notas}</span>
                         </span>
                       )}
                     </div>
                   </DialogDescription>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-4 ml-4">
+                <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end gap-2 sm:gap-4 sm:ml-4 border-t sm:border-t-0 border-white/20 pt-2 sm:pt-0">
                   <Badge variant="secondary" className="text-xs sm:text-lg px-2 sm:px-3 py-0.5 sm:py-1">
                     #{recepcion.id}
                   </Badge>
-                  {recepcion.estado !== 'finalizado' && (
-                    <>
-                      <Button 
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleEditCard}
-                        className="h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap"
-                      >
-                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button 
-                        variant={allDispatched ? "destructive" : "secondary"}
-                        size="sm"
-                        onClick={() => setShowFinalizeAlert(true)}
-                        disabled={!allDispatched}
-                        className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
-                      >
-                        {allDispatched 
-                          ? "Finalizar Tarjeta" 
-                          : `Pendientes: ${binesPendientes.length}/${bines.length}`
-                        }
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onOpenChange(false)}
-                    className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-5 w-5 sm:h-6 sm:w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {recepcion.estado !== 'finalizado' && (
+                      <>
+                        <Button 
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleEditCard}
+                          className="h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap"
+                        >
+                          <Pencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant={allDispatched ? "destructive" : "secondary"}
+                          size="sm"
+                          onClick={() => setShowFinalizeAlert(true)}
+                          disabled={!allDispatched}
+                          className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
+                        >
+                          {allDispatched 
+                            ? "Finalizar" 
+                            : `${binesPendientes.length}/${bines.length}`
+                          }
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onOpenChange(false)}
+                      className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
+                    >
+                      <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (

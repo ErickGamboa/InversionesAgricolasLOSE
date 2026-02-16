@@ -51,7 +51,7 @@ export function ReceptionCard({
       
       <CardHeader className="pb-2 pt-2">
         <div className="flex justify-between items-start gap-2">
-          <CardTitle className="text-lg font-bold line-clamp-2 min-h-[3.5rem] leading-tight flex items-center" title={recepcion.clientes?.nombre || "Sin Cliente"}>
+          <CardTitle className="text-lg font-bold min-h-[3.5rem] leading-tight flex items-center line-clamp-3 sm:line-clamp-2" title={recepcion.clientes?.nombre || "Sin Cliente"}>
             {recepcion.clientes?.nombre || "Sin Cliente"}
           </CardTitle>
           {recepcion.es_rechazo && (
@@ -67,7 +67,7 @@ export function ReceptionCard({
       </CardHeader>
       
       <CardContent className="space-y-4">
-        <div className="grid grid-cols-2 gap-2 text-sm">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-sm">
           <div className="flex flex-col">
             <span className="text-muted-foreground text-xs flex items-center gap-1">
               <User className="h-3 w-3" /> Chofer
@@ -76,18 +76,23 @@ export function ReceptionCard({
               {recepcion.choferes?.nombre || "-"}
             </span>
           </div>
-          <div className="flex flex-col items-end">
-            <span className="text-muted-foreground text-xs flex items-center gap-1">
-              <Package className="h-3 w-3" /> Total Kilos
+          <div className="flex flex-row sm:flex-col justify-between sm:items-end sm:text-right border-t sm:border-t-0 pt-2 sm:pt-0 mt-2 sm:mt-0">
+            <span className="text-muted-foreground text-xs flex items-center gap-1 sm:hidden">
+              <Package className="h-3 w-3" /> Total
             </span>
-            <span className="font-bold text-lg" suppressHydrationWarning>
-              {totalKilos.toLocaleString('es-CR')} kg
-            </span>
-            {kilosPendientes > 0 && (
-              <span className="font-bold text-lg text-destructive font-bold" suppressHydrationWarning>
-                Faltan: {kilosPendientes.toLocaleString('es-CR')} kg
+            <div className="flex flex-col items-end">
+              <span className="text-muted-foreground text-xs hidden sm:flex items-center gap-1">
+                <Package className="h-3 w-3" /> Total Kilos
               </span>
-            )}
+              <span className="font-bold text-base sm:text-lg" suppressHydrationWarning>
+                {totalKilos.toLocaleString('es-CR')} kg
+              </span>
+              {kilosPendientes > 0 && (
+                <span className="font-bold text-sm sm:text-lg text-destructive" suppressHydrationWarning>
+                  Faltan: {kilosPendientes.toLocaleString('es-CR')} kg
+                </span>
+              )}
+            </div>
           </div>
         </div>
 
