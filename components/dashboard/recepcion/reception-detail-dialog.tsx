@@ -284,7 +284,7 @@ export function ReceptionDetailDialog({
 
       if (error) throw error
 
-      toast.success(`${selectedBins.length} pares despachados`)
+      toast.success(`${selectedBins.length} pesas despachadas`)
       setShowDispatchDialog(false)
       setSelectedBins([])
       setDispatchDriverId("")
@@ -720,12 +720,12 @@ export function ReceptionDetailDialog({
                 <div className="bg-green-50 p-2 sm:p-3 rounded-lg border border-green-100 text-center sm:text-left">
                   <span className="text-[10px] sm:text-xs text-green-600 font-medium">En Patio</span>
                   <div className="text-xl sm:text-2xl font-bold text-green-700 leading-tight">{binesPendientes.length}</div>
-                  <div className="text-[10px] sm:text-xs text-green-600">pares</div>
+                  <div className="text-[10px] sm:text-xs text-green-600">pesas</div>
                 </div>
                 <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 text-center sm:text-left">
                   <span className="text-[10px] sm:text-xs text-blue-600 font-medium">Despachados</span>
                   <div className="text-xl sm:text-2xl font-bold text-blue-700 leading-tight">{binesDespachados.length}</div>
-                  <div className="text-[10px] sm:text-xs text-blue-600">pares</div>
+                  <div className="text-[10px] sm:text-xs text-blue-600">pesas</div>
                 </div>
               </div>
 
@@ -939,7 +939,7 @@ export function ReceptionDetailDialog({
       <Dialog open={showDispatchDialog} onOpenChange={setShowDispatchDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Despachar {selectedBins.length} Pares</DialogTitle>
+            <DialogTitle>Despachar {selectedBins.length} Pesas</DialogTitle>
             <DialogDescription>
               Seleccione el chofer que se llevará la carga.
             </DialogDescription>
