@@ -6,6 +6,7 @@ import { Plus, Search, Filter, History, Truck } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
+import { SidebarTrigger } from "@/components/ui/sidebar"
 import { ReceptionCard } from "@/components/dashboard/recepcion/reception-card"
 import { CreateReceptionDialog } from "@/components/dashboard/recepcion/create-reception-dialog"
 import { ReceptionDetailDialog } from "@/components/dashboard/recepcion/reception-detail-dialog"
@@ -79,8 +80,12 @@ export default function RecepcionPage() {
   )
 
   return (
-    <div className="flex flex-col h-full gap-6 p-6">
-      <div className="flex justify-between items-center">
+    <div className="flex flex-col h-full gap-6">
+      <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
+        <SidebarTrigger className="-ml-1" />
+      </header>
+      
+      <div className="flex justify-between items-center px-6 pt-6">
         <div>
           <h1 className="text-3xl font-bold tracking-tight">Recepción de Fruta</h1>
           <p className="text-muted-foreground">Gestión de entrada y despacho de bines.</p>
@@ -90,7 +95,7 @@ export default function RecepcionPage() {
         </Button>
       </div>
 
-      <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-4 px-6">
         <div className="flex justify-between items-center gap-4">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-[400px]">
             <TabsList>
@@ -115,7 +120,7 @@ export default function RecepcionPage() {
         </div>
 
         {loading ? (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 animate-pulse">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-6 animate-pulse">
             {[1, 2, 3, 4].map((i) => (
               <div key={i} className="h-48 bg-muted rounded-lg" />
             ))}
@@ -126,7 +131,7 @@ export default function RecepcionPage() {
             <p>No hay recepciones en esta vista</p>
           </div>
         ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 pb-10">
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 px-6 pb-10">
             {filteredRecepciones.map((rec: any) => {
               // Calcular totales desde los bines incluidos en la query
               const bines = rec.recepcion_bines || []
