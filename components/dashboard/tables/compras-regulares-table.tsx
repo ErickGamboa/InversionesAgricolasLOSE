@@ -268,7 +268,6 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("procedencia_tipo") && <TableHead>Tipo de Procedencia</TableHead>}
                 {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
                 {visibleColumns.includes("nb_tickete") && <TableHead>NB/Tickete</TableHead>}
-                {visibleColumns.includes("lugar_procedencia") && <TableHead>Procedencia</TableHead>}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
                 {visibleColumns.includes("tipo_pina") && <TableHead>Tipo</TableHead>}
                 {visibleColumns.includes("numero_kilos") && <TableHead className="text-right">Kilos</TableHead>}
@@ -303,16 +302,6 @@ export function ComprasRegularesTable({
                     <DebouncedInput placeholder="Cliente..." className="h-8 text-xs" value={filters.cliente || ""} onChange={(val) => setFilter("cliente", val.toString())} />
                   </TableHead>
                 )}
-                {visibleColumns.includes("numero_boleta") && (
-                  <TableHead className="p-2">
-                    <DebouncedInput placeholder="Boleta..." className="h-8 text-xs" value={filters.numero_boleta || ""} onChange={(val) => setFilter("numero_boleta", val.toString())} />
-                  </TableHead>
-                )}
-                {visibleColumns.includes("nb_tickete") && (
-                  <TableHead className="p-2">
-                    <DebouncedInput placeholder="Tickete..." className="h-8 text-xs" value={filters.nb_tickete || ""} onChange={(val) => setFilter("nb_tickete", val.toString())} />
-                  </TableHead>
-                )}
                 {visibleColumns.includes("lugar_procedencia") && (
                   <TableHead className="p-2">
                     <DebouncedInput placeholder="Lugar..." className="h-8 text-xs" value={filters.lugar_procedencia || ""} onChange={(val) => setFilter("lugar_procedencia", val.toString())} />
@@ -321,6 +310,16 @@ export function ComprasRegularesTable({
                 {visibleColumns.includes("procedencia_tipo") && (
                   <TableHead className="p-2">
                     <DebouncedInput placeholder="Tipo..." className="h-8 text-xs" value={filters.procedencia_tipo || ""} onChange={(val) => setFilter("procedencia_tipo", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Boleta..." className="h-8 text-xs" value={filters.numero_boleta || ""} onChange={(val) => setFilter("numero_boleta", val.toString())} />
+                  </TableHead>
+                )}
+                {visibleColumns.includes("nb_tickete") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Tickete..." className="h-8 text-xs" value={filters.nb_tickete || ""} onChange={(val) => setFilter("nb_tickete", val.toString())} />
                   </TableHead>
                 )}
                 {visibleColumns.includes("chofer.nombre") && (
@@ -340,7 +339,6 @@ export function ComprasRegularesTable({
                     </Select>
                   </TableHead>
                 )}
-                {visibleColumns.includes("procedencia_tipo") && <TableHead className="p-2" />}
                 {visibleColumns.includes("numero_kilos") && <TableHead className="p-2" />}
                 {visibleColumns.includes("precio_piña") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="p-2" />}
@@ -377,8 +375,6 @@ export function ComprasRegularesTable({
                     {visibleColumns.includes("fecha") && <TableCell className="whitespace-nowrap">{compra.fecha}</TableCell>}
                     {visibleColumns.includes("numero_semana") && <TableCell>{compra.numero_semana}</TableCell>}
                     {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
-                    {visibleColumns.includes("numero_boleta") && <TableCell>{compra.numero_boleta || "-"}</TableCell>}
-                    {visibleColumns.includes("nb_tickete") && <TableCell>{compra.nb_tickete || "-"}</TableCell>}
                     {visibleColumns.includes("lugar_procedencia") && (
                       <TableCell>
                         {compra.lugar_procedencia || "-"}
@@ -389,6 +385,8 @@ export function ComprasRegularesTable({
                         {compra.procedencia_tipo || "-"}
                       </TableCell>
                     )}
+                    {visibleColumns.includes("numero_boleta") && <TableCell>{compra.numero_boleta || "-"}</TableCell>}
+                    {visibleColumns.includes("nb_tickete") && <TableCell>{compra.nb_tickete || "-"}</TableCell>}
                     {visibleColumns.includes("chofer.nombre") && (
                       <TableCell>
                         {compra.choferes_info ? (
