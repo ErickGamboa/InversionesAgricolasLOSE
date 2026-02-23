@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, Search, Pencil, Check, X } from "lucide-react"
+import { Eye, Search, Pencil, Check, X, FilterX } from "lucide-react"
 import { BoletaRecepcion, TipoBoleta } from "@/types/boleta"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -69,6 +69,15 @@ export function BoletasRecepcionTable({
       prev.includes(key) ? prev.filter(c => c !== key) : [...prev, key]
     )
   }
+
+  const clearFilters = () => {
+    setFilterSemana("")
+    setFilterCliente("")
+    setFilterFechaDesde("")
+    setFilterFechaHasta("")
+  }
+
+  const hasActiveFilters = filterSemana || filterCliente || filterFechaDesde || filterFechaHasta
 
   const filteredBoletas = useMemo(() => {
     return boletas.filter((boleta) => {
@@ -160,20 +169,6 @@ export function BoletasRecepcionTable({
       <div className="flex flex-col gap-4 p-4 bg-muted/20 rounded-lg">
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <div className="space-y-2">
-            <Label htmlFor="filtro-semana" className="text-sm font-medium flex items-center gap-2">
-              <Search className="h-4 w-4" />
-              Semana
-            </Label>
-            <Input
-              id="filtro-semana"
-              type="number"
-              placeholder="Ej: 15"
-              value={filterSemana}
-              onChange={(e) => setFilterSemana(e.target.value)}
-              className="h-9"
-            />
-          </div>
-          <div className="space-y-2">
             <Label htmlFor="filtro-fecha-desde" className="text-sm font-medium">
               Fecha Desde
             </Label>
@@ -197,6 +192,20 @@ export function BoletasRecepcionTable({
               className="h-9"
             />
           </div>
+                    <div className="space-y-2">
+            <Label htmlFor="filtro-semana" className="text-sm font-medium flex items-center gap-2">
+              <Search className="h-4 w-4" />
+              Semana
+            </Label>
+            <Input
+              id="filtro-semana"
+              type="number"
+              placeholder="Ej: 15"
+              value={filterSemana}
+              onChange={(e) => setFilterSemana(e.target.value)}
+              className="h-9"
+            />
+          </div>
           <div className="space-y-2">
             <Label htmlFor="filtro-cliente" className="text-sm font-medium flex items-center gap-2">
               <Search className="h-4 w-4" />
@@ -213,14 +222,22 @@ export function BoletasRecepcionTable({
         </div>
         
         {/* Exportar y Columnas */}
-        <div className="flex justify-between items-center">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <div className="flex items-center gap-2">
+            <ExportActions
+              data={exportData}
+              columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))}
+              title="Reporte de boletas"
+              footerData={footerData}
+            />
+            {hasActiveFilters && (
+              <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
+                <FilterX className="mr-2 h-4 w-4" />
+                Limpiar Filtros
+              </Button>
+            )}
+          </div>
           <ColumnToggle columns={ALL_COLUMNS} visibleColumns={visibleColumns} onToggle={toggleColumn} />
-          <ExportActions
-            data={exportData}
-            columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))}
-            title="Reporte de boletas"
-            footerData={footerData}
-          />
         </div>
       </div>
 
