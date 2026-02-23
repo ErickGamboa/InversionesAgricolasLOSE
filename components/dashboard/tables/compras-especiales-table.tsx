@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, FilterX } from "lucide-react"
+import { Pencil, Trash2, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
 import {
@@ -64,6 +64,8 @@ const ALL_COLUMNS = [
   { key: "pagado", label: "Pagado" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "compras_especiales_filters"
 
 export function ComprasEspecialesTable({
@@ -76,17 +78,46 @@ export function ComprasEspecialesTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("compras_especiales_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
-    }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem("compras_especiales_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    const saved = localStorage.getItem("compras_especiales_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
+    }
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("compras_especiales_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())
@@ -149,7 +180,7 @@ export function ComprasEspecialesTable({
   }
 
   const filteredCompras = useMemo(() => {
-    return compras.filter((c) => {
+    let result = compras.filter((c) => {
       if (filters.fecha_desde && c.fecha < filters.fecha_desde) return false
       if (filters.fecha_hasta && c.fecha > filters.fecha_hasta) return false
 
@@ -173,7 +204,38 @@ export function ComprasEspecialesTable({
       }
       return true
     })
-  }, [compras, filters])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "cliente") {
+          aValue = a.cliente?.nombre || ""
+          bValue = b.cliente?.nombre || ""
+        } else if (sortConfig.key === "procedencia") {
+          aValue = a.procedencia || ""
+          bValue = b.procedencia || ""
+        } else if (sortConfig.key === "chofer") {
+          aValue = a.chofer?.nombre || ""
+          bValue = b.chofer?.nombre || ""
+        } else if (sortConfig.key === "placa") {
+          aValue = a.placa || ""
+          bValue = b.placa || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [compras, filters, sortConfig])
 
   const formatCurrency = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
@@ -235,12 +297,42 @@ export function ComprasEspecialesTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="min-w-[150px]">
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
-                {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
-                {visibleColumns.includes("procedencia") && <TableHead>Procedencia</TableHead>}
-                {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
-                {visibleColumns.includes("placa") && <TableHead>Placa</TableHead>}
+                {visibleColumns.includes("cliente.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("cliente")} className="flex items-center font-semibold hover:text-primary">
+                      Cliente<SortIcon columnKey="cliente" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("procedencia") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("procedencia")} className="flex items-center font-semibold hover:text-primary">
+                      Procedencia<SortIcon columnKey="procedencia" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("chofer.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("chofer")} className="flex items-center font-semibold hover:text-primary">
+                      Chofer<SortIcon columnKey="chofer" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("placa") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("placa")} className="flex items-center font-semibold hover:text-primary">
+                      Placa<SortIcon columnKey="placa" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
                 {visibleColumns.includes("total_pinas") && <TableHead className="text-right">Piñas</TableHead>}
                 {visibleColumns.includes("total_kilos") && <TableHead className="text-right">Kilos</TableHead>}

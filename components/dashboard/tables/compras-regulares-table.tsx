@@ -13,7 +13,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Checkbox } from "@/components/ui/checkbox"
-import { Pencil, Trash2, FilterX } from "lucide-react"
+import { Pencil, Trash2, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { Badge } from "@/components/ui/badge"
 import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
@@ -73,6 +73,8 @@ const ALL_COLUMNS = [
   { key: "numero_deposito", label: "Depósito" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "compras_regulares_filters"
 
 export function ComprasRegularesTable({
@@ -85,17 +87,46 @@ export function ComprasRegularesTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("compras_regulares_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
-    }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem("compras_regulares_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    const saved = localStorage.getItem("compras_regulares_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
+    }
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("compras_regulares_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())
@@ -158,7 +189,7 @@ export function ComprasRegularesTable({
   }
 
   const filteredCompras = useMemo(() => {
-    return compras.filter((compra) => {
+    let result = compras.filter((compra) => {
       if (filters.fecha_desde && compra.fecha < filters.fecha_desde) return false
       if (filters.fecha_hasta && compra.fecha > filters.fecha_hasta) return false
 
@@ -192,7 +223,35 @@ export function ComprasRegularesTable({
       }
       return true
     })
-  }, [compras, filters])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "numero_boleta") {
+          aValue = a.numero_boleta || ""
+          bValue = b.numero_boleta || ""
+        } else if (sortConfig.key === "cliente") {
+          aValue = a.cliente?.nombre || ""
+          bValue = b.cliente?.nombre || ""
+        } else if (sortConfig.key === "lugar_procedencia") {
+          aValue = a.lugar_procedencia || ""
+          bValue = b.lugar_procedencia || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [compras, filters, sortConfig])
 
   const formatCurrency = (num: number, dolares: boolean = false) => {
     if (dolares) {
@@ -251,12 +310,36 @@ export function ComprasRegularesTable({
             <TableHeader>
               {/* ENCABEZADOS - ORDEN STRICTO SEGÚN ALL_COLUMNS */}
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="min-w-[150px]">
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
-                {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
-                {visibleColumns.includes("lugar_procedencia") && <TableHead>Lugar de Procedencia</TableHead>}
+                {visibleColumns.includes("cliente.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("cliente")} className="flex items-center font-semibold hover:text-primary">
+                      Cliente<SortIcon columnKey="cliente" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("lugar_procedencia") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("lugar_procedencia")} className="flex items-center font-semibold hover:text-primary">
+                      Lugar de Procedencia<SortIcon columnKey="lugar_procedencia" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("procedencia_tipo") && <TableHead>Tipo de Procedencia</TableHead>}
-                {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("numero_boleta")} className="flex items-center font-semibold hover:text-primary">
+                      Boleta<SortIcon columnKey="numero_boleta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("nb_tickete") && <TableHead>NB/Tickete</TableHead>}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
                 {visibleColumns.includes("tipo_pina") && <TableHead>Tipo</TableHead>}

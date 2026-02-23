@@ -533,6 +533,10 @@ export function ReceptionDetailDialog({
                     <span className="truncate flex-1">{COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id} - {recepcion.clientes?.nombre}</span>
                     {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
                   </DialogTitle>
+                  <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
+                    <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
+                    <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                    <span className="flex items-center gap-1">Tipo: {recepcion.tipo_pina || "IQF"}</span>
                   <DialogDescription asChild>
                     <div className="text-white/80 mt-2 flex flex-col gap-1 text-xs sm:text-sm">
                       <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">

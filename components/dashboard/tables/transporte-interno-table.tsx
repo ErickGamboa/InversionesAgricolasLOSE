@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Pencil, Trash2, FilterX } from "lucide-react"
+import { Pencil, Trash2, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
 
@@ -45,6 +45,8 @@ const ALL_COLUMNS = [
   { key: "balance", label: "Balance (CRC)" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "transporte_interno_filters"
 
 export function TransporteInternoTable({
@@ -57,17 +59,46 @@ export function TransporteInternoTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("transporte_interno_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
-    }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem("transporte_interno_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    const saved = localStorage.getItem("transporte_interno_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
+    }
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("transporte_interno_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())
@@ -130,7 +161,7 @@ export function TransporteInternoTable({
   }
 
   const filteredTransportes = useMemo(() => {
-    return transportes.filter((t) => {
+    let result = transportes.filter((t) => {
       if (filters.fecha_desde && t.fecha < filters.fecha_desde) return false
       if (filters.fecha_hasta && t.fecha > filters.fecha_hasta) return false
 
@@ -150,7 +181,35 @@ export function TransporteInternoTable({
       }
       return true
     })
-  }, [transportes, filters])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "chofer") {
+          aValue = a.chofer?.nombre || ""
+          bValue = b.chofer?.nombre || ""
+        } else if (sortConfig.key === "placa") {
+          aValue = a.placa?.codigo || ""
+          bValue = b.placa?.codigo || ""
+        } else if (sortConfig.key === "cliente") {
+          aValue = a.cliente?.nombre || ""
+          bValue = b.cliente?.nombre || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [transportes, filters, sortConfig])
 
   const formatCurrency = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
@@ -212,11 +271,35 @@ export function TransporteInternoTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="min-w-[150px]">
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
-                {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
-                {visibleColumns.includes("placa.codigo") && <TableHead>Placa</TableHead>}
-                {visibleColumns.includes("cliente.nombre") && <TableHead>Cliente</TableHead>}
+                {visibleColumns.includes("chofer.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("chofer")} className="flex items-center font-semibold hover:text-primary">
+                      Chofer<SortIcon columnKey="chofer" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("placa.codigo") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("placa")} className="flex items-center font-semibold hover:text-primary">
+                      Placa<SortIcon columnKey="placa" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("cliente.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("cliente")} className="flex items-center font-semibold hover:text-primary">
+                      Cliente<SortIcon columnKey="cliente" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("diesel") && <TableHead className="text-right">Diesel (₡)</TableHead>}
                 {visibleColumns.includes("ingreso") && <TableHead className="text-right">Ingreso (₡)</TableHead>}
                 {visibleColumns.includes("balance") && <TableHead className="text-right">Balance (₡)</TableHead>}

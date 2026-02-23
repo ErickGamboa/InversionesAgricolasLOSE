@@ -9,10 +9,11 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Pencil, Trash2, FilterX } from "lucide-react"
+import { Pencil, Trash2, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
 import {
@@ -65,6 +66,8 @@ const ALL_COLUMNS = [
   { key: "total_pagar_pina", label: "Total Piña" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "ventas_plantas_filters"
 
 export function VentasPlantasTable({
@@ -77,18 +80,46 @@ export function VentasPlantasTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Visibilidad de columnas (Local Storage para persistencia de preferencia de UI)
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ventas_plantas_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
-    }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
-    localStorage.setItem("ventas_plantas_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    const saved = localStorage.getItem("ventas_plantas_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
+    }
+    setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    if (mounted) {
+      localStorage.setItem("ventas_plantas_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
 
   // Lógica de filtros desde URL
   const filters = useMemo(() => {
@@ -156,7 +187,7 @@ export function VentasPlantasTable({
   }
 
   const filteredVentas = useMemo(() => {
-    return ventas.filter((venta) => {
+    let result = ventas.filter((venta) => {
       // Filtro por rango de fecha
       if (filters.fecha_desde && venta.fecha < filters.fecha_desde) return false
       if (filters.fecha_hasta && venta.fecha > filters.fecha_hasta) return false
@@ -180,11 +211,35 @@ export function VentasPlantasTable({
         } else if (key === "tickete") {
           if (!venta.nb_tickete?.toLowerCase().includes(searchLower)) return false
         }
-        // Puedes añadir más filtros específicos aquí
       }
       return true
     })
-  }, [ventas, filters])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "numero_boleta") {
+          aValue = a.numero_boleta || ""
+          bValue = b.numero_boleta || ""
+        } else if (sortConfig.key === "planta") {
+          aValue = a.planta?.nombre || ""
+          bValue = b.planta?.nombre || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [ventas, filters, sortConfig])
 
   const formatCurrency = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
@@ -194,7 +249,8 @@ export function VentasPlantasTable({
 
   const footerData = useMemo(() => {
     return {
-      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0)
+      total_kilos: filteredVentas.reduce((acc, v) => acc + (v.total_kilos || 0), 0),
+      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + (v.total_pagar_pina || 0), 0)
     }
   }, [filteredVentas])
 
@@ -239,11 +295,29 @@ export function VentasPlantasTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="min-w-[150px]">
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
-                {visibleColumns.includes("planta.nombre") && <TableHead>Planta</TableHead>}
+                {visibleColumns.includes("planta.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("planta")} className="flex items-center font-semibold hover:text-primary">
+                      Planta<SortIcon columnKey="planta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
-                {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("numero_boleta")} className="flex items-center font-semibold hover:text-primary">
+                      Boleta<SortIcon columnKey="numero_boleta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("nb_tickete") && <TableHead>Tickete</TableHead>}
                 {visibleColumns.includes("tipo_pina") && <TableHead>Tipo</TableHead>}
                 {visibleColumns.includes("kilos_reportados") && <TableHead className="text-right">Kilos Rep.</TableHead>}
@@ -414,6 +488,32 @@ export function VentasPlantasTable({
                 ))
               )}
             </TableBody>
+            <TableFooter>
+              <TableRow className="bg-muted/50 font-bold">
+                {visibleColumns.includes("fecha") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_semana") && <TableCell></TableCell>}
+                {visibleColumns.includes("planta.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("chofer.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_boleta") && <TableCell></TableCell>}
+                {visibleColumns.includes("nb_tickete") && <TableCell></TableCell>}
+                {visibleColumns.includes("tipo_pina") && <TableCell></TableCell>}
+                {visibleColumns.includes("kilos_reportados") && <TableCell></TableCell>}
+                {visibleColumns.includes("porcentaje_castigo") && <TableCell></TableCell>}
+                {visibleColumns.includes("castigo_kilos") && <TableCell></TableCell>}
+                {visibleColumns.includes("total_kilos") && (
+                  <TableCell className="text-right">
+                    {formatNumber(footerData.total_kilos)}
+                  </TableCell>
+                )}
+                {visibleColumns.includes("total_pagar_castigo") && <TableCell></TableCell>}
+                {visibleColumns.includes("total_pagar_pina") && (
+                  <TableCell className="text-right">
+                    ${formatCurrency(footerData.total_pagar_pina)}
+                  </TableCell>
+                )}
+                <TableCell></TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </div>

@@ -15,7 +15,7 @@ Representa un camión que ingresó con fruta.
 - **fecha_creacion**: Fecha y hora de registro.
 - **usuario_creacion**: ID del usuario que registró.
 
-### Tabla `recepcion_bines` (Los Pares de Bines)
+### Tabla `recepcion_bines` (Las pesas de Bines)
 Detalle de cada par de bines pesado en una recepción.
 - **id**: Identificador único.
 - **recepcion_id**: Relación con la tabla `recepciones`.
@@ -50,12 +50,12 @@ El módulo se ubicará en `/dashboard/recepcion` y tendrá un diseño visualment
 - **Paso 2: Pesaje**:
   - Input grande para el **Peso Bruto**.
   - Al dar Enter, se agrega a la lista abajo y se calcula automáticamente el **Peso Neto (-100kg)**.
-  - Lista visible de los pares ingresados con opción de eliminar/editar si hay error.
+  - Lista visible de las pesas ingresados con opción de eliminar/editar si hay error.
   - Muestra el **Total Acumulado** en tiempo real.
 
 ### C. Detalle y Despacho
 - **Vista**: Modal grande o Pantalla dedicada.
-- **Lista de Bines**: Tabla con los pares de bines.
+- **Lista de Bines**: Tabla con las pesas de bines.
   - **Columnas**: # Par, Peso Neto, Estado, Chofer Salida.
   - **Estilo**:
     - *En Patio*: Texto normal, seleccionable.
