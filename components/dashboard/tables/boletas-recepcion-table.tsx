@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, Search, Pencil, Check, X, FilterX } from "lucide-react"
+import { Eye, Search, Pencil, Check, X, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { BoletaRecepcion, TipoBoleta } from "@/types/boleta"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -78,7 +78,26 @@ export function BoletasRecepcionTable({
       localStorage.setItem("boletas_recepcion_columns", JSON.stringify(visibleColumns))
     }
   }, [visibleColumns, mounted])
-  
+
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
+   
   // Estados para edición inline
   const [editingId, setEditingId] = useState<number | null>(null)
   const [editData, setEditData] = useState<{ total_kilos: string; precio_por_kilo: string }>({
@@ -102,7 +121,7 @@ export function BoletasRecepcionTable({
   const hasActiveFilters = filterSemana || filterCliente || filterFechaDesde || filterFechaHasta
 
   const filteredBoletas = useMemo(() => {
-    return boletas.filter((boleta) => {
+    let result = boletas.filter((boleta) => {
       const matchSemana = filterSemana
         ? boleta.numero_semana.toString() === filterSemana
         : true
@@ -117,7 +136,32 @@ export function BoletasRecepcionTable({
         : true
       return matchSemana && matchCliente && matchFechaDesde && matchFechaHasta
     })
-  }, [boletas, filterSemana, filterCliente, filterFechaDesde, filterFechaHasta])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "numero_boleta") {
+          aValue = a.numero_boleta
+          bValue = b.numero_boleta
+        } else if (sortConfig.key === "cliente") {
+          aValue = a.clientes?.nombre || ""
+          bValue = b.clientes?.nombre || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [boletas, filterSemana, filterCliente, filterFechaDesde, filterFechaHasta, sortConfig])
 
   const getTipoBadge = (tipo: TipoBoleta) => {
     return tipo === "PLANTA" ? (
@@ -269,11 +313,29 @@ export function BoletasRecepcionTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                {visibleColumns.includes("numero_boleta") && <TableHead className="w-[100px]">Nº Boleta</TableHead>}
-                {visibleColumns.includes("fecha") && <TableHead>Fecha</TableHead>}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead className="w-[100px]">
+                    <button onClick={() => handleSort("numero_boleta")} className="flex items-center font-semibold hover:text-primary">
+                      Nº Boleta<SortIcon columnKey="numero_boleta" />
+                    </button>
+                  </TableHead>
+                )}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Semana</TableHead>}
                 {visibleColumns.includes("tipo_boleta") && <TableHead>Tipo</TableHead>}
-                {visibleColumns.includes("cliente") && <TableHead>Cliente</TableHead>}
+                {visibleColumns.includes("cliente") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("cliente")} className="flex items-center font-semibold hover:text-primary">
+                      Cliente<SortIcon columnKey="cliente" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("chofer") && <TableHead>Chofer</TableHead>}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
                 {visibleColumns.includes("pinas_por_caja") && <TableHead className="text-right">Piñas/Caja</TableHead>}

@@ -12,7 +12,7 @@ import {
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
-import { Pencil, Trash2, FilterX } from "lucide-react"
+import { Pencil, Trash2, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
 import { Spinner } from "@/components/ui/spinner"
 import { ColumnToggle, ExportActions, DebouncedInput } from "./table-utils"
 import {
@@ -101,6 +101,25 @@ export function VentasPlantasTable({
     }
   }, [visibleColumns, mounted])
 
+  const [sortConfig, setSortConfig] = useState<{ key: string; direction: "asc" | "desc" } | null>({
+    key: "fecha",
+    direction: "desc"
+  })
+
+  const handleSort = (key: string) => {
+    setSortConfig((prev) => {
+      if (prev?.key === key) {
+        return prev.direction === "asc" ? { key, direction: "desc" } : { key, direction: "asc" }
+      }
+      return { key, direction: "asc" }
+    })
+  }
+
+  const SortIcon = ({ columnKey }: { columnKey: string }) => {
+    if (sortConfig?.key !== columnKey) return <ArrowUpDown className="ml-1 h-3 w-3 inline" />
+    return sortConfig.direction === "asc" ? <ArrowUp className="ml-1 h-3 w-3 inline" /> : <ArrowDown className="ml-1 h-3 w-3 inline" />
+  }
+
   // Lógica de filtros desde URL
   const filters = useMemo(() => {
     const params = Object.fromEntries(searchParams.entries())
@@ -167,7 +186,7 @@ export function VentasPlantasTable({
   }
 
   const filteredVentas = useMemo(() => {
-    return ventas.filter((venta) => {
+    let result = ventas.filter((venta) => {
       // Filtro por rango de fecha
       if (filters.fecha_desde && venta.fecha < filters.fecha_desde) return false
       if (filters.fecha_hasta && venta.fecha > filters.fecha_hasta) return false
@@ -191,11 +210,35 @@ export function VentasPlantasTable({
         } else if (key === "tickete") {
           if (!venta.nb_tickete?.toLowerCase().includes(searchLower)) return false
         }
-        // Puedes añadir más filtros específicos aquí
       }
       return true
     })
-  }, [ventas, filters])
+
+    if (sortConfig) {
+      result = [...result].sort((a, b) => {
+        let aValue: any, bValue: any
+
+        if (sortConfig.key === "fecha") {
+          aValue = new Date(a.fecha).getTime()
+          bValue = new Date(b.fecha).getTime()
+        } else if (sortConfig.key === "numero_boleta") {
+          aValue = a.numero_boleta || ""
+          bValue = b.numero_boleta || ""
+        } else if (sortConfig.key === "planta") {
+          aValue = a.planta?.nombre || ""
+          bValue = b.planta?.nombre || ""
+        } else {
+          return 0
+        }
+
+        if (aValue < bValue) return sortConfig.direction === "asc" ? -1 : 1
+        if (aValue > bValue) return sortConfig.direction === "asc" ? 1 : -1
+        return 0
+      })
+    }
+
+    return result
+  }, [ventas, filters, sortConfig])
 
   const formatCurrency = (num: number) =>
     num?.toLocaleString("es-CR", { minimumFractionDigits: 3, maximumFractionDigits: 3 }) || "0.000"
@@ -250,11 +293,29 @@ export function VentasPlantasTable({
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50 hover:bg-muted/50">
-                {visibleColumns.includes("fecha") && <TableHead className="min-w-[150px]">Fecha</TableHead>}
+                {visibleColumns.includes("fecha") && (
+                  <TableHead className="min-w-[150px]">
+                    <button onClick={() => handleSort("fecha")} className="flex items-center font-semibold hover:text-primary">
+                      Fecha<SortIcon columnKey="fecha" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_semana") && <TableHead>Sem</TableHead>}
-                {visibleColumns.includes("planta.nombre") && <TableHead>Planta</TableHead>}
+                {visibleColumns.includes("planta.nombre") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("planta")} className="flex items-center font-semibold hover:text-primary">
+                      Planta<SortIcon columnKey="planta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("chofer.nombre") && <TableHead>Chofer</TableHead>}
-                {visibleColumns.includes("numero_boleta") && <TableHead>Boleta</TableHead>}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("numero_boleta")} className="flex items-center font-semibold hover:text-primary">
+                      Boleta<SortIcon columnKey="numero_boleta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("nb_tickete") && <TableHead>Tickete</TableHead>}
                 {visibleColumns.includes("tipo_pina") && <TableHead>Tipo</TableHead>}
                 {visibleColumns.includes("kilos_reportados") && <TableHead className="text-right">Kilos Rep.</TableHead>}
