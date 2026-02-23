@@ -63,7 +63,6 @@ const ALL_COLUMNS = [
   { key: "procedencia_tipo", label: "Tipo de Procedencia" },
   { key: "numero_boleta", label: "Boleta" },
   { key: "nb_tickete", label: "NB/Tickete" },
-  { key: "lugar_procedencia", label: "Procedencia" },
   { key: "chofer.nombre", label: "Chofer" },
   { key: "tipo_pina", label: "Tipo" },
   { key: "numero_kilos", label: "Kilos" },
@@ -72,6 +71,8 @@ const ALL_COLUMNS = [
   { key: "pagado", label: "Pagado" },
   { key: "numero_deposito", label: "Depósito" },
 ]
+
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
 
 const FILTERS_STORAGE_KEY = "compras_regulares_filters"
 
@@ -85,13 +86,19 @@ export function ComprasRegularesTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("compras_regulares_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("compras_regulares_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
     }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  }, [])
 
   useEffect(() => {
     localStorage.setItem("compras_regulares_columns", JSON.stringify(visibleColumns))

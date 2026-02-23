@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useMemo } from "react"
+import { useState, useMemo, useEffect } from "react"
 import {
   Table,
   TableBody,
@@ -42,6 +42,11 @@ const ALL_COLUMNS = [
   { key: "total_precio", label: "Total Precio" },
 ]
 
+const DEFAULT_COLUMNS = [
+  "numero_boleta", "fecha", "cliente", "tipo_boleta", "cantidad_bines", 
+  "total_kilos", "precio_por_kilo", "total_precio"
+]
+
 export function BoletasRecepcionTable({
   boletas,
   onViewBoleta,
@@ -52,10 +57,23 @@ export function BoletasRecepcionTable({
   const [filterCliente, setFilterCliente] = useState<string>("")
   const [filterFechaDesde, setFilterFechaDesde] = useState<string>("")
   const [filterFechaHasta, setFilterFechaHasta] = useState<string>("")
-  const [visibleColumns, setVisibleColumns] = useState<string[]>([
-    "numero_boleta", "fecha", "cliente", "tipo_boleta", "cantidad_bines", 
-    "total_kilos", "precio_por_kilo", "total_precio"
-  ])
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("boletas_recepcion_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
+    }
+  }, [])
+
+  useEffect(() => {
+    localStorage.setItem("boletas_recepcion_columns", JSON.stringify(visibleColumns))
+  }, [visibleColumns])
   
   // Estados para edición inline
   const [editingId, setEditingId] = useState<number | null>(null)

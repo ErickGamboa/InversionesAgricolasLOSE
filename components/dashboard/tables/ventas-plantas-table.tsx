@@ -65,6 +65,8 @@ const ALL_COLUMNS = [
   { key: "total_pagar_pina", label: "Total Piña" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "ventas_plantas_filters"
 
 export function VentasPlantasTable({
@@ -77,14 +79,19 @@ export function VentasPlantasTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  // Visibilidad de columnas (Local Storage para persistencia de preferencia de UI)
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("ventas_plantas_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("ventas_plantas_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
     }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  }, [])
 
   useEffect(() => {
     localStorage.setItem("ventas_plantas_columns", JSON.stringify(visibleColumns))

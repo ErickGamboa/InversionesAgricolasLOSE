@@ -45,6 +45,8 @@ const ALL_COLUMNS = [
   { key: "balance", label: "Balance (CRC)" },
 ]
 
+const DEFAULT_COLUMNS = ALL_COLUMNS.map(c => c.key)
+
 const FILTERS_STORAGE_KEY = "transporte_interno_filters"
 
 export function TransporteInternoTable({
@@ -57,13 +59,19 @@ export function TransporteInternoTable({
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
-  const [visibleColumns, setVisibleColumns] = useState<string[]>(() => {
-    if (typeof window !== "undefined") {
-      const saved = localStorage.getItem("transporte_interno_columns")
-      return saved ? JSON.parse(saved) : ALL_COLUMNS.map(c => c.key)
+  const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+
+  useEffect(() => {
+    const saved = localStorage.getItem("transporte_interno_columns")
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved)
+        const validKeys = ALL_COLUMNS.map(c => c.key)
+        const validCols = parsed.filter((c: string) => validKeys.includes(c))
+        if (validCols.length > 0) setVisibleColumns(validCols)
+      } catch { }
     }
-    return ALL_COLUMNS.map(c => c.key)
-  })
+  }, [])
 
   useEffect(() => {
     localStorage.setItem("transporte_interno_columns", JSON.stringify(visibleColumns))
