@@ -7,6 +7,7 @@ import { createClient } from "@/lib/supabase/client"
 import type { User } from "@supabase/supabase-js"
 import { Input } from "@/components/ui/input"
 import { toast } from "sonner"
+import { useUserRole } from "@/hooks/use-user-role"
 import {
   Sidebar,
   SidebarContent,
@@ -125,6 +126,7 @@ export function DashboardSidebar({ user }: { user: User }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
+  const { role, loading } = useUserRole()
 
   const [titulo, setTitulo] = useState("Recepción Piña")
   const [isEditing, setIsEditing] = useState(false)
@@ -246,41 +248,48 @@ export function DashboardSidebar({ user }: { user: User }) {
         </div>
       </SidebarHeader>
       <SidebarContent>
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Dashboard - solo admin */}
+        {!loading && role === "admin" && (
+          <SidebarGroup>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {mainMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url}>
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
-        <SidebarGroup>
-          <SidebarGroupLabel>Operaciones administrativas</SidebarGroupLabel>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {adminOperationsMenuItems.map((item) => (
-                <SidebarMenuItem key={item.title}>
-                  <SidebarMenuButton asChild isActive={pathname === item.url}>
-                    <Link href={item.url}>
-                      <item.icon className="h-4 w-4" />
-                      <span>{item.title}</span>
-                    </Link>
-                  </SidebarMenuButton>
-                </SidebarMenuItem>
-              ))}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
+        {/* Operaciones administrativas - solo admin */}
+        {!loading && role === "admin" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Operaciones administrativas</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {adminOperationsMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url}>
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
 
+        {/* Operaciones en planta - admin + operario */}
         <SidebarGroup>
           <SidebarGroupLabel>Operaciones en planta</SidebarGroupLabel>
           <SidebarGroupContent>
@@ -299,6 +308,7 @@ export function DashboardSidebar({ user }: { user: User }) {
           </SidebarGroupContent>
         </SidebarGroup>
 
+        {/* Mantenimiento - admin + operario */}
         <SidebarGroup>
           <SidebarGroupLabel>Mantenimiento</SidebarGroupLabel>
           <SidebarGroupContent>

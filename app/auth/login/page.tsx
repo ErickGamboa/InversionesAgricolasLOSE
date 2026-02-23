@@ -26,7 +26,7 @@ export default function LoginPage() {
     setLoading(true)
     setError(null)
 
-    const { error } = await supabase.auth.signInWithPassword({
+    const { error, data } = await supabase.auth.signInWithPassword({
       email,
       password,
     })
@@ -37,7 +37,23 @@ export default function LoginPage() {
       return
     }
 
-    router.push("/dashboard")
+    // Get user role and redirect accordingly
+    if (data?.user) {
+      const { data: perfil } = await supabase
+        .from("perfiles")
+        .select("rol")
+        .eq("id", data.user.id)
+        .single()
+
+      if (perfil?.rol === "operario") {
+        router.push("/dashboard/recepcion")
+      } else {
+        router.push("/dashboard")
+      }
+    } else {
+      router.push("/dashboard")
+    }
+    
     router.refresh()
   }
 
