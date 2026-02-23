@@ -80,6 +80,7 @@ export function VentasPlantasTable({
   const searchParams = useSearchParams()
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("ventas_plantas_columns")
@@ -91,11 +92,14 @@ export function VentasPlantasTable({
         if (validCols.length > 0) setVisibleColumns(validCols)
       } catch { }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("ventas_plantas_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    if (mounted) {
+      localStorage.setItem("ventas_plantas_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
 
   // Lógica de filtros desde URL
   const filters = useMemo(() => {

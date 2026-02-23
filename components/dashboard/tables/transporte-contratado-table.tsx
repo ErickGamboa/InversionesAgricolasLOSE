@@ -75,6 +75,7 @@ export function TransporteContratadoTable({
   const searchParams = useSearchParams()
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("transporte_contratado_columns")
@@ -86,11 +87,14 @@ export function TransporteContratadoTable({
         if (validCols.length > 0) setVisibleColumns(validCols)
       } catch { }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("transporte_contratado_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    if (mounted) {
+      localStorage.setItem("transporte_contratado_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())

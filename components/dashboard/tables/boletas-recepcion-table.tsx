@@ -58,6 +58,7 @@ export function BoletasRecepcionTable({
   const [filterFechaDesde, setFilterFechaDesde] = useState<string>("")
   const [filterFechaHasta, setFilterFechaHasta] = useState<string>("")
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("boletas_recepcion_columns")
@@ -69,11 +70,14 @@ export function BoletasRecepcionTable({
         if (validCols.length > 0) setVisibleColumns(validCols)
       } catch { }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("boletas_recepcion_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    if (mounted) {
+      localStorage.setItem("boletas_recepcion_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
   
   // Estados para edición inline
   const [editingId, setEditingId] = useState<number | null>(null)

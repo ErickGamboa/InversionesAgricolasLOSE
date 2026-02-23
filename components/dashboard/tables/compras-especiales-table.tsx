@@ -79,6 +79,7 @@ export function ComprasEspecialesTable({
   const searchParams = useSearchParams()
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("compras_especiales_columns")
@@ -90,11 +91,14 @@ export function ComprasEspecialesTable({
         if (validCols.length > 0) setVisibleColumns(validCols)
       } catch { }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("compras_especiales_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    if (mounted) {
+      localStorage.setItem("compras_especiales_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())

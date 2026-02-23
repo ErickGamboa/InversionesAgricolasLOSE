@@ -87,6 +87,7 @@ export function ComprasRegularesTable({
   const searchParams = useSearchParams()
 
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_COLUMNS)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
     const saved = localStorage.getItem("compras_regulares_columns")
@@ -98,11 +99,14 @@ export function ComprasRegularesTable({
         if (validCols.length > 0) setVisibleColumns(validCols)
       } catch { }
     }
+    setMounted(true)
   }, [])
 
   useEffect(() => {
-    localStorage.setItem("compras_regulares_columns", JSON.stringify(visibleColumns))
-  }, [visibleColumns])
+    if (mounted) {
+      localStorage.setItem("compras_regulares_columns", JSON.stringify(visibleColumns))
+    }
+  }, [visibleColumns, mounted])
 
   const filters = useMemo(() => {
     return Object.fromEntries(searchParams.entries())
