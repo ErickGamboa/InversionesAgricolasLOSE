@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -248,7 +249,8 @@ export function VentasPlantasTable({
 
   const footerData = useMemo(() => {
     return {
-      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + v.total_pagar_pina, 0)
+      total_kilos: filteredVentas.reduce((acc, v) => acc + (v.total_kilos || 0), 0),
+      total_pagar_pina: filteredVentas.reduce((acc, v) => acc + (v.total_pagar_pina || 0), 0)
     }
   }, [filteredVentas])
 
@@ -486,6 +488,32 @@ export function VentasPlantasTable({
                 ))
               )}
             </TableBody>
+            <TableFooter>
+              <TableRow className="bg-muted/50 font-bold">
+                {visibleColumns.includes("fecha") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_semana") && <TableCell></TableCell>}
+                {visibleColumns.includes("planta.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("chofer.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_boleta") && <TableCell></TableCell>}
+                {visibleColumns.includes("nb_tickete") && <TableCell></TableCell>}
+                {visibleColumns.includes("tipo_pina") && <TableCell></TableCell>}
+                {visibleColumns.includes("kilos_reportados") && <TableCell></TableCell>}
+                {visibleColumns.includes("porcentaje_castigo") && <TableCell></TableCell>}
+                {visibleColumns.includes("castigo_kilos") && <TableCell></TableCell>}
+                {visibleColumns.includes("total_kilos") && (
+                  <TableCell className="text-right">
+                    {formatNumber(footerData.total_kilos)}
+                  </TableCell>
+                )}
+                {visibleColumns.includes("total_pagar_castigo") && <TableCell></TableCell>}
+                {visibleColumns.includes("total_pagar_pina") && (
+                  <TableCell className="text-right">
+                    ${formatCurrency(footerData.total_pagar_pina)}
+                  </TableCell>
+                )}
+                <TableCell></TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </div>
