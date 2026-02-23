@@ -6,7 +6,7 @@ import { createClient } from "@/lib/supabase/client"
 export type UserRole = "admin" | "operario" | null
 
 export function useUserRole() {
-  const [role, setRole] = useState<UserRole>(null)
+  const [role, setRole] = useState<UserRole>("operario")
   const [loading, setLoading] = useState(true)
   const supabase = createClient()
 

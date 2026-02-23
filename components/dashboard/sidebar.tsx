@@ -126,7 +126,7 @@ export function DashboardSidebar({ user }: { user: User }) {
   const pathname = usePathname()
   const router = useRouter()
   const supabase = createClient()
-  const { role, loading } = useUserRole()
+  const { role } = useUserRole()
 
   const [titulo, setTitulo] = useState("Recepción Piña")
   const [isEditing, setIsEditing] = useState(false)
@@ -249,7 +249,7 @@ export function DashboardSidebar({ user }: { user: User }) {
       </SidebarHeader>
       <SidebarContent>
         {/* Dashboard - solo admin */}
-        {!loading && role === "admin" && (
+        {role === "admin" && (
           <SidebarGroup>
             <SidebarGroupContent>
               <SidebarMenu>
@@ -269,7 +269,7 @@ export function DashboardSidebar({ user }: { user: User }) {
         )}
 
         {/* Operaciones administrativas - solo admin */}
-        {!loading && role === "admin" && (
+        {role === "admin" && (
           <SidebarGroup>
             <SidebarGroupLabel>Operaciones administrativas</SidebarGroupLabel>
             <SidebarGroupContent>
