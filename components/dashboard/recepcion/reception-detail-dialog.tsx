@@ -525,6 +525,7 @@ export function ReceptionDetailDialog({
                   <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
                     <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
                     <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                    <span className="flex items-center gap-1">Tipo: {recepcion.tipo_pina || "IQF"}</span>
                   </DialogDescription>
                 </div>
                 <div className="flex items-center gap-2 sm:gap-4 ml-4">

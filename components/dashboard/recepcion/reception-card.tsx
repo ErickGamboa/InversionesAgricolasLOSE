@@ -76,6 +76,11 @@ export function ReceptionCard({
             </span>
           </div>
         </div>
+        
+        <div className="flex items-center justify-between text-xs border-t pt-2">
+          <span className="text-muted-foreground">Tipo:</span>
+          <span className="font-medium">{recepcion.tipo_pina || "IQF"}</span>
+        </div>
 
         <div className="space-y-1.5">
           <div className="flex justify-between text-xs">
