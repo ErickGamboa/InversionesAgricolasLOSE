@@ -40,6 +40,7 @@ import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Badge } from "@/components/ui/badge"
+import { Textarea } from "@/components/ui/textarea"
 import {
   Loader2,
   Scale,
@@ -52,6 +53,7 @@ import {
   X,
   Check,
   RotateCcw,
+  FileText,
 } from "lucide-react"
 import { Recepcion, RecepcionBin, COLOR_OPTIONS } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
@@ -105,6 +107,7 @@ export function ReceptionDetailDialog({
     procedencia_tipo: 'campo' as 'campo' | 'planta',
     color_etiqueta: '',
     es_rechazo: false,
+    notas: '',
   })
   const [savingCard, setSavingCard] = useState(false)
 
@@ -217,6 +220,7 @@ export function ReceptionDetailDialog({
           numero_par: nextPar,
           peso_bruto: pesoBruto,
           peso_neto: pesoNeto,
+          tara_aplicada: taraValue,
           estado: 'en_patio'
         })
         .select()
@@ -226,7 +230,7 @@ export function ReceptionDetailDialog({
 
       setBines([data, ...bines])
       setPesoInput("")
-      toast.success(`Par #${nextPar} agregado`)
+      toast.success(`Par agregado`)
       onUpdate() // Actualizar tarjeta padre
       
       // Mantener foco
@@ -284,7 +288,7 @@ export function ReceptionDetailDialog({
 
       if (error) throw error
 
-      toast.success(`${selectedBins.length} pares despachados`)
+      toast.success(`${selectedBins.length} pesas despachadas`)
       setShowDispatchDialog(false)
       setSelectedBins([])
       setDispatchDriverId("")
@@ -388,6 +392,7 @@ export function ReceptionDetailDialog({
       procedencia_tipo: recepcion.procedencia_tipo || 'campo',
       color_etiqueta: recepcion.color_etiqueta,
       es_rechazo: recepcion.es_rechazo,
+      notas: recepcion.notas || '',
     })
     setIsEditingCard(true)
   }
@@ -400,11 +405,8 @@ export function ReceptionDetailDialog({
       toast.error("Debe seleccionar un cliente")
       return
     }
-    if (!editedCard.es_rechazo && !editedCard.chofer_ingreso_id) {
-      toast.error("Debe seleccionar un chofer de ingreso")
-      return
-    }
-
+    // Chofer no es obligatorio al editar
+    
     setSavingCard(true)
     try {
       const { error } = await supabase
@@ -416,6 +418,7 @@ export function ReceptionDetailDialog({
           procedencia_tipo: editedCard.procedencia_tipo,
           color_etiqueta: editedCard.color_etiqueta,
           es_rechazo: editedCard.es_rechazo,
+          notas: editedCard.notas || null,
         })
         .eq("id", recepcionId)
 
@@ -443,7 +446,15 @@ export function ReceptionDetailDialog({
   }
 
   const handleSaveBin = async (binId: number) => {
-    const pesoNeto = editedBin.peso_bruto - taraValue
+    // Buscar el bin original para obtener la tara histórica
+    const binOriginal = bines.find(b => b.id === binId)
+    if (!binOriginal) {
+      toast.error("No se encontró el bin")
+      return
+    }
+    
+    // Usar la tara histórica para el cálculo
+    const pesoNeto = editedBin.peso_bruto - binOriginal.tara_aplicada
     
     if (editedBin.peso_bruto <= 0) {
       toast.error("El peso debe ser mayor a 0")
@@ -513,58 +524,80 @@ export function ReceptionDetailDialog({
       <Dialog open={open} onOpenChange={onOpenChange}>
         <DialogContent className="max-w-[95vw] w-full h-[85dvh] flex flex-col p-0 gap-0 overflow-hidden sm:max-w-[95vw] sm:h-[90vh] [&>button]:hidden">
           {/* Header */}
-          <div className={cn("px-4 sm:px-6 py-3 border-b flex justify-between items-center shrink-0", recepcion.color_etiqueta)}>
+          <div className={cn("px-4 sm:px-6 py-3 border-b flex flex-col sm:flex-row justify-between items-start sm:items-center shrink-0 gap-3 sm:gap-0", recepcion.color_etiqueta)}>
             {!isEditingCard ? (
               // Vista normal
               <>
-                <div className="text-white min-w-0 flex-1">
-                  <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2 truncate">
-                    <span className="truncate">{recepcion.clientes?.nombre}</span>
+                <div className="text-white min-w-0 flex-1 w-full">
+                  <DialogTitle className="text-lg sm:text-2xl font-bold flex items-center gap-2">
+                    <span className="truncate flex-1">{COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id} - {recepcion.clientes?.nombre}</span>
                     {recepcion.es_rechazo && <Badge variant="destructive" className="ml-2 border-white shrink-0">Rechazo</Badge>}
                   </DialogTitle>
                   <DialogDescription className="text-white/80 mt-1 flex flex-col sm:flex-row gap-1 sm:gap-4 text-xs sm:text-sm">
                     <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
                     <span className="flex items-center gap-1"><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
                     <span className="flex items-center gap-1">Tipo: {recepcion.tipo_pina || "IQF"}</span>
+                  <DialogDescription asChild>
+                    <div className="text-white/80 mt-2 flex flex-col gap-1 text-xs sm:text-sm">
+                      <div className="flex flex-col sm:flex-row gap-1 sm:gap-4">
+                        <span className="flex items-center gap-1"><User className="h-3 w-3 sm:h-4 sm:w-4" /> {recepcion.choferes?.nombre || "Sin Chofer"}</span>
+                        <div className="flex flex-col sm:flex-row sm:items-center sm:gap-4">
+                          <span className="flex items-center gap-1" suppressHydrationWarning><Scale className="h-3 w-3 sm:h-4 sm:w-4" /> {totalKilos.toLocaleString()} kg Total</span>
+                          {binesPendientes.length > 0 && (
+                            <span className="flex items-center gap-1 text-white font-bold text-xs mt-1 sm:mt-0" suppressHydrationWarning>
+                              Faltan: {binesPendientes.reduce((sum, b) => sum + (b.peso_neto || 0), 0).toLocaleString()} kg
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                      {recepcion.notas && (
+                        <span className="flex items-start gap-1 italic mt-1 w-full" title={recepcion.notas}>
+                          <FileText className="h-3 w-3 sm:h-4 sm:w-4 mt-0.5 shrink-0" />
+                          <span className="truncate w-full">{recepcion.notas}</span>
+                        </span>
+                      )}
+                    </div>
                   </DialogDescription>
                 </div>
-                <div className="flex items-center gap-2 sm:gap-4 ml-4">
+                <div className="flex items-center justify-between w-full sm:w-auto sm:justify-end gap-2 sm:gap-4 sm:ml-4 border-t sm:border-t-0 border-white/20 pt-2 sm:pt-0">
                   <Badge variant="secondary" className="text-xs sm:text-lg px-2 sm:px-3 py-0.5 sm:py-1">
                     #{recepcion.id}
                   </Badge>
-                  {recepcion.estado !== 'finalizado' && (
-                    <>
-                      <Button 
-                        variant="secondary"
-                        size="sm"
-                        onClick={handleEditCard}
-                        className="h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap"
-                      >
-                        <Pencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
-                        Editar
-                      </Button>
-                      <Button 
-                        variant={allDispatched ? "destructive" : "secondary"}
-                        size="sm"
-                        onClick={() => setShowFinalizeAlert(true)}
-                        disabled={!allDispatched}
-                        className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
-                      >
-                        {allDispatched 
-                          ? "Finalizar Tarjeta" 
-                          : `Pendientes: ${binesPendientes.length}/${bines.length}`
-                        }
-                      </Button>
-                    </>
-                  )}
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={() => onOpenChange(false)}
-                    className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
-                  >
-                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth={2} strokeLinecap="round" strokeLinejoin="round" className="lucide lucide-x h-5 w-5 sm:h-6 sm:w-6"><path d="M18 6 6 18"></path><path d="m6 6 12 12"></path></svg>
-                  </Button>
+                  <div className="flex items-center gap-2">
+                    {recepcion.estado !== 'finalizado' && (
+                      <>
+                        <Button 
+                          variant="secondary"
+                          size="sm"
+                          onClick={handleEditCard}
+                          className="h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap"
+                        >
+                          <Pencil className="h-3 w-3 sm:h-4 sm:w-4 mr-1" />
+                          Editar
+                        </Button>
+                        <Button 
+                          variant={allDispatched ? "destructive" : "secondary"}
+                          size="sm"
+                          onClick={() => setShowFinalizeAlert(true)}
+                          disabled={!allDispatched}
+                          className={cn("h-7 text-xs sm:h-9 sm:text-sm whitespace-nowrap", allDispatched && "animate-pulse")}
+                        >
+                          {allDispatched 
+                            ? "Finalizar" 
+                            : `${binesPendientes.length}/${bines.length}`
+                          }
+                        </Button>
+                      </>
+                    )}
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      onClick={() => onOpenChange(false)}
+                      className="h-8 w-8 sm:h-10 sm:w-10 text-white hover:bg-white/20 ml-2"
+                    >
+                      <X className="h-5 w-5 sm:h-6 sm:w-6" />
+                    </Button>
+                  </div>
                 </div>
               </>
             ) : (
@@ -653,14 +686,29 @@ export function ReceptionDetailDialog({
                         key={color.value}
                         type="button"
                         className={cn(
-                          "h-6 w-6 rounded-full transition-all",
+                          "h-6 w-6 rounded-full transition-all flex items-center justify-center text-[10px] text-white font-bold",
                           color.value,
                           editedCard.color_etiqueta === color.value && "ring-2 ring-white scale-110"
                         )}
                         onClick={() => setEditedCard({...editedCard, color_etiqueta: color.value})}
                         title={color.label}
-                      />
+                      >
+                        {color.id}
+                      </button>
                     ))}
+                  </div>
+                </div>
+                {/* Notas Editables */}
+                <div className="relative">
+                  <Textarea
+                    value={editedCard.notas || ''}
+                    onChange={(e) => setEditedCard({...editedCard, notas: e.target.value})}
+                    placeholder="Notas adicionales..."
+                    className="min-h-[60px] resize-none bg-white text-foreground text-xs"
+                    maxLength={500}
+                  />
+                  <div className="absolute bottom-1 right-2 text-[10px] text-muted-foreground">
+                    {editedCard.notas?.length || 0}/500
                   </div>
                 </div>
               </div>
@@ -721,12 +769,12 @@ export function ReceptionDetailDialog({
                 <div className="bg-green-50 p-2 sm:p-3 rounded-lg border border-green-100 text-center sm:text-left">
                   <span className="text-[10px] sm:text-xs text-green-600 font-medium">En Patio</span>
                   <div className="text-xl sm:text-2xl font-bold text-green-700 leading-tight">{binesPendientes.length}</div>
-                  <div className="text-[10px] sm:text-xs text-green-600">pares</div>
+                  <div className="text-[10px] sm:text-xs text-green-600">pesas</div>
                 </div>
                 <div className="bg-blue-50 p-2 sm:p-3 rounded-lg border border-blue-100 text-center sm:text-left">
                   <span className="text-[10px] sm:text-xs text-blue-600 font-medium">Despachados</span>
                   <div className="text-xl sm:text-2xl font-bold text-blue-700 leading-tight">{binesDespachados.length}</div>
-                  <div className="text-[10px] sm:text-xs text-blue-600">pares</div>
+                  <div className="text-[10px] sm:text-xs text-blue-600">pesas</div>
                 </div>
               </div>
 
@@ -745,7 +793,7 @@ export function ReceptionDetailDialog({
             {/* Panel Derecho: Lista de Bines */}
             <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-0">
               <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-xs sm:text-sm px-3 sm:px-4 shrink-0">
-                <span className="font-medium text-muted-foreground">Listado ({bines.length})</span>
+                <span className="font-medium text-muted-foreground">Pesas ({bines.length})</span>
                 <span className="text-muted-foreground hidden sm:inline">Reciente arriba</span>
               </div>
               <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0">
@@ -780,7 +828,7 @@ export function ReceptionDetailDialog({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      bines.map((bin) => (
+                      bines.map((bin, index) => (
                         <TableRow 
                           key={bin.id} 
                           className={cn(
@@ -796,29 +844,29 @@ export function ReceptionDetailDialog({
                               />
                             )}
                           </TableCell>
-                          <TableCell className="text-center font-medium p-1 sm:p-2">#{bin.numero_par}</TableCell>
+                          <TableCell className="text-center font-medium p-1 sm:p-2">#{index + 1}</TableCell>
                           
                           {/* Peso - Editable */}
                           <TableCell className="text-right font-bold p-1 sm:p-2">
-                            {editingBinId === bin.id ? (
-                              <div className="flex flex-col items-end gap-1">
-                                <Input
-                                  type="number"
-                                  value={editedBin.peso_bruto}
-                                  onChange={(e) => setEditedBin({...editedBin, peso_bruto: Number(e.target.value) || 0})}
-                                  className="w-20 h-6 text-xs text-right"
-                                  autoFocus
-                                />
-                                <span className="text-[9px] text-muted-foreground">
-                                  Neto: {(editedBin.peso_bruto - taraValue).toLocaleString()} kg
-                                </span>
-                              </div>
-                            ) : (
-                              <div className="flex flex-col items-end">
-                                <span>{bin.peso_neto.toLocaleString()}</span>
-                                <span className="text-[9px] text-muted-foreground">({bin.peso_bruto} - {taraValue})</span>
-                              </div>
-                            )}
+                           {editingBinId === bin.id ? (
+                               <div className="flex flex-col items-end gap-1">
+                                 <Input
+                                   type="number"
+                                   value={editedBin.peso_bruto}
+                                   onChange={(e) => setEditedBin({...editedBin, peso_bruto: Number(e.target.value) || 0})}
+                                   className="w-20 h-6 text-xs text-right"
+                                   autoFocus
+                                 />
+                                 <span className="text-[9px] text-muted-foreground">
+                                   Neto: {(editedBin.peso_bruto - bin.tara_aplicada).toLocaleString()} kg (Tara: {bin.tara_aplicada}kg)
+                                 </span>
+                               </div>
+                             ) : (
+                               <div className="flex flex-col items-end">
+                                 <span>{bin.peso_neto.toLocaleString()}</span>
+                                 <span className="text-[9px] text-muted-foreground">({bin.peso_bruto} - {bin.tara_aplicada})</span>
+                               </div>
+                             )}
                           </TableCell>
                           
                           <TableCell className="text-center p-1 sm:p-2">
@@ -940,7 +988,7 @@ export function ReceptionDetailDialog({
       <Dialog open={showDispatchDialog} onOpenChange={setShowDispatchDialog}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Despachar {selectedBins.length} Pares</DialogTitle>
+            <DialogTitle>Despachar {selectedBins.length} Pesas</DialogTitle>
             <DialogDescription>
               Seleccione el chofer que se llevará la carga.
             </DialogDescription>
@@ -975,7 +1023,7 @@ export function ReceptionDetailDialog({
       <AlertDialog open={!!binToDelete} onOpenChange={(open) => !open && setBinToDelete(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>¿Eliminar este par de bines?</AlertDialogTitle>
+            <AlertDialogTitle>¿Eliminar esta pesa de bines?</AlertDialogTitle>
             <AlertDialogDescription>
               Esta acción no se puede deshacer. El peso se restará del total de la tarjeta.
             </AlertDialogDescription>

@@ -31,6 +31,7 @@ import {
 import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { SearchableSelect } from "@/components/ui/searchable-select"
+import { Textarea } from "@/components/ui/textarea"
 import { COLOR_OPTIONS } from "@/types/recepcion"
 import { Loader2 } from "lucide-react"
 import { cn } from "@/lib/utils"
@@ -42,6 +43,7 @@ const formSchema = z.object({
   color_etiqueta: z.string().min(1, "Seleccione un color"),
   tipo_pina: z.enum(["IQF", "Jugo"], { required_error: "Seleccione el tipo de piña" }).optional(),
   procedencia_tipo: z.enum(["campo", "planta"], { required_error: "Seleccione la procedencia" }).optional(),
+  notas: z.string().max(500, "Máximo 500 caracteres").optional(),
 })
 
 interface CreateReceptionDialogProps {
@@ -67,6 +69,7 @@ export function CreateReceptionDialog({
       color_etiqueta: "bg-red-500", // Color por defecto
       tipo_pina: "IQF",
       procedencia_tipo: "campo",
+      notas: "",
     },
   })
 
@@ -107,6 +110,7 @@ export function CreateReceptionDialog({
           color_etiqueta: values.color_etiqueta,
           tipo_pina: values.tipo_pina,
           procedencia_tipo: values.procedencia_tipo,
+          notas: values.notas || null,
           estado: 'pendiente'
         })
         .select()
@@ -250,6 +254,30 @@ export function CreateReceptionDialog({
 
             <FormField
               control={form.control}
+              name="notas"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Notas</FormLabel>
+                  <FormControl>
+                    <Textarea
+                      placeholder="Observaciones adicionales..."
+                      className="resize-none"
+                      maxLength={500}
+                      {...field}
+                    />
+                  </FormControl>
+                  <div className="flex justify-between">
+                    <FormMessage />
+                    <span className="text-xs text-muted-foreground">
+                      {field.value?.length || 0}/500
+                    </span>
+                  </div>
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
               name="color_etiqueta"
               render={({ field }) => (
                 <FormItem>
@@ -263,14 +291,16 @@ export function CreateReceptionDialog({
                           key={color.value}
                           type="button"
                           className={cn(
-                            "group relative h-10 w-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black",
+                            "group relative h-10 w-10 rounded-full transition-all focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-black flex items-center justify-center text-white font-bold text-sm",
                             color.value,
                             isSelected && "ring-2 ring-offset-2 ring-black scale-110",
                             !isSelected && "hover:scale-110 hover:shadow-md"
                           )}
                           onClick={() => field.onChange(color.value)}
                           title={color.label}
-                        />
+                        >
+                          {color.id}
+                        </button>
                       )
                     })}
                   </div>

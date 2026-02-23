@@ -131,6 +131,8 @@ export default function RecepcionPage() {
               // Calcular totales desde los bines incluidos en la query
               const bines = rec.recepcion_bines || []
               const totalKilos = bines.reduce((acc: number, b: any) => acc + (b.peso_neto || 0), 0)
+              const binesPendientes = bines.filter((b: any) => b.estado === 'en_patio')
+              const kilosPendientes = binesPendientes.reduce((acc: number, b: any) => acc + (b.peso_neto || 0), 0)
               const binesDespachados = bines.filter((b: any) => b.estado === 'despachado').length
 
               return (
@@ -138,6 +140,7 @@ export default function RecepcionPage() {
                   key={rec.id}
                   recepcion={rec}
                   totalKilos={totalKilos}
+                  kilosPendientes={kilosPendientes}
                   binesTotal={bines.length}
                   binesDespachados={binesDespachados}
                   onClick={() => handleCardClick(rec.id)}

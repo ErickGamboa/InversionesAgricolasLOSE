@@ -55,6 +55,7 @@ interface ComprasRegularesTableProps {
   isLoading?: boolean
 }
 
+// DEFINICIÓN DE COLUMNAS ORDENADAS
 const ALL_COLUMNS = [
   { key: "fecha", label: "Fecha" },
   { key: "numero_semana", label: "Sem" },
@@ -307,6 +308,7 @@ export function ComprasRegularesTable({
         <div className="overflow-x-auto">
           <Table>
             <TableHeader>
+              {/* ENCABEZADOS - ORDEN STRICTO SEGÚN ALL_COLUMNS */}
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 {visibleColumns.includes("fecha") && (
                   <TableHead className="min-w-[150px]">
@@ -349,6 +351,7 @@ export function ComprasRegularesTable({
                 <TableHead className="text-right">Acciones</TableHead>
               </TableRow>
 
+              {/* FILTROS - ORDEN STRICTO SEGÚN ALL_COLUMNS */}
               <TableRow className="bg-muted/20 hover:bg-muted/20 border-b">
                 {visibleColumns.includes("fecha") && (
                   <TableHead className="p-2">
@@ -443,6 +446,7 @@ export function ComprasRegularesTable({
               ) : (
                 filteredCompras.map((compra) => (
                   <TableRow key={compra.id} className="hover:bg-muted/30 transition-colors">
+                    {/* DATOS - ORDEN STRICTO SEGÚN ALL_COLUMNS */}
                     {visibleColumns.includes("fecha") && <TableCell className="whitespace-nowrap">{compra.fecha}</TableCell>}
                     {visibleColumns.includes("numero_semana") && <TableCell>{compra.numero_semana}</TableCell>}
                     {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
