@@ -531,6 +531,7 @@ export function ReceptionDetailDialog({
   const binesPendientes = bines.filter(b => b.estado === 'en_patio')
   const binesDespachados = bines.filter(b => b.estado === 'despachado')
   const allDispatched = bines.length > 0 && binesPendientes.length === 0
+  const binesOrdenados = [...bines].sort((a, b) => (b.numero_par || 0) - (a.numero_par || 0))
 
   if (!recepcion) return null
 
@@ -808,7 +809,7 @@ export function ReceptionDetailDialog({
             <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-0">
               <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-xs sm:text-sm px-3 sm:px-4 shrink-0">
                 <span className="font-medium text-muted-foreground">Pesas ({bines.length})</span>
-                <span className="text-muted-foreground hidden sm:inline">Reciente arriba</span>
+                <span className="text-muted-foreground hidden sm:inline">Mayor # primero</span>
               </div>
               <div className="flex-1 overflow-x-auto overflow-y-hidden min-h-0">
                 <Table>
@@ -842,7 +843,7 @@ export function ReceptionDetailDialog({
                         </TableCell>
                       </TableRow>
                     ) : (
-                      bines.map((bin, index) => (
+                      binesOrdenados.map((bin) => (
                         <TableRow 
                           key={bin.id} 
                           className={cn(
@@ -858,7 +859,7 @@ export function ReceptionDetailDialog({
                               />
                             )}
                           </TableCell>
-                          <TableCell className="text-center font-medium p-1 sm:p-2">#{index + 1}</TableCell>
+                          <TableCell className="text-center font-medium p-1 sm:p-2">#{bin.numero_par}</TableCell>
                           
                           {/* Peso - Editable */}
                           <TableCell className="text-right font-bold p-1 sm:p-2">
