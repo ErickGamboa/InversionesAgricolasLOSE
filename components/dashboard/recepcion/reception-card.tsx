@@ -115,7 +115,7 @@ export function ReceptionCard({
                 {totalKilos.toLocaleString('es-CR')} kg
               </span>
               {kilosPendientes > 0 && (
-                <span className="font-bold text-sm sm:text-lg text-destructive" suppressHydrationWarning>
+                <span className="font-bold text-sm sm:text-lg text-destructive whitespace-nowrap" suppressHydrationWarning>
                   Faltan: {kilosPendientes.toLocaleString('es-CR')} kg
                 </span>
               )}
