@@ -115,6 +115,7 @@ export function ReceptionDetailDialog({
   const [editingBinId, setEditingBinId] = useState<number | null>(null)
   const [editedBin, setEditedBin] = useState({
     peso_bruto: 0,
+    tara_aplicada: 0,
     chofer_salida_id: null as number | null,
   })
   const [savingBin, setSavingBin] = useState(false)
@@ -456,26 +457,24 @@ export function ReceptionDetailDialog({
     setEditingBinId(bin.id)
     setEditedBin({
       peso_bruto: bin.peso_bruto,
+      tara_aplicada: bin.tara_aplicada,
       chofer_salida_id: bin.chofer_salida_id,
     })
   }
 
   const handleSaveBin = async (binId: number) => {
-    // Buscar el bin original para obtener la tara histórica
-    const binOriginal = bines.find(b => b.id === binId)
-    if (!binOriginal) {
-      toast.error("No se encontró el bin")
+    if (!editedBin.tara_aplicada || editedBin.tara_aplicada < 0) {
+      toast.error("La tara debe ser mayor o igual a 0")
       return
     }
-    
-    // Usar la tara histórica para el cálculo
-    const pesoNeto = editedBin.peso_bruto - binOriginal.tara_aplicada
     
     if (editedBin.peso_bruto <= 0) {
       toast.error("El peso debe ser mayor a 0")
       return
     }
 
+    const pesoNeto = editedBin.peso_bruto - editedBin.tara_aplicada
+    
     setSavingBin(true)
     try {
       const { error } = await supabase
@@ -483,6 +482,7 @@ export function ReceptionDetailDialog({
         .update({
           peso_bruto: editedBin.peso_bruto,
           peso_neto: pesoNeto,
+          tara_aplicada: editedBin.tara_aplicada,
           chofer_salida_id: editedBin.chofer_salida_id,
         })
         .eq("id", binId)
@@ -857,17 +857,28 @@ export function ReceptionDetailDialog({
                           
                           {/* Peso - Editable */}
                           <TableCell className="text-right font-bold p-1 sm:p-2">
-                           {editingBinId === bin.id ? (
+                           {editingBinId === bin.id && bin.estado === 'en_patio' ? (
                                <div className="flex flex-col items-end gap-1">
-                                 <Input
-                                   type="number"
-                                   value={editedBin.peso_bruto}
-                                   onChange={(e) => setEditedBin({...editedBin, peso_bruto: Number(e.target.value) || 0})}
-                                   className="w-20 h-6 text-xs text-right"
-                                   autoFocus
-                                 />
-                                 <span className="text-[9px] text-muted-foreground">
-                                   Neto: {(editedBin.peso_bruto - bin.tara_aplicada).toLocaleString()} kg (Tara: {bin.tara_aplicada}kg)
+                                 <div className="flex items-center gap-1">
+                                   <Input
+                                     type="number"
+                                     value={editedBin.peso_bruto}
+                                     onChange={(e) => setEditedBin({...editedBin, peso_bruto: Number(e.target.value) || 0})}
+                                     className="w-20 sm:w-24 h-9 sm:h-10 text-sm text-right"
+                                     autoFocus
+                                     placeholder="Bruto"
+                                   />
+                                   <span className="text-xs text-muted-foreground">-</span>
+                                   <Input
+                                     type="number"
+                                     value={editedBin.tara_aplicada}
+                                     onChange={(e) => setEditedBin({...editedBin, tara_aplicada: Number(e.target.value) || 0})}
+                                     className="w-20 sm:w-24 h-9 sm:h-10 text-sm text-right"
+                                     placeholder="Tara"
+                                   />
+                                 </div>
+                                 <span className="text-xs sm:text-sm text-green-600 font-medium">
+                                   Neto: {(editedBin.peso_bruto - editedBin.tara_aplicada).toLocaleString()} kg
                                  </span>
                                </div>
                              ) : (
