@@ -803,7 +803,6 @@ export function ReceptionDetailDialog({
             <div className="flex-1 flex flex-col overflow-hidden bg-background min-h-0">
               <div className="p-2 border-b bg-muted/10 flex justify-between items-center text-xs sm:text-sm px-3 sm:px-4 shrink-0">
                 <span className="font-medium text-muted-foreground">Pesas ({bines.length})</span>
-                <span className="text-muted-foreground hidden sm:inline">Mayor # primero</span>
               </div>
               <div className="overflow-x-auto overflow-y-auto min-h-[150px] max-h-[calc(100dvh-300px)] sm:max-h-[calc(90vh-200px)]">
                 <Table>
