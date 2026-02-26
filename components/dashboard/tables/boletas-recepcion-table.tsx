@@ -14,7 +14,7 @@ import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { Eye, Search, Pencil, Check, X, FilterX, ArrowUpDown, ArrowUp, ArrowDown } from "lucide-react"
+import { Eye, Search, Pencil, Check, X, FilterX, ArrowUpDown, ArrowUp, ArrowDown, Trash2 } from "lucide-react"
 import { BoletaRecepcion, TipoBoleta } from "@/types/boleta"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
@@ -24,6 +24,7 @@ interface BoletasRecepcionTableProps {
   boletas: BoletaRecepcion[]
   onViewBoleta: (boleta: BoletaRecepcion) => void
   onUpdateBoleta?: (id: number, data: { total_kilos?: number; precio_por_kilo?: number }) => Promise<void>
+  onDelete?: (id: number) => void
   isLoading?: boolean
 }
 
@@ -51,6 +52,7 @@ export function BoletasRecepcionTable({
   boletas,
   onViewBoleta,
   onUpdateBoleta,
+  onDelete,
   isLoading = false,
 }: BoletasRecepcionTableProps) {
   const [filterSemana, setFilterSemana] = useState<string>("")
@@ -477,6 +479,17 @@ export function BoletasRecepcionTable({
                             >
                               <Pencil className="h-4 w-4" />
                             </Button>
+                            {onDelete && (
+                              <Button
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => onDelete(boleta.id)}
+                                className="h-8 w-8 text-destructive"
+                                title="Eliminar"
+                              >
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            )}
                           </>
                         )}
                       </div>

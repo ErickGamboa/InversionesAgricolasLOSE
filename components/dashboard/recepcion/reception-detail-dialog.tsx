@@ -167,7 +167,7 @@ export function ReceptionDetailDialog({
           choferes:chofer_salida_id (nombre)
         `)
         .eq("recepcion_id", recepcionId)
-        .order("numero_par", { ascending: false }) // Mostrar últimos arriba
+        .order("numero_par", { ascending: true }) // Mostrar 1, 2, 3...
 
       if (binError) throw binError
       setBines(binData || [])
@@ -228,7 +228,7 @@ export function ReceptionDetailDialog({
 
       if (error) throw error
 
-      setBines([data, ...bines])
+      setBines([...bines, data])
       setPesoInput("")
       toast.success(`Par agregado`)
       onUpdate() // Actualizar tarjeta padre
@@ -254,7 +254,22 @@ export function ReceptionDetailDialog({
 
       if (error) throw error
 
-      setBines(bines.filter(b => b.id !== binToDelete))
+      // Reordenar bins restantes para mantener secuencia 1, 2, 3...
+      const binsRestantes = bines.filter(b => b.id !== binToDelete)
+      const binsActualizados = binsRestantes.map((bin, index) => ({
+        ...bin,
+        numero_par: index + 1
+      }))
+
+      // Actualizar en Supabase los numero_par
+      for (const bin of binsActualizados) {
+        await supabase
+          .from("recepcion_bines")
+          .update({ numero_par: bin.numero_par })
+          .eq("id", bin.id)
+      }
+
+      setBines(binsActualizados)
       toast.success("Bin eliminado")
       onUpdate()
     } catch (error) {

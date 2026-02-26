@@ -26,6 +26,16 @@ import {
   DialogTitle,
   DialogOverlay,
 } from "@/components/ui/dialog"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
 import { useToast } from "@/hooks/use-toast"
 import { BoletaRecepcion, BoletaFormData } from "@/types/boleta"
 
@@ -65,6 +75,7 @@ export default function BoletasRecepcionPage() {
   const [isFormOpen, setIsFormOpen] = useState(false)
   const [viewingBoleta, setViewingBoleta] = useState<BoletaRecepcion | null>(null)
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [deletingId, setDeletingId] = useState<number | null>(null)
 
   const handleSubmit = useCallback(async (formData: BoletaFormData) => {
     setIsSubmitting(true)
@@ -153,6 +164,31 @@ export default function BoletasRecepcionPage() {
     }
   }, [mutate, toast])
 
+  const handleDeleteBoleta = useCallback(async () => {
+    if (!deletingId) return
+    
+    try {
+      const { error } = await supabase
+        .from("boletas_recepcion")
+        .delete()
+        .eq("id", deletingId)
+
+      if (error) throw error
+
+      toast({ title: "Boleta eliminada exitosamente" })
+      mutate()
+    } catch (error) {
+      console.error(error)
+      toast({
+        title: "Error",
+        description: "No se pudo eliminar la boleta",
+        variant: "destructive",
+      })
+    } finally {
+      setDeletingId(null)
+    }
+  }, [deletingId, mutate, toast])
+
   return (
     <>
       <header className="flex h-14 shrink-0 items-center gap-2 border-b bg-background px-4">
@@ -198,6 +234,7 @@ export default function BoletasRecepcionPage() {
               boletas={boletas as BoletaRecepcion[]}
               onViewBoleta={setViewingBoleta}
               onUpdateBoleta={handleUpdateBoleta}
+              onDelete={setDeletingId}
               isLoading={isLoading}
             />
           </CardContent>
@@ -259,6 +296,24 @@ export default function BoletasRecepcionPage() {
             )}
           </DialogContent>
         </Dialog>
+
+        {/* AlertDialog para confirmar eliminación */}
+        <AlertDialog open={!!deletingId} onOpenChange={() => setDeletingId(null)}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>¿Está seguro de eliminar esta boleta?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta acción no se puede deshacer. La boleta será eliminada permanentemente.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction onClick={handleDeleteBoleta} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+                Eliminar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </>
   )
