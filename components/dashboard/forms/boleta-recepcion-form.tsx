@@ -64,6 +64,9 @@ export function BoletaRecepcionForm({
     if (!formData.chofer_id) {
       newErrors.chofer_id = "Seleccione un chofer"
     }
+    if (!formData.placa || formData.placa.trim() === "") {
+      newErrors.placa = "Ingrese la placa"
+    }
 
     if (formData.tipo_boleta === "PLANTA") {
       if (!formData.numero_cajas || parseInt(formData.numero_cajas) <= 0) {
@@ -188,13 +191,16 @@ export function BoletaRecepcionForm({
           </div>
 
           <div className="space-y-2">
-            <Label htmlFor="placa">Placa</Label>
+            <Label htmlFor="placa">Placa *</Label>
             <Input
               id="placa"
               value={formData.placa}
               onChange={(e) => setFormData({ ...formData, placa: e.target.value })}
               placeholder="Ej: 151726"
             />
+            {errors.placa && (
+              <p className="text-sm text-destructive">{errors.placa}</p>
+            )}
           </div>
         </div>
 

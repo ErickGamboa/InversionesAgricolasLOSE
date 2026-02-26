@@ -9,6 +9,7 @@ import {
   TableHead,
   TableHeader,
   TableRow,
+  TableFooter,
 } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -264,12 +265,13 @@ export function ComprasRegularesTable({
     num?.toLocaleString("es-CR", { minimumFractionDigits: 2, maximumFractionDigits: 2 }) || "0.00"
 
   const footerData = useMemo(() => {
+    const total_kilos = filteredCompras.reduce((acc, c) => acc + (c.numero_kilos || 0), 0)
     const crc = filteredCompras.filter(c => !c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
     const usd = filteredCompras.filter(c => c.pago_dolares).reduce((acc, c) => acc + c.total_a_pagar, 0)
-    // Formatear ambos valores con sus monedas
     const crcFormatted = formatCurrency(crc)
     const usdFormatted = formatCurrency(usd, true)
     return {
+      numero_kilos: total_kilos,
       total_a_pagar: `CRC ${crcFormatted} / USD ${usdFormatted}`
     }
   }, [filteredCompras])
@@ -515,7 +517,30 @@ export function ComprasRegularesTable({
                   </TableRow>
                 ))
               )}
-            </TableBody>
+              </TableBody>
+            <TableFooter>
+              <TableRow className="bg-muted/50 font-bold">
+                {visibleColumns.includes("fecha") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_semana") && <TableCell></TableCell>}
+                {visibleColumns.includes("cliente.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("lugar_procedencia") && <TableCell></TableCell>}
+                {visibleColumns.includes("procedencia_tipo") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_boleta") && <TableCell></TableCell>}
+                {visibleColumns.includes("nb_tickete") && <TableCell></TableCell>}
+                {visibleColumns.includes("chofer.nombre") && <TableCell></TableCell>}
+                {visibleColumns.includes("tipo_pina") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_kilos") && (
+                  <TableCell className="text-right">
+                    {formatNumber(footerData.numero_kilos)}
+                  </TableCell>
+                )}
+                {visibleColumns.includes("precio_piña") && <TableCell></TableCell>}
+                {visibleColumns.includes("total_a_pagar") && <TableCell></TableCell>}
+                {visibleColumns.includes("pagado") && <TableCell></TableCell>}
+                {visibleColumns.includes("numero_deposito") && <TableCell></TableCell>}
+                <TableCell></TableCell>
+              </TableRow>
+            </TableFooter>
           </Table>
         </div>
       </div>
