@@ -73,6 +73,23 @@ export default function RecepcionPage() {
     setShowDetail(true)
   }
 
+  const handleDeleteRecepcion = async (id: number) => {
+    try {
+      const { error } = await supabase
+        .from("recepciones")
+        .delete()
+        .eq("id", id)
+
+      if (error) throw error
+      
+      toast.success("Recepción eliminada")
+      fetchRecepciones()
+    } catch (error) {
+      console.error(error)
+      toast.error("Error al eliminar recepción")
+    }
+  }
+
   const filteredRecepciones = recepciones.filter((rec) => 
     rec.clientes?.nombre.toLowerCase().includes(searchTerm.toLowerCase()) ||
     rec.choferes?.nombre?.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -149,6 +166,7 @@ export default function RecepcionPage() {
                   binesTotal={bines.length}
                   binesDespachados={binesDespachados}
                   onClick={() => handleCardClick(rec.id)}
+                  onDelete={activeTab === "patio" ? handleDeleteRecepcion : undefined}
                 />
               )
             })}

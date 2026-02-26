@@ -79,7 +79,6 @@ function DialogContent({
     </DialogPortal>
   )
 }
-
 function DialogHeader({ className, ...props }: React.ComponentProps<'div'>) {
   return (
     <div

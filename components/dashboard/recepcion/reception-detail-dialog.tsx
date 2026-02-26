@@ -732,7 +732,7 @@ export function ReceptionDetailDialog({
 
           <div className="flex flex-col md:flex-row flex-1 overflow-hidden">
             {/* Panel Izquierdo: Input y Resumen */}
-            <div className="w-full md:w-80 lg:w-96 shrink-0 bg-muted/20 border-r-0 md:border-r border-b md:border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4 overflow-y-auto max-h-[35vh] md:max-h-full">
+            <div className="w-full md:w-80 lg:w-96 shrink-0 bg-muted/20 border-r-0 md:border-r border-b md:border-b-0 p-3 sm:p-4 flex flex-col gap-3 sm:gap-4">
               {recepcion.estado !== 'finalizado' && (
                 <div className="bg-card p-3 sm:p-4 rounded-lg border shadow-sm space-y-2 sm:space-y-3">
                   <h3 className="font-semibold flex items-center gap-2 text-sm sm:text-base">

@@ -5,9 +5,20 @@ import { Progress } from "@/components/ui/progress"
 import { Badge } from "@/components/ui/badge"
 import { format } from "date-fns"
 import { es } from "date-fns/locale"
-import { Package, Truck, User, Clock } from "lucide-react"
+import { Package, Truck, User, Clock, Trash2 } from "lucide-react"
 import { Recepcion, COLOR_OPTIONS } from "@/types/recepcion"
 import { cn } from "@/lib/utils"
+import { Button } from "@/components/ui/button"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog"
+import { useState } from "react"
 
 interface ReceptionCardProps {
   recepcion: Recepcion
@@ -16,6 +27,7 @@ interface ReceptionCardProps {
   binesTotal: number
   binesDespachados: number
   onClick: () => void
+  onDelete?: (id: number) => void
 }
 
 export function ReceptionCard({
@@ -25,13 +37,28 @@ export function ReceptionCard({
   binesTotal,
   binesDespachados,
   onClick,
+  onDelete,
 }: ReceptionCardProps) {
+  const [showDeleteAlert, setShowDeleteAlert] = useState(false)
   const progreso = binesTotal > 0 ? (binesDespachados / binesTotal) * 100 : 0
   
   // Extraer el color base para usarlo en estilos dinámicos
   // Asumimos que color_etiqueta es una clase como "bg-red-500"
   const colorClass = recepcion.color_etiqueta || "bg-gray-500"
   const colorId = COLOR_OPTIONS.find(c => c.value === recepcion.color_etiqueta)?.id || 0
+
+  const handleDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    setShowDeleteAlert(true)
+  }
+
+  const confirmDelete = (e: React.MouseEvent) => {
+    e.stopPropagation()
+    if (onDelete) {
+      onDelete(recepcion.id)
+    }
+    setShowDeleteAlert(false)
+  }
 
   return (
     <Card 
@@ -110,7 +137,35 @@ export function ReceptionCard({
           </div>
           <Progress value={progreso} className="h-2" />
         </div>
+        
+        {onDelete && recepcion.estado !== 'finalizado' && (
+          <div className="border-t pt-2 mt-2">
+            <Button
+              variant="destructive"
+              size="sm"
+              className="w-full h-8 text-xs"
+              onClick={handleDelete}
+            >
+              <Trash2 className="h-3 w-3 mr-1" />
+              Eliminar
+            </Button>
+          </div>
+        )}
       </CardContent>
+
+      <AlertDialog open={showDeleteAlert} onOpenChange={setShowDeleteAlert}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Eliminar esta recepción?</AlertDialogTitle>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={(e) => e.stopPropagation()}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={confirmDelete} className="bg-destructive text-destructive-foreground hover:bg-destructive/90">
+              Eliminar
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Card>
   )
 }
