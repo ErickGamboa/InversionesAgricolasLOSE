@@ -405,7 +405,7 @@ export function ComprasEspecialesForm({
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="precio_por_kilo" className="whitespace-nowrap">Precio por Kilo (₡)</Label>
+              <Label htmlFor="precio_por_kilo" className="whitespace-nowrap">Precio por Kilo ($)</Label>
               <Input
                 id="precio_por_kilo"
                 type="number"
@@ -419,7 +419,7 @@ export function ComprasEspecialesForm({
             <div className="space-y-2">
               <Label className="whitespace-nowrap">Total a Pagar</Label>
               <div className="flex h-9 items-center rounded-md border bg-primary/10 px-3 text-sm font-bold text-primary overflow-hidden">
-                <span className="truncate">₡{formatCurrency(totalAPagar)}</span>
+                <span className="truncate">${formatCurrency(totalAPagar)}</span>
               </div>
             </div>
           </div>

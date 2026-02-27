@@ -57,9 +57,11 @@ const ALL_COLUMNS = [
   { key: "procedencia", label: "Procedencia" },
   { key: "chofer.nombre", label: "Chofer" },
   { key: "placa", label: "Placa" },
+  { key: "numero_boleta", label: "Boleta" },
   { key: "numero_cajas", label: "Cajas" },
   { key: "total_pinas", label: "Piñas" },
   { key: "total_kilos", label: "Kilos" },
+  { key: "precio_por_kilo", label: "$/kg" },
   { key: "total_a_pagar", label: "Total" },
   { key: "pagado", label: "Pagado" },
 ]
@@ -224,6 +226,9 @@ export function ComprasEspecialesTable({
         } else if (sortConfig.key === "placa") {
           aValue = a.placa || ""
           bValue = b.placa || ""
+        } else if (sortConfig.key === "numero_boleta") {
+          aValue = a.numero_boleta || ""
+          bValue = b.numero_boleta || ""
         } else {
           return 0
         }
@@ -280,7 +285,7 @@ export function ComprasEspecialesTable({
             columns={ALL_COLUMNS.filter(c => visibleColumns.includes(c.key))} 
             title="Reporte de fruta" 
             footerData={footerData}
-            currency="CRC"
+            currency="USD"
           />
           {Object.keys(filters).length > 0 && (
             <Button variant="ghost" size="sm" onClick={clearFilters} className="text-destructive h-8">
@@ -333,9 +338,17 @@ export function ComprasEspecialesTable({
                     </button>
                   </TableHead>
                 )}
+                {visibleColumns.includes("numero_boleta") && (
+                  <TableHead className="text-right">
+                    <button onClick={() => handleSort("numero_boleta")} className="flex items-center font-semibold hover:text-primary">
+                      Boleta<SortIcon columnKey="numero_boleta" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
                 {visibleColumns.includes("total_pinas") && <TableHead className="text-right">Piñas</TableHead>}
                 {visibleColumns.includes("total_kilos") && <TableHead className="text-right">Kilos</TableHead>}
+                {visibleColumns.includes("precio_por_kilo") && <TableHead className="text-right">$/kg</TableHead>}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="text-right">Total</TableHead>}
                 {visibleColumns.includes("pagado") && <TableHead className="text-center">Pagado</TableHead>}
                 <TableHead className="text-right">Acciones</TableHead>
@@ -380,9 +393,11 @@ export function ComprasEspecialesTable({
                     <DebouncedInput placeholder="Placa..." className="h-8 text-xs" value={filters.placa || ""} onChange={(val) => setFilter("placa", val.toString())} />
                   </TableHead>
                 )}
+                {visibleColumns.includes("numero_boleta") && <TableHead className="p-2" />}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_pinas") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_kilos") && <TableHead className="p-2" />}
+                {visibleColumns.includes("precio_por_kilo") && <TableHead className="p-2" />}
                 {visibleColumns.includes("total_a_pagar") && <TableHead className="p-2" />}
                 {visibleColumns.includes("pagado") && (
                   <TableHead className="p-2 text-center">
@@ -416,10 +431,12 @@ export function ComprasEspecialesTable({
                       {visibleColumns.includes("procedencia") && <TableCell>{compra.procedencia || "-"}</TableCell>}
                       {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
                       {visibleColumns.includes("placa") && <TableCell>{compra.placa || "-"}</TableCell>}
+                      {visibleColumns.includes("numero_boleta") && <TableCell className="text-right">{compra.numero_boleta || "-"}</TableCell>}
                       {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(compra.numero_cajas)}</TableCell>}
                       {visibleColumns.includes("total_pinas") && <TableCell className="text-right">{formatNumber(compra.total_pinas)}</TableCell>}
                       {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{compra.total_kilos?.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</TableCell>}
-                      {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right font-medium">₡{formatCurrency(compra.total_a_pagar)}</TableCell>}
+                      {visibleColumns.includes("precio_por_kilo") && <TableCell className="text-right">${compra.precio_por_kilo?.toLocaleString("en-US", { minimumFractionDigits: 3 })}</TableCell>}
+                      {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right font-medium">${formatCurrency(compra.total_a_pagar)}</TableCell>}
                       {visibleColumns.includes("pagado") && (
                         <TableCell className="text-center">
                           <Checkbox checked={compra.pagado} disabled />
@@ -434,13 +451,14 @@ export function ComprasEspecialesTable({
                     </TableRow>
                   ))}
                   <TableRow className="bg-muted/50 font-bold">
-                    <TableCell colSpan={visibleColumns.filter(c => ["fecha", "numero_semana", "cliente.nombre", "procedencia", "chofer.nombre", "placa"].includes(c)).length} className="text-right">
+                    <TableCell colSpan={visibleColumns.filter(c => ["fecha", "numero_semana", "cliente.nombre", "procedencia", "chofer.nombre", "placa", "numero_boleta"].includes(c)).length} className="text-right">
                       Totales:
                     </TableCell>
                     {visibleColumns.includes("numero_cajas") && <TableCell className="text-right">{formatNumber(totals.cajas)}</TableCell>}
                     {visibleColumns.includes("total_pinas") && <TableCell className="text-right">{formatNumber(totals.pinas)}</TableCell>}
                     {visibleColumns.includes("total_kilos") && <TableCell className="text-right">{totals.kilos?.toLocaleString("es-CR", { minimumFractionDigits: 2 })}</TableCell>}
-                    {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right text-primary">₡{formatCurrency(totals.total)}</TableCell>}
+                    {visibleColumns.includes("precio_por_kilo") && <TableCell className="text-right">-</TableCell>}
+                    {visibleColumns.includes("total_a_pagar") && <TableCell className="text-right text-primary">${formatCurrency(totals.total)}</TableCell>}
                     <TableCell colSpan={2} />
                   </TableRow>
                 </>
