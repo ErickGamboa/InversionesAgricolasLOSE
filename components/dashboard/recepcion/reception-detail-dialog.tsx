@@ -531,7 +531,7 @@ export function ReceptionDetailDialog({
   const binesPendientes = bines.filter(b => b.estado === 'en_patio')
   const binesDespachados = bines.filter(b => b.estado === 'despachado')
   const allDispatched = bines.length > 0 && binesPendientes.length === 0
-  const binesOrdenados = [...bines].sort((a, b) => (b.numero_par || 0) - (a.numero_par || 0))
+  const binesOrdenados = [...bines].sort((a, b) => (a.numero_par || 0) - (b.numero_par || 0))
 
   if (!recepcion) return null
 
