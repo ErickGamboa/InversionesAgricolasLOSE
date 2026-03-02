@@ -84,7 +84,7 @@ export default function BoletasRecepcionPage() {
       
       const dataToInsert = {
         tipo_boleta: formData.tipo_boleta,
-        fecha: formData.fecha,
+        fecha: formData.fecha + "T00:00:00-06:00",
         numero_semana: formData.numero_semana,
         cliente_id: parseInt(formData.cliente_id) || null,
         chofer_id: parseInt(formData.chofer_id) || null,

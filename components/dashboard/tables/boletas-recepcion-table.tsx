@@ -20,6 +20,11 @@ import { format } from "date-fns"
 import { es } from "date-fns/locale"
 import { ColumnToggle, ExportActions } from "./table-utils"
 
+function parseLocalDate(dateStr: string): Date {
+  const [year, month, day] = dateStr.split("-").map(Number)
+  return new Date(year, month - 1, day)
+}
+
 interface BoletasRecepcionTableProps {
   boletas: BoletaRecepcion[]
   onViewBoleta: (boleta: BoletaRecepcion) => void
@@ -131,10 +136,10 @@ export function BoletasRecepcionTable({
         ? boleta.clientes?.nombre?.toLowerCase().includes(filterCliente.toLowerCase())
         : true
       const matchFechaDesde = filterFechaDesde
-        ? new Date(boleta.fecha) >= new Date(filterFechaDesde)
+        ? parseLocalDate(boleta.fecha) >= new Date(filterFechaDesde)
         : true
       const matchFechaHasta = filterFechaHasta
-        ? new Date(boleta.fecha) <= new Date(filterFechaHasta)
+        ? parseLocalDate(boleta.fecha) <= new Date(filterFechaHasta)
         : true
       return matchSemana && matchCliente && matchFechaDesde && matchFechaHasta
     })
@@ -144,8 +149,8 @@ export function BoletasRecepcionTable({
         let aValue: any, bValue: any
 
         if (sortConfig.key === "fecha") {
-          aValue = new Date(a.fecha).getTime()
-          bValue = new Date(b.fecha).getTime()
+          aValue = parseLocalDate(a.fecha).getTime()
+          bValue = parseLocalDate(b.fecha).getTime()
         } else if (sortConfig.key === "numero_boleta") {
           aValue = a.numero_boleta
           bValue = b.numero_boleta
@@ -213,7 +218,7 @@ export function BoletasRecepcionTable({
   // Preparar datos para exportación
   const exportData = filteredBoletas.map(boleta => ({
     numero_boleta: boleta.numero_boleta.toString().padStart(6, "0"),
-    fecha: format(new Date(boleta.fecha), "dd/MM/yyyy", { locale: es }),
+    fecha: format(parseLocalDate(boleta.fecha), "dd/MM/yyyy", { locale: es }),
     numero_semana: boleta.numero_semana,
     tipo_boleta: boleta.tipo_boleta,
     cliente: boleta.clientes?.nombre || "-",
@@ -373,7 +378,7 @@ export function BoletasRecepcionTable({
                     )}
                     {visibleColumns.includes("fecha") && (
                       <TableCell suppressHydrationWarning>
-                        {format(new Date(boleta.fecha), "dd/MM/yyyy", { locale: es })}
+                        {format(parseLocalDate(boleta.fecha), "dd/MM/yyyy", { locale: es })}
                       </TableCell>
                     )}
                     {visibleColumns.includes("numero_semana") && (

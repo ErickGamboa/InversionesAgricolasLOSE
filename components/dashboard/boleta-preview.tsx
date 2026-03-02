@@ -10,7 +10,8 @@ interface BoletaPreviewProps {
 
 export function BoletaPreview({ boleta }: BoletaPreviewProps) {
   const formatDate = (dateString: string) => {
-    const date = new Date(dateString)
+    const [year, month, day] = dateString.split("-").map(Number)
+    const date = new Date(year, month - 1, day)
     return {
       dia: date.getDate().toString().padStart(2, '0'),
       mes: (date.getMonth() + 1).toString().padStart(2, '0'),

@@ -13,6 +13,13 @@ import { TipoBoleta, BoletaFormData } from "@/types/boleta"
 import { format, getISOWeek } from "date-fns"
 import { es } from "date-fns/locale"
 
+function getLocalDateString(date: Date): string {
+  const year = date.getFullYear()
+  const month = String(date.getMonth() + 1).padStart(2, '0')
+  const day = String(date.getDate()).padStart(2, '0')
+  return `${year}-${month}-${day}`
+}
+
 interface BoletaRecepcionFormProps {
   initialData?: Partial<BoletaFormData>
   onSubmit: (data: BoletaFormData) => void
@@ -35,7 +42,7 @@ export function BoletaRecepcionForm({
 
   const [formData, setFormData] = useState<BoletaFormData>({
     tipo_boleta: (initialData?.tipo_boleta as TipoBoleta) || "PLANTA",
-    fecha: initialData?.fecha || format(today, "yyyy-MM-dd"),
+    fecha: initialData?.fecha || getLocalDateString(today),
     numero_semana: initialData?.numero_semana || currentWeek,
     cliente_id: initialData?.cliente_id || "",
     chofer_id: initialData?.chofer_id || "",
@@ -149,6 +156,8 @@ export function BoletaRecepcionForm({
               id="semana"
               type="number"
               value={formData.numero_semana}
+              disabled
+              className="bg-muted"
               onChange={(e) =>
                 setFormData({ ...formData, numero_semana: parseInt(e.target.value) || 0 })
               }
