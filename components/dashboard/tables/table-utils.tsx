@@ -247,6 +247,11 @@ export function ExportActions({
           value = item[col.key]
         }
         
+        // Si es columna chofer y tiene choferes_info, usar ese valor
+        if (col.key === 'chofer.nombre' && item.choferes_info) {
+          value = item.choferes_info
+        }
+        
         // Formatear campos de precio
         if (isPriceField(col.key) && typeof value === 'number') {
           // Solo Compras Regulares: formato con moneda según fila
