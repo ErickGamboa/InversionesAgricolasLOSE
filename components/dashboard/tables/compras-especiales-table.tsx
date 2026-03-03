@@ -55,6 +55,7 @@ const ALL_COLUMNS = [
   { key: "numero_semana", label: "Sem" },
   { key: "cliente.nombre", label: "Cliente" },
   { key: "procedencia", label: "Procedencia" },
+  { key: "lote", label: "Lote" },
   { key: "chofer.nombre", label: "Chofer" },
   { key: "placa", label: "Placa" },
   { key: "numero_boleta", label: "Boleta" },
@@ -196,6 +197,8 @@ export function ComprasEspecialesTable({
           if (!c.chofer?.nombre?.toLowerCase().includes(searchLower)) return false
         } else if (key === "procedencia") {
           if (!c.procedencia?.toLowerCase().includes(searchLower)) return false
+        } else if (key === "lote") {
+          if (!c.lote?.toLowerCase().includes(searchLower)) return false
         } else if (key === "placa") {
           if (!c.placa?.toLowerCase().includes(searchLower)) return false
         } else if (key === "pagado") {
@@ -324,6 +327,13 @@ export function ComprasEspecialesTable({
                     </button>
                   </TableHead>
                 )}
+                {visibleColumns.includes("lote") && (
+                  <TableHead>
+                    <button onClick={() => handleSort("lote")} className="flex items-center font-semibold hover:text-primary">
+                      Lote<SortIcon columnKey="lote" />
+                    </button>
+                  </TableHead>
+                )}
                 {visibleColumns.includes("chofer.nombre") && (
                   <TableHead>
                     <button onClick={() => handleSort("chofer")} className="flex items-center font-semibold hover:text-primary">
@@ -383,6 +393,11 @@ export function ComprasEspecialesTable({
                     <DebouncedInput placeholder="Procedencia..." className="h-8 text-xs" value={filters.procedencia || ""} onChange={(val) => setFilter("procedencia", val.toString())} />
                   </TableHead>
                 )}
+                {visibleColumns.includes("lote") && (
+                  <TableHead className="p-2">
+                    <DebouncedInput placeholder="Lote..." className="h-8 text-xs" value={filters.lote || ""} onChange={(val) => setFilter("lote", val.toString())} />
+                  </TableHead>
+                )}
                 {visibleColumns.includes("chofer.nombre") && (
                   <TableHead className="p-2">
                     <DebouncedInput placeholder="Chofer..." className="h-8 text-xs" value={filters.chofer || ""} onChange={(val) => setFilter("chofer", val.toString())} />
@@ -429,6 +444,7 @@ export function ComprasEspecialesTable({
                       {visibleColumns.includes("numero_semana") && <TableCell>{compra.numero_semana}</TableCell>}
                       {visibleColumns.includes("cliente.nombre") && <TableCell>{compra.cliente?.nombre || "-"}</TableCell>}
                       {visibleColumns.includes("procedencia") && <TableCell>{compra.procedencia || "-"}</TableCell>}
+                      {visibleColumns.includes("lote") && <TableCell>{compra.lote || "-"}</TableCell>}
                       {visibleColumns.includes("chofer.nombre") && <TableCell>{compra.chofer?.nombre || "-"}</TableCell>}
                       {visibleColumns.includes("placa") && <TableCell>{compra.placa || "-"}</TableCell>}
                       {visibleColumns.includes("numero_boleta") && <TableCell className="text-right">{compra.numero_boleta || "-"}</TableCell>}
