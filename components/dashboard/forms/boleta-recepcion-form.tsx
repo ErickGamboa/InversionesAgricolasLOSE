@@ -47,6 +47,7 @@ export function BoletaRecepcionForm({
     cliente_id: initialData?.cliente_id || "",
     chofer_id: initialData?.chofer_id || "",
     placa: initialData?.placa || "",
+    notas: initialData?.notas || "",
     numero_cajas: initialData?.numero_cajas || "",
     pinas_por_caja: initialData?.pinas_por_caja || "",
     cantidad_bines: initialData?.cantidad_bines || "",
@@ -210,6 +211,16 @@ export function BoletaRecepcionForm({
             {errors.placa && (
               <p className="text-sm text-destructive">{errors.placa}</p>
             )}
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="notas">Notas</Label>
+            <Input
+              id="notas"
+              value={formData.notas}
+              onChange={(e) => setFormData({ ...formData, notas: e.target.value })}
+              placeholder="Notas adicionales (opcional)"
+            />
           </div>
         </div>
 

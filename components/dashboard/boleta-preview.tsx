@@ -77,6 +77,12 @@ export function BoletaPreview({ boleta }: BoletaPreviewProps) {
             <span className="text-xs text-gray-500 uppercase block">Placa:</span>
             <span className="font-semibold">{boleta.placa || "-"}</span>
           </div>
+          {boleta.notas && (
+            <div>
+              <span className="text-xs text-gray-500 uppercase block">Notas:</span>
+              <span className="font-semibold italic">{boleta.notas}</span>
+            </div>
+          )}
         </div>
 
         <Separator className="my-4" />

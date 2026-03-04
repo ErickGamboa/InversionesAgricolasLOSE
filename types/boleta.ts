@@ -10,6 +10,9 @@ export interface BoletaRecepcion {
   chofer_id: number | null
   placa: string | null
   
+  // Notas
+  notas: string | null
+  
   // Campos PLANTA
   numero_cajas: number | null
   pinas_por_caja: number | null
@@ -39,6 +42,7 @@ export interface BoletaFormData {
   cliente_id: string
   chofer_id: string
   placa: string
+  notas: string
   
   // PLANTA
   numero_cajas: string

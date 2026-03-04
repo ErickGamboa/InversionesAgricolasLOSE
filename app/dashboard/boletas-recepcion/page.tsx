@@ -89,6 +89,7 @@ export default function BoletasRecepcionPage() {
         cliente_id: parseInt(formData.cliente_id) || null,
         chofer_id: parseInt(formData.chofer_id) || null,
         placa: formData.placa || null,
+        notas: formData.notas || null,
         
         // PLANTA
         numero_cajas: isPlanta ? (parseInt(formData.numero_cajas) || null) : null,
@@ -142,7 +143,7 @@ export default function BoletasRecepcionPage() {
 
   const handleUpdateBoleta = useCallback(async (
     id: number, 
-    data: { total_kilos?: number; precio_por_kilo?: number }
+    data: { total_kilos?: number; precio_por_kilo?: number; notas?: string | null }
   ) => {
     try {
       const { error } = await supabase

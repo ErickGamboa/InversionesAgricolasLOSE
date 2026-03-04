@@ -28,7 +28,7 @@ function parseLocalDate(dateStr: string): Date {
 interface BoletasRecepcionTableProps {
   boletas: BoletaRecepcion[]
   onViewBoleta: (boleta: BoletaRecepcion) => void
-  onUpdateBoleta?: (id: number, data: { total_kilos?: number; precio_por_kilo?: number }) => Promise<void>
+  onUpdateBoleta?: (id: number, data: { total_kilos?: number; precio_por_kilo?: number; notas?: string | null }) => Promise<void>
   onDelete?: (id: number) => void
   isLoading?: boolean
 }
@@ -40,6 +40,8 @@ const ALL_COLUMNS = [
   { key: "tipo_boleta", label: "Tipo" },
   { key: "cliente", label: "Cliente" },
   { key: "chofer", label: "Chofer" },
+  { key: "placa", label: "Placa" },
+  { key: "notas", label: "Notas" },
   { key: "numero_cajas", label: "Cajas" },
   { key: "pinas_por_caja", label: "Piñas/Caja" },
   { key: "cantidad_bines", label: "Bines" },
@@ -50,7 +52,7 @@ const ALL_COLUMNS = [
 
 const DEFAULT_COLUMNS = [
   "numero_boleta", "fecha", "cliente", "tipo_boleta", "cantidad_bines", 
-  "total_kilos", "precio_por_kilo", "total_precio"
+  "total_kilos", "precio_por_kilo", "total_precio", "notas"
 ]
 
 export function BoletasRecepcionTable({
@@ -107,9 +109,10 @@ export function BoletasRecepcionTable({
    
   // Estados para edición inline
   const [editingId, setEditingId] = useState<number | null>(null)
-  const [editData, setEditData] = useState<{ total_kilos: string; precio_por_kilo: string }>({
+  const [editData, setEditData] = useState<{ total_kilos: string; precio_por_kilo: string; notas: string }>({
     total_kilos: "",
     precio_por_kilo: "",
+    notas: "",
   })
 
   const toggleColumn = (key: string) => {
@@ -190,6 +193,7 @@ export function BoletasRecepcionTable({
     setEditData({
       total_kilos: boleta.total_kilos?.toString() || "",
       precio_por_kilo: boleta.precio_por_kilo?.toString() || "",
+      notas: boleta.notas || "",
     })
   }
 
@@ -198,6 +202,7 @@ export function BoletasRecepcionTable({
       await onUpdateBoleta(id, {
         total_kilos: editData.total_kilos ? parseFloat(editData.total_kilos) : undefined,
         precio_por_kilo: editData.precio_por_kilo ? parseFloat(editData.precio_por_kilo) : undefined,
+        notas: editData.notas || null,
       })
     }
     setEditingId(null)
@@ -205,7 +210,7 @@ export function BoletasRecepcionTable({
 
   const handleCancelEdit = () => {
     setEditingId(null)
-    setEditData({ total_kilos: "", precio_por_kilo: "" })
+    setEditData({ total_kilos: "", precio_por_kilo: "", notas: "" })
   }
 
   // Calcular totales
@@ -223,6 +228,8 @@ export function BoletasRecepcionTable({
     tipo_boleta: boleta.tipo_boleta,
     cliente: boleta.clientes?.nombre || "-",
     chofer: boleta.choferes?.nombre || "-",
+    placa: boleta.placa || "-",
+    notas: boleta.notas || "-",
     numero_cajas: boleta.numero_cajas || 0,
     pinas_por_caja: boleta.pinas_por_caja || 0,
     cantidad_bines: boleta.cantidad_bines || 0,
@@ -344,6 +351,8 @@ export function BoletasRecepcionTable({
                   </TableHead>
                 )}
                 {visibleColumns.includes("chofer") && <TableHead>Chofer</TableHead>}
+                {visibleColumns.includes("placa") && <TableHead>Placa</TableHead>}
+                {visibleColumns.includes("notas") && <TableHead>Notas</TableHead>}
                 {visibleColumns.includes("numero_cajas") && <TableHead className="text-right">Cajas</TableHead>}
                 {visibleColumns.includes("pinas_por_caja") && <TableHead className="text-right">Piñas/Caja</TableHead>}
                 {visibleColumns.includes("cantidad_bines") && <TableHead className="text-right">Bines</TableHead>}
@@ -395,6 +404,25 @@ export function BoletasRecepcionTable({
                     {visibleColumns.includes("chofer") && (
                       <TableCell className="max-w-[150px] truncate">
                         {boleta.choferes?.nombre || "-"}
+                      </TableCell>
+                    )}
+                    {visibleColumns.includes("placa") && (
+                      <TableCell className="max-w-[100px] truncate">
+                        {boleta.placa || "-"}
+                      </TableCell>
+                    )}
+                    {visibleColumns.includes("notas") && (
+                      <TableCell className="max-w-[200px] truncate" title={boleta.notas || undefined}>
+                        {editingId === boleta.id ? (
+                          <Input
+                            value={editData.notas || ""}
+                            onChange={(e) => setEditData({ ...editData, notas: e.target.value })}
+                            placeholder="Notas..."
+                            className="h-8 text-xs"
+                          />
+                        ) : (
+                          boleta.notas || "-"
+                        )}
                       </TableCell>
                     )}
                     {visibleColumns.includes("numero_cajas") && (
@@ -511,6 +539,8 @@ export function BoletasRecepcionTable({
                 {visibleColumns.includes("tipo_boleta") && <TableCell></TableCell>}
                 {visibleColumns.includes("cliente") && <TableCell></TableCell>}
                 {visibleColumns.includes("chofer") && <TableCell></TableCell>}
+                {visibleColumns.includes("placa") && <TableCell></TableCell>}
+                {visibleColumns.includes("notas") && <TableCell></TableCell>}
                 {visibleColumns.includes("numero_cajas") && <TableCell></TableCell>}
                 {visibleColumns.includes("pinas_por_caja") && <TableCell></TableCell>}
                 {visibleColumns.includes("cantidad_bines") && <TableCell></TableCell>}
