@@ -89,9 +89,14 @@ export function BoletaRecepcionForm({
       if (!formData.total_kilos || parseFloat(formData.total_kilos) <= 0) {
         newErrors.total_kilos = "Ingrese total de kilos"
       }
-      if (!formData.cantidad_bines || parseInt(formData.cantidad_bines) <= 0) {
-        newErrors.cantidad_bines = "Ingrese cantidad de bines"
+
+      if (formData.cantidad_bines) {
+        const cantidadBines = parseFloat(formData.cantidad_bines)
+        if (isNaN(cantidadBines) || cantidadBines < 0) {
+          newErrors.cantidad_bines = "La cantidad de bines no puede ser negativa"
+        }
       }
+
       if (!formData.tipo_fruta) {
         newErrors.tipo_fruta = "Seleccione tipo de fruta"
       }
@@ -276,16 +281,17 @@ export function BoletaRecepcionForm({
             <h3 className="font-semibold text-lg">Datos de Campo</h3>
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
-                <Label htmlFor="cantidad_bines">Cantidad de Bines *</Label>
+                <Label htmlFor="cantidad_bines">Cantidad de Bines</Label>
                 <Input
                   id="cantidad_bines"
                   type="number"
+                  step="0.01"
                   min="0"
                   value={formData.cantidad_bines}
                   onChange={(e) =>
                     setFormData({ ...formData, cantidad_bines: e.target.value })
                   }
-                  placeholder="Ej: 24"
+                  placeholder="Ej: 2.5"
                 />
                 {errors.cantidad_bines && (
                   <p className="text-sm text-destructive">{errors.cantidad_bines}</p>

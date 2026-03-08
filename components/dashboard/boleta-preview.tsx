@@ -19,6 +19,17 @@ export function BoletaPreview({ boleta }: BoletaPreviewProps) {
     }
   }
 
+  const formatCantidadBines = (valor: number | null | undefined) => {
+    if (valor === null || valor === undefined) {
+      return "-"
+    }
+
+    return valor.toLocaleString("es-CR", {
+      minimumFractionDigits: 0,
+      maximumFractionDigits: 2,
+    })
+  }
+
   const fecha = formatDate(boleta.fecha)
   
   return (
@@ -121,8 +132,8 @@ export function BoletaPreview({ boleta }: BoletaPreviewProps) {
              <div className="space-y-3 text-sm">
                <div className="flex justify-between items-center">
                  <span className="text-xs text-gray-500 uppercase">Cantidad de Bines:</span>
-                 <span className="font-bold text-xl">{boleta.cantidad_bines || "-"}</span>
-               </div>
+                 <span className="font-bold text-xl">{formatCantidadBines(boleta.cantidad_bines)}</span>
+                </div>
                <div className="flex justify-between items-center">
                  <span className="text-xs text-gray-500 uppercase">Total de Kilos:</span>
                  <span className="font-bold text-xl">{boleta.total_kilos?.toLocaleString('es-CR', {minimumFractionDigits: 3}) || "-"}</span>

@@ -82,6 +82,15 @@ export default function BoletasRecepcionPage() {
     try {
       const isPlanta = formData.tipo_boleta === "PLANTA"
       
+      const rawCantidadBines = formData.cantidad_bines.trim()
+      let cantidadBinesValue: number | null = null
+      if (rawCantidadBines) {
+        const parsed = parseFloat(rawCantidadBines)
+        if (!Number.isNaN(parsed)) {
+          cantidadBinesValue = Math.round(parsed * 100) / 100
+        }
+      }
+
       const dataToInsert = {
         tipo_boleta: formData.tipo_boleta,
         fecha: formData.fecha + "T00:00:00-06:00",
@@ -99,7 +108,7 @@ export default function BoletasRecepcionPage() {
           : null,
         
         // CAMPO
-        cantidad_bines: !isPlanta ? (parseInt(formData.cantidad_bines) || null) : null,
+        cantidad_bines: !isPlanta ? cantidadBinesValue : null,
         total_kilos: !isPlanta ? (parseFloat(formData.total_kilos) || null) : null,
         tipo_fruta: !isPlanta ? formData.tipo_fruta : null,
       }

@@ -25,6 +25,14 @@ function parseLocalDate(dateStr: string): Date {
   return new Date(year, month - 1, day)
 }
 
+const formatCantidadBines = (valor: number | null | undefined) => {
+  if (valor === null || valor === undefined) return "-"
+  return valor.toLocaleString("es-CR", {
+    minimumFractionDigits: 0,
+    maximumFractionDigits: 2,
+  })
+}
+
 interface BoletasRecepcionTableProps {
   boletas: BoletaRecepcion[]
   onViewBoleta: (boleta: BoletaRecepcion) => void
@@ -232,7 +240,7 @@ export function BoletasRecepcionTable({
     notas: boleta.notas || "-",
     numero_cajas: boleta.numero_cajas || 0,
     pinas_por_caja: boleta.pinas_por_caja || 0,
-    cantidad_bines: boleta.cantidad_bines || 0,
+    cantidad_bines: boleta.cantidad_bines ?? "",
     total_kilos: boleta.total_kilos || 0,
     precio_por_kilo: boleta.precio_por_kilo || 0,
     total_precio: getTotalPrecio(boleta.total_kilos, boleta.precio_por_kilo) || 0,
@@ -432,7 +440,7 @@ export function BoletasRecepcionTable({
                       <TableCell className="text-right">{boleta.pinas_por_caja || "-"}</TableCell>
                     )}
                     {visibleColumns.includes("cantidad_bines") && (
-                      <TableCell className="text-right">{boleta.cantidad_bines || "-"}</TableCell>
+                      <TableCell className="text-right">{formatCantidadBines(boleta.cantidad_bines)}</TableCell>
                     )}
                     {visibleColumns.includes("total_kilos") && (
                       <TableCell className="text-right">
