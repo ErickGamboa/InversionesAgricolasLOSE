@@ -85,6 +85,11 @@ const adminOperationsMenuItems = [
     url: "/dashboard/operaciones-administrativas/planillas",
     icon: Wallet,
   },
+  {
+    title: "Tareas Diarias",
+    url: "/dashboard/operaciones-administrativas/tareas-diarias",
+    icon: ClipboardList,
+  },
 ]
 
 const plantOperationsMenuItems = [
