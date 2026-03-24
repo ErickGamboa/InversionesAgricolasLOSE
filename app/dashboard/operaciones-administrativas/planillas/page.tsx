@@ -6,9 +6,10 @@ import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Badge } from "@/components/ui/badge"
+import { SearchableSelect } from "@/components/ui/searchable-select"
 import { toast } from "sonner"
 import { Planilla, EmpleadoPlanilla } from "@/types/planilla"
-import { Plus, Save, X, CheckCircle2, Pencil, Trash2 } from "lucide-react"
+import { Plus, Save, X, CheckCircle2, Pencil, Trash2, ChevronDown, ChevronUp } from "lucide-react"
 import {
   Dialog,
   DialogContent,
@@ -61,6 +62,7 @@ const computeTotalsFromLine = (line: PendingLine) => {
 }
 
 export default function PlanillasPage() {
+  const currentYear = String(new Date().getFullYear())
   const [employees, setEmployees] = useState<EmpleadoPlanilla[]>([])
   const [planillas, setPlanillas] = useState<Planilla[]>([])
   const [loadingEmployees, setLoadingEmployees] = useState(true)
@@ -77,37 +79,92 @@ export default function PlanillasPage() {
   const [deletingEmployee, setDeletingEmployee] = useState<EmpleadoPlanilla | null>(null)
   const [deleteEmployeeDialogOpen, setDeleteEmployeeDialogOpen] = useState(false)
   const [deletingEmployeeId, setDeletingEmployeeId] = useState<number | null>(null)
+  const [yearFilter, setYearFilter] = useState(currentYear)
+  const [showMonthlyTotals, setShowMonthlyTotals] = useState(true)
+  const [monthlyEmployeeFilter, setMonthlyEmployeeFilter] = useState("all")
+
+  const yearOptions = useMemo(() => {
+    const years = new Set<string>()
+    years.add(currentYear)
+
+    planillas.forEach((item) => {
+      const parsed = new Date(`${item.fecha_pago}T00:00:00`)
+      if (Number.isNaN(parsed.getTime())) return
+      years.add(String(parsed.getFullYear()))
+    })
+
+    return Array.from(years)
+      .sort((a, b) => Number(b) - Number(a))
+      .map((year) => ({ value: year, label: year }))
+  }, [planillas, currentYear])
+
+  const filteredPlanillasByYear = useMemo(() => {
+    const targetYear = Number(yearFilter)
+    return planillas.filter((item) => {
+      const parsed = new Date(`${item.fecha_pago}T00:00:00`)
+      if (Number.isNaN(parsed.getTime())) return false
+      return parsed.getFullYear() === targetYear
+    })
+  }, [planillas, yearFilter])
 
   const groupedPlanillas = useMemo(() => {
     const map: Record<number, Planilla[]> = {}
-    planillas.forEach((planilla) => {
+    filteredPlanillasByYear.forEach((planilla) => {
       const target = planilla.empleado_id
       if (!map[target]) map[target] = []
       map[target].push(planilla)
     })
     return map
-  }, [planillas])
+  }, [filteredPlanillasByYear])
 
-  const totalsByEmployee = useMemo(() => {
-    const map: Record<number, { bruto: number; neto: number; horas: number }> = {}
-    Object.entries(groupedPlanillas).forEach(([key, items]) => {
-      map[Number(key)] = items.reduce(
-        (acc, item) => {
-          acc.bruto += item.total_pagar
-          acc.neto += item.neto
-          acc.horas += item.horas_extra
-          return acc
-        },
-        { bruto: 0, neto: 0, horas: 0 },
-      )
+  const filteredPlanillasForTotals = useMemo(() => {
+    if (monthlyEmployeeFilter === "all") return filteredPlanillasByYear
+    return filteredPlanillasByYear.filter((item) => item.empleado_id === Number(monthlyEmployeeFilter))
+  }, [filteredPlanillasByYear, monthlyEmployeeFilter])
+
+  const monthlyTotals = useMemo(() => {
+    const map: Record<string, { key: string; label: string; bruto: number; neto: number; lineas: number }> = {}
+
+    filteredPlanillasForTotals.forEach((item) => {
+      const parsed = new Date(`${item.fecha_pago}T00:00:00`)
+      if (Number.isNaN(parsed.getTime())) return
+
+      const key = `${parsed.getFullYear()}-${String(parsed.getMonth() + 1).padStart(2, "0")}`
+      if (!map[key]) {
+        map[key] = {
+          key,
+          label: new Intl.DateTimeFormat("es-CR", { month: "long", year: "numeric" }).format(parsed),
+          bruto: 0,
+          neto: 0,
+          lineas: 0,
+        }
+      }
+
+      map[key].bruto += Number(item.total_pagar) || 0
+      map[key].neto += Number(item.neto) || 0
+      map[key].lineas += 1
     })
-    return map
-  }, [groupedPlanillas])
 
-  const totalPlanillas = useMemo(
-    () => planillas.reduce((acc, item) => acc + item.total_pagar, 0),
-    [planillas],
+    return Object.values(map).sort((a, b) => a.key.localeCompare(b.key))
+  }, [filteredPlanillasForTotals])
+
+  const monthlyEmployeeOptions = useMemo(
+    () => [
+      { value: "all", label: "Todos los colaboradores" },
+      ...employees.map((employee) => ({ value: String(employee.id), label: employee.nombre_completo })),
+    ],
+    [employees],
   )
+
+  useEffect(() => {
+    setMonthlyEmployeeFilter("all")
+  }, [yearFilter])
+
+  const selectedEmployeeName = useMemo(() => {
+    if (monthlyEmployeeFilter === "all") return "Todos los colaboradores"
+    const employee = employees.find((item) => item.id === Number(monthlyEmployeeFilter))
+    return employee?.nombre_completo ?? "Colaborador"
+  }, [employees, monthlyEmployeeFilter])
 
   const fetchEmployees = useCallback(async () => {
     setLoadingEmployees(true)
@@ -236,8 +293,9 @@ export default function PlanillasPage() {
   }
 
   const handleSaveLine = async (employeeId: number, line: PendingLine) => {
-    if (!line.horasExtra || !line.precioHora) {
-      toast.error("Completa horas extra y precio antes de guardar")
+    const rebajo = Number(line.rebajo) || 0
+    if (rebajo < 0 || rebajo > 100) {
+      toast.error("El porcentaje de rebajo debe estar entre 0% y 100%")
       return
     }
     const payload = {
@@ -245,10 +303,10 @@ export default function PlanillasPage() {
       fecha_pago: line.fecha,
       tipo_pago: "semanal" as const,
       estado: "pendiente" as const,
-      horas_extra: Number(line.horasExtra),
-      precio_hora_extra: Number(line.precioHora),
+      horas_extra: Number(line.horasExtra) || 0,
+      precio_hora_extra: Number(line.precioHora) || 0,
       salario_linea: Number(line.salario) || 0,
-      rebajo_porcentaje: Number(line.rebajo),
+      rebajo_porcentaje: rebajo,
       comentarios: `Línea generada en tarjeta semana ${line.numeroSemana}`,
       metadata: {},
     }
@@ -293,8 +351,9 @@ export default function PlanillasPage() {
 
   const handleUpdateLine = async () => {
     if (!editingPlanilla || !editingLineValues) return
-    if (!editingLineValues.horasExtra || !editingLineValues.precioHora) {
-      toast.error("Completa horas y precio antes de guardar")
+    const rebajo = Number(editingLineValues.rebajo) || 0
+    if (rebajo < 0 || rebajo > 100) {
+      toast.error("El porcentaje de rebajo debe estar entre 0% y 100%")
       return
     }
     const payload = {
@@ -303,9 +362,9 @@ export default function PlanillasPage() {
       fecha_pago: editingLineValues.fecha,
       tipo_pago: editingPlanilla.tipo_pago,
       estado: editingPlanilla.estado,
-      horas_extra: Number(editingLineValues.horasExtra),
-      precio_hora_extra: Number(editingLineValues.precioHora),
-      rebajo_porcentaje: Number(editingLineValues.rebajo),
+      horas_extra: Number(editingLineValues.horasExtra) || 0,
+      precio_hora_extra: Number(editingLineValues.precioHora) || 0,
+      rebajo_porcentaje: rebajo,
       comentarios: editingPlanilla.comentarios,
       metadata: editingPlanilla.metadata,
       salario_linea: Number(editingLineValues.salario) || 0,
@@ -381,27 +440,30 @@ export default function PlanillasPage() {
     setDeletingEmployeeId(deletingEmployee.id)
     try {
       const supabase = createClient()
+      const { error: planillasError } = await supabase
+        .from("planillas")
+        .delete()
+        .eq("empleado_id", deletingEmployee.id)
+
+      if (planillasError) throw planillasError
+
       const { error } = await supabase.from("empleados").delete().eq("id", deletingEmployee.id)
 
       if (error) throw error
 
-      toast.success("Colaborador eliminado")
+      toast.success("Colaborador y registros eliminados")
       setDeleteEmployeeDialogOpen(false)
       setDeletingEmployee(null)
       fetchEmployees()
       fetchPlanillas()
     } catch (error) {
-      const message = error instanceof Error ? error.message : "Error desconocido"
-      const lower = message.toLowerCase()
-      if (
-        lower.includes("foreign key") ||
-        lower.includes("23503") ||
-        lower.includes("planillas")
-      ) {
-        toast.error("No se puede eliminar el colaborador porque tiene planillas registradas")
-      } else {
-        toast.error(message)
-      }
+      const message =
+        error instanceof Error
+          ? error.message
+          : typeof error === "object" && error !== null && "message" in error && typeof (error as { message?: unknown }).message === "string"
+            ? String((error as { message: string }).message)
+            : "Error desconocido"
+      toast.error(message)
     } finally {
       setDeletingEmployeeId(null)
     }
@@ -437,7 +499,7 @@ export default function PlanillasPage() {
             </div>
             <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
               <DialogTrigger asChild>
-                <Button variant="default" className="gap-2 bg-emerald-600 text-white">
+                <Button variant="default" className="gap-2 bg-[#5f9500] text-white hover:bg-[#4f7d00]">
                   <Plus className="h-4 w-4" /> Nuevo colaborador
                 </Button>
               </DialogTrigger>
@@ -487,11 +549,21 @@ export default function PlanillasPage() {
         </Card>
 
         <Card className="border border-border bg-white shadow-sm">
-          <CardHeader className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-foreground">Historial de planillas</h2>
-            <Button variant="outline" className="gap-2 text-sm">
-              Exportar
-            </Button>
+          <CardHeader className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+            <div>
+              <h2 className="text-lg font-semibold text-foreground">Historial de planillas</h2>
+              <p className="text-xs text-muted-foreground">Mostrando año: {yearFilter}</p>
+            </div>
+            <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+              <SearchableSelect
+                options={yearOptions}
+                value={yearFilter}
+                onChange={(value) => setYearFilter(value || currentYear)}
+                placeholder="Filtrar por año"
+                emptyText="No se encontraron años"
+                className="w-full sm:w-[220px]"
+              />
+            </div>
           </CardHeader>
           <CardContent className="space-y-6">
             {overallLoading ? (
@@ -506,9 +578,66 @@ export default function PlanillasPage() {
               </div>
             ) : (
               <div className="space-y-6">
+                <div className="space-y-3 rounded-xl border border-border bg-slate-50 p-4">
+                  <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <h3 className="text-sm font-semibold text-foreground">Totales por mes</h3>
+                      <p className="text-xs text-muted-foreground">Mostrando: {selectedEmployeeName}</p>
+                    </div>
+                    <div className="flex w-full flex-col gap-2 sm:w-auto sm:flex-row sm:items-center">
+                      <SearchableSelect
+                        options={monthlyEmployeeOptions}
+                        value={monthlyEmployeeFilter}
+                        onChange={(value) => setMonthlyEmployeeFilter(value || "all")}
+                        placeholder="Filtrar por colaborador"
+                        emptyText="No se encontraron colaboradores"
+                        className="w-full sm:w-[260px]"
+                      />
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full gap-2 sm:w-auto"
+                        onClick={() => setShowMonthlyTotals((prev) => !prev)}
+                      >
+                        {showMonthlyTotals ? "Ocultar" : "Mostrar"}
+                        {showMonthlyTotals ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                      </Button>
+                    </div>
+                  </div>
+
+                  {showMonthlyTotals && (
+                    <>
+                      {monthlyTotals.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-3 md:grid-cols-2 xl:grid-cols-3">
+                          {monthlyTotals.map((month) => (
+                            <div key={month.key} className="rounded-xl border border-border bg-white p-4">
+                              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Mes</p>
+                              <h4 className="text-lg font-semibold capitalize text-foreground">{month.label}</h4>
+                              <p className="mt-1 text-xs text-muted-foreground">{month.lineas} líneas</p>
+                              <div className="mt-3 grid grid-cols-1 gap-2 text-sm">
+                                <div className="rounded-md border border-amber-200 bg-amber-50 px-3 py-2">
+                                  <p className="text-xs text-amber-700">Total bruto del mes</p>
+                                  <p className="font-semibold text-amber-900">{currencyFormatter.format(month.bruto)}</p>
+                                </div>
+                                <div className="rounded-md border border-emerald-200 bg-emerald-50 px-3 py-2">
+                                  <p className="text-xs text-emerald-700">Total neto del mes</p>
+                                  <p className="font-semibold text-emerald-900">{currencyFormatter.format(month.neto)}</p>
+                                </div>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="rounded-xl border border-dashed border-muted bg-white p-4 text-sm text-muted-foreground">
+                          No hay líneas de planilla para el filtro seleccionado.
+                        </div>
+                      )}
+                    </>
+                  )}
+                </div>
+
                 {employees.map((employee) => {
                   const lines = groupedPlanillas[employee.id] ?? []
-                  const totals = totalsByEmployee[employee.id] ?? { bruto: 0, neto: 0, horas: 0 }
                   const pending = pendingLines[employee.id] ?? []
                   return (
                     <div key={employee.id} className="rounded-2xl border border-border bg-slate-50 p-4">
@@ -830,7 +959,7 @@ export default function PlanillasPage() {
             <AlertDialogHeader>
               <AlertDialogTitle>¿Eliminar colaborador?</AlertDialogTitle>
               <AlertDialogDescription>
-                Se eliminará el colaborador seleccionado. Esta acción no se puede deshacer.
+                Se eliminará el colaborador y todas sus líneas de planilla. Esta acción no se puede deshacer.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

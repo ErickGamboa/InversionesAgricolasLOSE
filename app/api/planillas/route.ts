@@ -7,16 +7,19 @@ const tipoEstadoSchema = z.enum(["pendiente", "pagado"])
 
 const planillaBodySchema = z.object({
   id: z.number().optional(),
-  empleado_id: z.number().positive(),
+  empleado_id: z.number().positive("El colaborador es obligatorio"),
   fecha_pago: z.string().refine((value) => !Number.isNaN(Date.parse(value)), {
     message: "Fecha inválida",
   }),
   tipo_pago: tipoPagoSchema,
   estado: tipoEstadoSchema.optional(),
-  horas_extra: z.number().nonnegative(),
-  precio_hora_extra: z.number().nonnegative(),
-  rebajo_porcentaje: z.number().min(0).max(100),
-  salario_linea: z.number().nonnegative().optional(),
+  horas_extra: z.number({ invalid_type_error: "Las horas extra deben ser un número" }).min(0, "Las horas extra no pueden ser negativas"),
+  precio_hora_extra: z.number({ invalid_type_error: "El precio por hora debe ser un número" }).min(0, "El precio por hora no puede ser negativo"),
+  rebajo_porcentaje: z
+    .number({ invalid_type_error: "El porcentaje de rebajo debe ser un número" })
+    .min(0, "El rebajo no puede ser menor a 0%")
+    .max(100, "El rebajo no puede ser mayor a 100%"),
+  salario_linea: z.number({ invalid_type_error: "El salario debe ser un número" }).min(0, "El salario no puede ser negativo").optional(),
   comentarios: z.string().max(500).nullable().optional(),
   metadata: z.record(z.unknown()).optional(),
 })
@@ -64,6 +67,11 @@ function buildComputedFields(payload: z.infer<typeof planillaBodySchema>) {
 }
 
 function extractErrorMessage(error: unknown): string {
+  if (error instanceof z.ZodError) {
+    const firstIssue = error.issues[0]
+    return firstIssue?.message ?? "Datos inválidos en la planilla"
+  }
+
   if (error instanceof Error) return error.message
   if (typeof error === "object" && error !== null && "message" in error) {
     const message = (error as { message?: unknown }).message
