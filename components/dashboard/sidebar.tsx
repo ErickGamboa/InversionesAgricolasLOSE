@@ -80,6 +80,9 @@ const adminOperationsMenuItems = [
     url: "/dashboard/transporte-interno",
     icon: ClipboardList,
   },
+]
+
+const personalOperationsMenuItems = [
   {
     title: "Planillas",
     url: "/dashboard/operaciones-administrativas/planillas",
@@ -286,6 +289,27 @@ export function DashboardSidebar({ user }: { user: User }) {
             <SidebarGroupContent>
               <SidebarMenu>
                 {adminOperationsMenuItems.map((item) => (
+                  <SidebarMenuItem key={item.title}>
+                    <SidebarMenuButton asChild isActive={pathname === item.url}>
+                      <Link href={item.url}>
+                        <item.icon className="h-4 w-4" />
+                        <span>{item.title}</span>
+                      </Link>
+                    </SidebarMenuButton>
+                  </SidebarMenuItem>
+                ))}
+              </SidebarMenu>
+            </SidebarGroupContent>
+          </SidebarGroup>
+        )}
+
+        {/* Operaciones personales - solo admin */}
+        {role === "admin" && (
+          <SidebarGroup>
+            <SidebarGroupLabel>Operaciones personales</SidebarGroupLabel>
+            <SidebarGroupContent>
+              <SidebarMenu>
+                {personalOperationsMenuItems.map((item) => (
                   <SidebarMenuItem key={item.title}>
                     <SidebarMenuButton asChild isActive={pathname === item.url}>
                       <Link href={item.url}>

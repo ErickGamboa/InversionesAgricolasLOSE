@@ -35,6 +35,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { useToast } from "@/hooks/use-toast";
+import { useAdminFrontendGuard } from "@/hooks/use-admin-frontend-guard";
 
 const supabase = createClient();
 
@@ -69,9 +70,10 @@ const fetchLookups = async () => {
 };
 
 export default function TransporteContratadoPage() {
+  const { isAdmin, loading: guardLoading } = useAdminFrontendGuard();
   const { toast } = useToast();
-  const { data: transportes = [], mutate, isLoading } = useSWR("transporte_contratado", fetcher);
-  const { data: lookups } = useSWR("lookups_transporte_contratado", fetchLookups);
+  const { data: transportes = [], mutate, isLoading } = useSWR(isAdmin ? "transporte_contratado" : null, fetcher);
+  const { data: lookups } = useSWR(isAdmin ? "lookups_transporte_contratado" : null, fetchLookups);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [editingTransporte, setEditingTransporte] = useState<Record<string, unknown> | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -166,6 +168,14 @@ export default function TransporteContratadoPage() {
     sum + Number(t.total_kilos || 0), 0);
   const todayMonto = todayStats.reduce((sum: number, t: Record<string, unknown>) => 
     sum + Number(t.total_a_pagar || 0), 0);
+
+  if (guardLoading) {
+    return <div className="min-h-screen bg-slate-50 p-6 text-sm text-muted-foreground">Validando permisos...</div>;
+  }
+
+  if (!isAdmin) {
+    return <div className="min-h-screen bg-slate-50 p-6 text-sm text-muted-foreground">Redirigiendo a Recepción de Fruta...</div>;
+  }
 
   return (
     <>

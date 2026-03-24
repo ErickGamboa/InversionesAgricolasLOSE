@@ -1,6 +1,7 @@
 "use client"
 
 import { useCallback, useEffect, useMemo, useState } from "react"
+import { useRouter } from "next/navigation"
 import { createClient } from "@/lib/supabase/client"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -24,6 +25,7 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Breadcrumb, BreadcrumbItem, BreadcrumbList, BreadcrumbPage, BreadcrumbSeparator } from "@/components/ui/breadcrumb"
 import { SidebarTrigger } from "@/components/ui/sidebar"
 import { Separator } from "@/components/ui/separator"
+import { useUserRole } from "@/hooks/use-user-role"
 
 type PendingLine = {
   id: string
@@ -62,6 +64,8 @@ const computeTotalsFromLine = (line: PendingLine) => {
 }
 
 export default function PlanillasPage() {
+  const router = useRouter()
+  const { role, loading: roleLoading } = useUserRole()
   const currentYear = String(new Date().getFullYear())
   const [employees, setEmployees] = useState<EmpleadoPlanilla[]>([])
   const [planillas, setPlanillas] = useState<Planilla[]>([])
@@ -207,12 +211,20 @@ export default function PlanillasPage() {
   }, [])
 
   useEffect(() => {
-    fetchEmployees()
-  }, [fetchEmployees])
+    if (!roleLoading && role !== "admin") {
+      router.replace("/dashboard/recepcion")
+    }
+  }, [role, roleLoading, router])
 
   useEffect(() => {
+    if (roleLoading || role !== "admin") return
+    fetchEmployees()
+  }, [fetchEmployees, role, roleLoading])
+
+  useEffect(() => {
+    if (roleLoading || role !== "admin") return
     fetchPlanillas()
-  }, [fetchPlanillas])
+  }, [fetchPlanillas, role, roleLoading])
 
   const resetEmployeeForm = () => {
     setNewEmployee({ nombre: "", cargo: "" })
@@ -471,6 +483,22 @@ export default function PlanillasPage() {
 
 
   const overallLoading = loadingEmployees || loadingPlanillas
+
+  if (roleLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 text-sm text-muted-foreground">
+        Validando permisos...
+      </div>
+    )
+  }
+
+  if (role !== "admin") {
+    return (
+      <div className="min-h-screen bg-slate-50 p-6 text-sm text-muted-foreground">
+        Redirigiendo a Recepción de Fruta...
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-slate-50">
