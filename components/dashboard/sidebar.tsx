@@ -43,6 +43,7 @@ import {
   Check,
   X,
   Receipt,
+  Wallet,
 } from "lucide-react"
 
 const mainMenuItems = [
@@ -78,6 +79,11 @@ const adminOperationsMenuItems = [
     title: "Transporte Interno",
     url: "/dashboard/transporte-interno",
     icon: ClipboardList,
+  },
+  {
+    title: "Planillas",
+    url: "/dashboard/operaciones-administrativas/planillas",
+    icon: Wallet,
   },
 ]
 
