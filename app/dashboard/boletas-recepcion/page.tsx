@@ -42,17 +42,30 @@ import { BoletaRecepcion, BoletaFormData } from "@/types/boleta"
 const supabase = createClient()
 
 const fetcher = async () => {
-  const { data, error } = await supabase
-    .from("boletas_recepcion")
-    .select(`
-      *,
-      clientes (nombre),
-      choferes (nombre)
-    `)
-    .order("numero_boleta", { ascending: false })
+  const PAGE_SIZE = 1000;
+  let allData: Record<string, unknown>[] = [];
+  let from = 0;
 
-  if (error) throw error
-  return data
+  while (true) {
+    const { data, error } = await supabase
+      .from("boletas_recepcion")
+      .select(`
+        *,
+        clientes (nombre),
+        choferes (nombre)
+      `)
+      .order("numero_boleta", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return allData;
 }
 
 const fetchLookups = async () => {

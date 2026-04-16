@@ -40,19 +40,32 @@ import { useAdminFrontendGuard } from "@/hooks/use-admin-frontend-guard";
 const supabase = createClient();
 
 const fetcher = async () => {
-  const { data, error } = await supabase
-    .from("transporte_interno")
-    .select(`
-      *,
-      chofer:choferes(id, nombre),
-      placa:placas(id, codigo),
-      cliente:clientes(id, nombre)
-    `)
-    .order("fecha", { ascending: false })
-    .order("id", { ascending: false });
+  const PAGE_SIZE = 1000;
+  let allData: Record<string, unknown>[] = [];
+  let from = 0;
 
-  if (error) throw error;
-  return data;
+  while (true) {
+    const { data, error } = await supabase
+      .from("transporte_interno")
+      .select(`
+        *,
+        chofer:choferes(id, nombre),
+        placa:placas(id, codigo),
+        cliente:clientes(id, nombre)
+      `)
+      .order("fecha", { ascending: false })
+      .order("id", { ascending: false })
+      .range(from, from + PAGE_SIZE - 1);
+
+    if (error) throw error;
+    if (!data || data.length === 0) break;
+
+    allData = allData.concat(data);
+    if (data.length < PAGE_SIZE) break;
+    from += PAGE_SIZE;
+  }
+
+  return allData;
 };
 
 const fetchLookups = async () => {
